@@ -12,8 +12,9 @@ export default function PortraitGrid() {
             const { data, error } = await supabase
                 .from('dancers')
                 .select('*')
+                .order('is_verified', { ascending: false })
                 .order('created_at', { ascending: false })
-                .limit(10);
+                .limit(30);
 
             if (error) {
                 console.error('Error fetching dancers:', error);

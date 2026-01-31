@@ -2,6 +2,7 @@
 
 import { PlayCircle } from "lucide-react";
 import Image from "next/image";
+import CarouselWithDots from "@/components/ui/CarouselWithDots";
 
 interface MediaItem {
     id: string | number;
@@ -24,10 +25,33 @@ export default function MediaGrid({ items }: MediaGridProps) {
 
     const displayItems = items || defaultItems;
 
+    const carouselItems = displayItems.map((item) => (
+        <div key={item.id} className="relative aspect-[4/5] bg-muted rounded-xl overflow-hidden group w-full">
+            <Image
+                src={item.thumbnail}
+                alt="Portfolio item"
+                fill
+                className="object-cover"
+            />
+            {item.type === "video" && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition-colors">
+                    <PlayCircle className="w-10 h-10 text-white opacity-90" />
+                </div>
+            )}
+        </div>
+    ));
+
     return (
         <div className="px-6 mb-20">
             <h3 className="text-lg font-bold mb-4">Portfolio</h3>
-            <div className="grid grid-cols-2 gap-3">
+
+            {/* Mobile: Swipeable Carousel */}
+            <div className="block md:hidden -mx-2">
+                <CarouselWithDots items={carouselItems} />
+            </div>
+
+            {/* Desktop: Grid */}
+            <div className="hidden md:grid grid-cols-2 gap-3">
                 {displayItems.map((item) => (
                     <div key={item.id} className="relative aspect-[4/5] bg-muted rounded-xl overflow-hidden group">
                         <Image
