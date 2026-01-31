@@ -6,8 +6,8 @@ import { ChevronRight } from "lucide-react";
 
 const POPULAR_ARTISTS = [
     { id: "j-ho", name: "J-Ho", image: "https://images.unsplash.com/photo-1527011046414-4781f1f94f8c?w=400&h=400&fit=crop" },
-    { id: "lia", name: "Lia Kim", image: "https://images.unsplash.com/photo-1504609773096-104ff2c73ba4?w=400&h=400&fit=crop" },
-    { id: "bada", name: "Bada Lee", image: "https://images.unsplash.com/photo-1508700929628-666bc8bd84ea?w=400&h=400&fit=crop" },
+    { id: "lia-kim", name: "Lia Kim", image: "https://images.unsplash.com/photo-1504609773096-104ff2c73ba4?w=400&h=400&fit=crop" },
+    { id: "bada-lee", name: "Bada Lee", image: "https://images.unsplash.com/photo-1508700929628-666bc8bd84ea?w=400&h=400&fit=crop" },
     { id: "aiki", name: "Aiki", image: "https://images.unsplash.com/photo-1515524738708-327f6b0037a7?w=400&h=400&fit=crop" },
     { id: "noze", name: "Noze", image: "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=400&h=400&fit=crop" },
 ];

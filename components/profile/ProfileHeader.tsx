@@ -1,6 +1,9 @@
-import { CheckCircle2, MapPin, Share2 } from "lucide-react";
+"use client";
+
+import { CheckCircle2, MapPin, Share2, ChevronLeft } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 interface ProfileHeaderProps {
     dancer: {
@@ -16,6 +19,8 @@ interface ProfileHeaderProps {
 }
 
 export default function ProfileHeader({ dancer }: ProfileHeaderProps) {
+    const router = useRouter();
+
     // Tidal Style: Full Bleed Hero with Centered Content
     return (
         <div className="relative w-full mb-8">
@@ -42,6 +47,15 @@ export default function ProfileHeader({ dancer }: ProfileHeaderProps) {
                 <div className="absolute inset-0 bg-black/20" />
 
                 {/* Top Actions */}
+                <div className="absolute top-4 left-4 flex gap-2 z-30 pt-4">
+                    <button
+                        onClick={() => router.back()}
+                        className="p-2.5 bg-black/20 backdrop-blur-md rounded-full text-white hover:bg-white/10 transition border border-white/10"
+                    >
+                        <ChevronLeft className="w-5 h-5" />
+                    </button>
+                </div>
+
                 <div className="absolute top-4 right-4 flex gap-2 z-30 pt-4">
                     <button className="p-2.5 bg-black/20 backdrop-blur-md rounded-full text-white hover:bg-white/10 transition border border-white/10">
                         <Share2 className="w-5 h-5" />
@@ -49,10 +63,10 @@ export default function ProfileHeader({ dancer }: ProfileHeaderProps) {
                 </div>
 
                 {/* Content - Bottom Aligned */}
-                <div className="absolute bottom-0 left-0 right-0 p-6 z-20 flex flex-col items-center text-center pb-8">
+                <div className="absolute bottom-0 left-0 right-0 p-6 z-20 flex flex-col items-center text-center pb-4">
 
                     {/* Title */}
-                    <h1 className="text-4xl font-extrabold text-white flex items-center gap-2 mb-1 tracking-tight drop-shadow-md">
+                    <h1 className="text-4xl font-extrabold text-white flex items-center gap-2 mb-8 tracking-tight drop-shadow-md">
                         {dancer.name}
                         {dancer.isVerified && (
                             <CheckCircle2 className="w-6 h-6 text-blue-400 fill-blue-900/40" />
@@ -60,20 +74,20 @@ export default function ProfileHeader({ dancer }: ProfileHeaderProps) {
                     </h1>
 
                     {/* Subtitle / Role */}
-                    <p className="text-sm font-medium text-white/70 mb-6 uppercase tracking-wider">{dancer.role}</p>
+                    {/* <p className="text-sm font-medium text-white/70 mb-6 uppercase tracking-wider">{dancer.role}</p> */}
 
                     {/* Main Action Buttons (Proprosal / Portfolio) */}
-                    <div className="flex gap-4 w-full justify-center max-w-sm mb-6">
-                        <Link href={`/proposal/${dancer.id}`} className="flex-1 bg-white text-black h-12 rounded-full font-bold text-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
+                    <div className="flex gap-2.5 w-full justify-center max-w-[240px] mb-8">
+                        <Link href={`/proposal/${dancer.id}`} className="flex-1 bg-white text-black h-9 rounded-full font-bold text-[11px] uppercase tracking-wider hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
                             Proposal
                         </Link>
-                        <button className="flex-1 bg-white/10 backdrop-blur-md text-white border border-white/10 h-12 rounded-full font-bold text-sm hover:bg-white/20 transition-colors flex items-center justify-center gap-2">
+                        <button className="flex-1 bg-white/10 backdrop-blur-md text-white border border-white/10 h-9 rounded-full font-bold text-[11px] uppercase tracking-wider hover:bg-white/20 transition-colors flex items-center justify-center gap-2">
                             Portfolio
                         </button>
                     </div>
 
                     {/* Icon Row (Follow, Location, Fans) - Minimal */}
-                    <div className="flex items-center gap-8 text-white/60">
+                    {/* <div className="flex items-center gap-8 text-white/60">
                         <div className="flex flex-col items-center gap-1 cursor-pointer hover:text-white transition-colors">
                             <div className="border border-current rounded-full w-6 h-6 flex items-center justify-center text-lg leading-none pb-0.5">+</div>
                             <span className="text-[10px] font-medium">Follow</span>
@@ -86,7 +100,7 @@ export default function ProfileHeader({ dancer }: ProfileHeaderProps) {
                             <span className="text-sm font-bold text-white">{dancer.stats.followers}</span>
                             <span className="text-[10px] font-medium">Fans</span>
                         </div>
-                    </div>
+                    </div> */}
                 </div>
             </div>
 

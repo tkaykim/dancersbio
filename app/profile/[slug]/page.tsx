@@ -6,21 +6,28 @@ import { notFound } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
 interface PageProps {
-    params: Promise<{ id: string }>;
+    params: Promise<{ slug: string }>;
 }
 
 export const revalidate = 0; // Disable caching to ensure fresh profile data
 
 
 export default async function ProfilePage({ params }: PageProps) {
-    const { id } = await params;
+    const { slug } = await params;
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug);
 
     // Fetch dancer data
-    const { data: dancer, error: dancerError } = await supabase
+    const query = supabase
         .from('dancers')
-        .select('*')
-        .eq('id', id)
-        .single();
+        .select('*');
+
+    if (isUuid) {
+        query.eq('id', slug);
+    } else {
+        query.eq('slug', slug);
+    }
+
+    const { data: dancer, error: dancerError } = await query.single();
 
     if (dancerError || !dancer) {
         return notFound();
@@ -30,7 +37,7 @@ export default async function ProfilePage({ params }: PageProps) {
     const { data: careers, error: careersError } = await supabase
         .from('careers')
         .select('*')
-        .eq('dancer_id', id)
+        .eq('dancer_id', dancer.id)
         .order('date', { ascending: false });
 
     // Transform careers data to match component format

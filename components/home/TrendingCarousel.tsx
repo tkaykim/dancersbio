@@ -7,8 +7,8 @@ import { Star } from "lucide-react";
 // Mock Data with J-Ho
 const TRENDING_DANCERS = [
     { id: "j-ho", name: "J-Ho", role: "Just Jerk Crew", image: "https://images.unsplash.com/photo-1547153760-18fc86324498?w=400&h=400&fit=crop" },
-    { id: "lia", name: "Lia Kim", role: "1MILLION", image: "https://images.unsplash.com/photo-1504609773096-104ff2c73ba4?w=400&h=400&fit=crop" },
-    { id: "bada", name: "Bada Lee", role: "BEBE", image: "https://images.unsplash.com/photo-1508700929628-666bc8bd84ea?w=400&h=400&fit=crop" },
+    { id: "lia-kim", name: "Lia Kim", role: "1MILLION", image: "https://images.unsplash.com/photo-1504609773096-104ff2c73ba4?w=400&h=400&fit=crop" },
+    { id: "bada-lee", name: "Bada Lee", role: "BEBE", image: "https://images.unsplash.com/photo-1508700929628-666bc8bd84ea?w=400&h=400&fit=crop" },
     { id: "aiki", name: "Aiki", role: "Hook", image: "https://images.unsplash.com/photo-1515524738708-327f6b0037a7?w=400&h=400&fit=crop" },
 ];
 

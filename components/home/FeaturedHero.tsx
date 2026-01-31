@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Play } from "lucide-react";
 
 export default function FeaturedHero() {
@@ -8,7 +9,7 @@ export default function FeaturedHero() {
             <h1 className="text-2xl font-bold mb-4 px-2">Home</h1>
 
             {/* Main Featured Card - Tidal 'Headliners' Style */}
-            <div className="w-full aspect-[4/5] sm:aspect-video relative rounded-3xl overflow-hidden bg-[#111] border border-white/10 group cursor-pointer">
+            <Link href="/profile/j-ho" className="block w-full aspect-[4/5] sm:aspect-video relative rounded-3xl overflow-hidden bg-[#111] border border-white/10 group cursor-pointer">
                 {/* Background Pattern/Image */}
                 <div className="absolute inset-0 opacity-40 bg-[url('https://images.unsplash.com/photo-1547153760-18fc86324498?w=800&h=800&fit=crop')] bg-cover bg-center transition-transform duration-700 group-hover:scale-105" />
                 <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/60 to-black/90" />
@@ -37,7 +38,7 @@ export default function FeaturedHero() {
                         View Collection
                     </button>
                 </div>
-            </div>
+            </Link>
         </div>
     );
 }

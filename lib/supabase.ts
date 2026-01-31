@@ -11,6 +11,7 @@ export interface Dancer {
     owner_id: string | null
     manager_id: string | null
     stage_name: string
+    slug?: string
     profile_img: string | null
     bio: string | null
     specialties: string[] | null

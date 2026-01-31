@@ -106,10 +106,10 @@ export default function CareerTimeline({ careers }: CareerTimelineProps) {
                             onClick={() => handleItemClick(item)}
                             className={`bg-neutral-800/50 p-4 rounded-xl border border-white/5 h-full flex flex-col justify-center ${item.video_url ? 'cursor-pointer hover:bg-neutral-800/80 transition-colors' : ''}`}
                         >
-                            <div className="flex justify-end items-start mb-2">
-                                {item.year && <span className="text-[10px] text-primary/60 font-mono px-1.5 py-0.5 bg-primary/10 rounded">{item.year}</span>}
+                            <div className="flex justify-between items-center mb-1 gap-2">
+                                <h4 className="font-medium text-sm text-white line-clamp-1">{item.title}</h4>
+                                {item.year && <span className="text-[10px] text-primary/60 font-mono px-1.5 py-0.5 bg-primary/10 rounded shrink-0">{item.year}</span>}
                             </div>
-                            <h4 className="font-medium text-sm text-white line-clamp-1 mb-1">{item.title}</h4>
                             <div className="flex items-center gap-2 text-xs text-white/40">
                                 {item.description && <span className="line-clamp-1">{item.description}</span>}
                             </div>

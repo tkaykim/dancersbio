@@ -47,7 +47,7 @@ export default function PortraitGrid() {
                 {dancers.map((dancer) => (
                     <Link
                         key={dancer.id}
-                        href={`/profile/${dancer.id}`}
+                        href={`/profile/${dancer.slug || dancer.id}`}
                         className="group relative aspect-[3/4] rounded-xl overflow-hidden bg-neutral-900"
                     >
                         {/* Image Rendering */}
