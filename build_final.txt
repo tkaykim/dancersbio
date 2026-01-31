@@ -1,0 +1,26 @@
+
+> mobile-web@0.1.0 build
+> next build
+
+▲ Next.js 16.1.6 (Turbopack)
+- Environments: .env.local
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 11.0s
+  Running TypeScript ...
+  Collecting page data using 7 workers ...
+  Generating static pages using 7 workers (0/17) ...
+⨯ useSearchParams() should be wrapped in a suspense boundary at page "/auth/confirm". Read more: https://nextjs.org/docs/messages/missing-suspense-with-csr-bailout
+    at Q (C:\Users\그리고\Desktop\dancersbio\.next\server\chunks\ssr\node_modules_next_920e7746._.js:2:2111)
+    at o (C:\Users\그리고\Desktop\dancersbio\.next\server\chunks\ssr\node_modules_next_920e7746._.js:4:5284)
+    at h (C:\Users\그리고\Desktop\dancersbio\.next\server\chunks\ssr\_36ff8abf._.js:1:755)
+    at an (C:\Users\그리고\Desktop\dancersbio\node_modules\next\dist\compiled\next-server\app-page-turbo.runtime.prod.js:2:84360)
+    at ai (C:\Users\그리고\Desktop\dancersbio\node_modules\next\dist\compiled\next-server\app-page-turbo.runtime.prod.js:2:86179)
+    at al (C:\Users\그리고\Desktop\dancersbio\node_modules\next\dist\compiled\next-server\app-page-turbo.runtime.prod.js:2:107953)
+    at as (C:\Users\그리고\Desktop\dancersbio\node_modules\next\dist\compiled\next-server\app-page-turbo.runtime.prod.js:2:105368)
+    at aa (C:\Users\그리고\Desktop\dancersbio\node_modules\next\dist\compiled\next-server\app-page-turbo.runtime.prod.js:2:84712)
+    at ai (C:\Users\그리고\Desktop\dancersbio\node_modules\next\dist\compiled\next-server\app-page-turbo.runtime.prod.js:2:86228)
+    at ai (C:\Users\그리고\Desktop\dancersbio\node_modules\next\dist\compiled\next-server\app-page-turbo.runtime.prod.js:2:104708)
+Error occurred prerendering page "/auth/confirm". Read more: https://nextjs.org/docs/messages/prerender-error
+Export encountered an error on /auth/confirm/page: /auth/confirm, exiting the build.
+⨯ Next.js build worker exited with code: 1 and signal: null

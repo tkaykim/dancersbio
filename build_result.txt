@@ -1,0 +1,24 @@
+
+> mobile-web@0.1.0 build
+> next build
+
+▲ Next.js 16.1.6 (Turbopack)
+- Environments: .env.local
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 11.1s
+  Running TypeScript ...
+Failed to compile.
+
+./app/onboarding/create/page.tsx:296:33
+Type error: Type '{ userId: string; currentPhotoUrl: string; onUploadSuccess: (url: string) => void; }' is not assignable to type 'IntrinsicAttributes & ProfilePhotoUploadProps'.
+  Property 'userId' does not exist on type 'IntrinsicAttributes & ProfilePhotoUploadProps'.
+
+[0m [90m 294 |[39m
+ [90m 295 |[39m                             [33m<[39m[33mProfilePhotoUpload[39m
+[31m[1m>[22m[39m[90m 296 |[39m                                 userId[33m=[39m{user[33m![39m[33m.[39mid}
+ [90m     |[39m                                 [31m[1m^[22m[39m
+ [90m 297 |[39m                                 currentPhotoUrl[33m=[39m{formData[33m.[39mprofile_img}
+ [90m 298 |[39m                                 onUploadSuccess[33m=[39m{(url) [33m=>[39m setFormData({ [33m...[39mformData[33m,[39m profile_img[33m:[39m url })}
+ [90m 299 |[39m                             [33m/[39m[33m>[39m[0m
+Next.js build worker exited with code: 1 and signal: null
