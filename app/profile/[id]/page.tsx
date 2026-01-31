@@ -44,7 +44,8 @@ export default async function ProfilePage({ params }: PageProps) {
             year: new Date(career.date).getFullYear().toString(),
             title: career.title,
             description: career.details?.role || career.details?.achievement || '',
-            image: career.details?.thumbnail || ''
+            image: career.details?.thumbnail || '',
+            video_url: career.details?.link || ''
         });
     });
 

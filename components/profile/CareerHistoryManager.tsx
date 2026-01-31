@@ -375,6 +375,17 @@ export default function CareerHistoryManager({ dancerId }: CareerHistoryManagerP
                     </div>
 
                     <div>
+                        <label className="block text-sm font-medium text-white mb-2">관련 영상 링크 (선택사항)</label>
+                        <input
+                            type="url"
+                            value={formData.link}
+                            onChange={e => setFormData({ ...formData, link: e.target.value })}
+                            className="w-full px-4 py-3 bg-black/50 border border-neutral-800 rounded-xl text-white focus:border-primary focus:outline-none"
+                            placeholder="https://youtube.com/..."
+                        />
+                    </div>
+
+                    <div>
                         <label className="block text-sm font-medium text-white mb-2">상세 설명</label>
                         <textarea
                             value={formData.description}
