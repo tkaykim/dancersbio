@@ -66,6 +66,7 @@ export default async function ProfilePage({ params }: PageProps) {
         isClaimed: !!dancer.owner_id,
         location: dancer.location || 'Seoul',
         stats: { followers: '0', views: '0' },
+        socialLinks: dancer.social_links || null,
         careers: groupedCareers,
         media: Array.isArray(dancer.portfolio) ? dancer.portfolio.map((item: any) => ({
             id: item.id,

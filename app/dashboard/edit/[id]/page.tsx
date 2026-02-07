@@ -6,9 +6,28 @@ import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft, Save, Loader2 } from 'lucide-react'
 import Link from 'next/link'
+import { cn } from '@/lib/utils'
 import ProfilePhotoUpload from '@/components/profile/ProfilePhotoUpload'
 import PortfolioMediaManager from '@/components/portfolio/PortfolioMediaManager'
 import CareerHistoryManager from '@/components/profile/CareerHistoryManager'
+import SocialLinksInput from '@/components/profile/SocialLinksInput'
+import PriorityMultiSelect from '@/components/ui/PriorityMultiSelect'
+import type { SocialLinks } from '@/lib/supabase'
+
+const SPECIALTIES = [
+    { value: 'choreo', label: '안무 (Choreography)' },
+    { value: 'broadcast', label: '방송 (Broadcast)' },
+    { value: 'battle', label: '배틀 (Battle)' },
+    { value: 'workshop', label: '워크샵 (Workshop)' },
+    { value: 'judge', label: '심사 (Judge)' },
+    { value: 'performance', label: '공연 (Performance)' }
+]
+
+const GENRES = [
+    'Hip Hop', 'Popping', 'Locking', 'Waacking', 'Voguing',
+    'House', 'Krump', 'Breaking', 'Heels', 'Contemporary',
+    'Jazz', 'K-Pop'
+]
 
 interface MediaItem {
     id: string
@@ -33,7 +52,11 @@ export default function ProfileEditPage({ params }: PageProps) {
         stage_name: '',
         bio: '',
         location: '',
-        profile_img: ''
+        profile_img: '',
+        gender: '' as '' | 'male' | 'female' | 'other',
+        social_links: {} as SocialLinks,
+        specialties: [] as string[],
+        genres: [] as string[]
     })
     const [portfolioMedia, setPortfolioMedia] = useState<MediaItem[]>([])
 
@@ -69,7 +92,11 @@ export default function ProfileEditPage({ params }: PageProps) {
                 stage_name: data.stage_name || '',
                 bio: data.bio || '',
                 location: data.location || '',
-                profile_img: data.profile_img || ''
+                profile_img: data.profile_img || '',
+                gender: data.gender || '',
+                social_links: data.social_links || {},
+                specialties: data.specialties || [],
+                genres: data.genres || []
             })
             if (data.portfolio && Array.isArray(data.portfolio)) {
                 setPortfolioMedia(data.portfolio)
@@ -100,6 +127,12 @@ export default function ProfileEditPage({ params }: PageProps) {
 
         try {
             // Update dancer profile
+            // Clean social_links: remove empty strings
+            const cleanedSocialLinks: SocialLinks = {}
+            if (formData.social_links.instagram) cleanedSocialLinks.instagram = formData.social_links.instagram
+            if (formData.social_links.twitter) cleanedSocialLinks.twitter = formData.social_links.twitter
+            if (formData.social_links.youtube) cleanedSocialLinks.youtube = formData.social_links.youtube
+
             const { error: dancerError } = await supabase
                 .from('dancers')
                 .update({
@@ -107,7 +140,11 @@ export default function ProfileEditPage({ params }: PageProps) {
                     bio: formData.bio,
                     location: formData.location,
                     profile_img: formData.profile_img,
-                    portfolio: portfolioMedia
+                    gender: formData.gender || null,
+                    portfolio: portfolioMedia,
+                    social_links: Object.keys(cleanedSocialLinks).length > 0 ? cleanedSocialLinks : null,
+                    specialties: formData.specialties.length > 0 ? formData.specialties : null,
+                    genres: formData.genres.length > 0 ? formData.genres : null
                 })
                 .eq('id', id)
 
@@ -208,6 +245,67 @@ export default function ProfileEditPage({ params }: PageProps) {
                             placeholder="예: Seoul"
                         />
                     </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-white/80 mb-2">
+                            성별
+                        </label>
+                        <div className="flex gap-2">
+                            {([
+                                { value: 'male', label: '남성' },
+                                { value: 'female', label: '여성' },
+                                { value: 'other', label: '기타' },
+                            ] as const).map(option => (
+                                <button
+                                    key={option.value}
+                                    type="button"
+                                    onClick={() => setFormData({ ...formData, gender: formData.gender === option.value ? '' : option.value })}
+                                    className={cn(
+                                        'flex-1 py-3 rounded-lg border text-sm font-medium transition-all',
+                                        formData.gender === option.value
+                                            ? 'border-primary bg-primary/10 text-primary'
+                                            : 'border-neutral-800 text-white/60 hover:bg-neutral-900'
+                                    )}
+                                >
+                                    {option.label}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Specialties */}
+                <div className="space-y-4">
+                    <h2 className="text-lg font-bold text-white">전문 분야</h2>
+                    <p className="text-white/40 text-sm">주요 활동 영역을 선택하세요 (선택 순서 = 우선순위)</p>
+                    <PriorityMultiSelect
+                        options={SPECIALTIES}
+                        selected={formData.specialties}
+                        onChange={(specialties) => setFormData({ ...formData, specialties })}
+                        variant="list"
+                    />
+                </div>
+
+                {/* Genres */}
+                <div className="space-y-4">
+                    <h2 className="text-lg font-bold text-white">장르</h2>
+                    <p className="text-white/40 text-sm">주로 하는 장르를 선택하세요 (선택 순서 = 우선순위)</p>
+                    <PriorityMultiSelect
+                        options={GENRES.map(g => ({ value: g, label: g }))}
+                        selected={formData.genres}
+                        onChange={(genres) => setFormData({ ...formData, genres })}
+                        variant="pills"
+                    />
+                </div>
+
+                {/* Social Links */}
+                <div className="space-y-4">
+                    <h2 className="text-lg font-bold text-white">SNS 연결</h2>
+                    <p className="text-white/40 text-sm">소셜 미디어 계정을 연결하면 프로필에 아이콘이 표시됩니다.</p>
+                    <SocialLinksInput
+                        value={formData.social_links}
+                        onChange={(links) => setFormData({ ...formData, social_links: links })}
+                    />
                 </div>
 
                 {/* Portfolio Media */}

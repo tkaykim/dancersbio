@@ -42,6 +42,7 @@ Supabase Auth와 1:1로 매핑되는 최상위 사용자 테이블입니다.
 | **`specialties`** | text[] | Yes | **['choreo', 'broadcast', 'battle']** (주요 활동 영역) |
 | **`genres`** | text[] | Yes | **['HipHop', 'Popping', 'Locking', 'Waacking', 'Voguing']** |
 | `location` | text | Yes | 주 활동 지역 |
+| `social_links` | jsonb | Yes | SNS 링크 `{ instagram?, twitter?, youtube? }` |
 | `portfolio` | jsonb | Yes | 포트폴리오 미디어 (사진/영상) 배열 |
 
 ### 3.3. `clients` (비즈니스 프로필)

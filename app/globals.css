@@ -16,35 +16,17 @@
 }
 
 :root {
-  --background: #ffffff;
-  --foreground: #09090b;
-  /* slate-950 */
+  /* Dark theme as default */
+  --background: #09090b;
+  --foreground: #ededed;
   --primary: #CEFF00;
   /* Tidal Volt Green */
   --primary-foreground: #000000;
-  --muted: #f4f4f5;
-  /* zinc-100 */
-  --muted-foreground: #71717a;
-  /* zinc-500 */
-  --card: #ffffff;
-  --card-foreground: #09090b;
-  --border: #e4e4e7;
-  /* zinc-200 */
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #09090b;
-    --foreground: #ededed;
-    --primary: #CEFF00;
-    /* Tidal Volt Green */
-    --primary-foreground: #000000;
-    --muted: #27272a;
-    --muted-foreground: #a1a1aa;
-    --card: #18181b;
-    --card-foreground: #ededed;
-    --border: #27272a;
-  }
+  --muted: #27272a;
+  --muted-foreground: #a1a1aa;
+  --card: #18181b;
+  --card-foreground: #ededed;
+  --border: #27272a;
 }
 
 body {

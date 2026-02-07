@@ -4,10 +4,13 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
 import { supabase } from '@/lib/supabase'
-import { ArrowLeft, Check, ChevronRight, Loader2, X } from 'lucide-react'
+import { ArrowLeft, ChevronRight, Loader2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import ProfilePhotoUpload from '@/components/profile/ProfilePhotoUpload'
+import SocialLinksInput from '@/components/profile/SocialLinksInput'
+import PriorityMultiSelect from '@/components/ui/PriorityMultiSelect'
+import type { SocialLinks } from '@/lib/supabase'
 
 const SPECIALTIES = [
     { value: 'choreo', label: '안무 (Choreography)' },
@@ -44,8 +47,10 @@ export default function CreateProfilePage() {
         location: '',
         bio: '',
         profile_img: '',
+        gender: '' as '' | 'male' | 'female' | 'other',
         specialties: [] as string[],
-        genres: [] as string[]
+        genres: [] as string[],
+        social_links: {} as SocialLinks
     })
 
     useEffect(() => {
@@ -54,25 +59,15 @@ export default function CreateProfilePage() {
         }
     }, [user, authLoading, router])
 
-    const toggleSpecialty = (value: string) => {
-        setFormData(prev => ({
-            ...prev,
-            specialties: prev.specialties.includes(value)
-                ? prev.specialties.filter(s => s !== value)
-                : [...prev.specialties, value]
-        }))
+    const setSpecialties = (specialties: string[]) => {
+        setFormData(prev => ({ ...prev, specialties }))
     }
 
-    const toggleGenre = (genre: string) => {
-        setFormData(prev => ({
-            ...prev,
-            genres: prev.genres.includes(genre)
-                ? prev.genres.filter(g => g !== genre)
-                : [...prev.genres, genre]
-        }))
+    const setGenres = (genres: string[]) => {
+        setFormData(prev => ({ ...prev, genres }))
     }
 
-    const nextStep = () => setStep(s => Math.min(s + 1, 5))
+    const nextStep = () => setStep(s => Math.min(s + 1, 6))
     const prevStep = () => setStep(s => Math.max(s - 1, 1))
 
     const handleFinish = async () => {
@@ -90,8 +85,10 @@ export default function CreateProfilePage() {
                     location: formData.location || null,
                     bio: formData.bio || null,
                     profile_img: formData.profile_img || null,
+                    gender: formData.gender || null,
                     specialties: formData.specialties.length > 0 ? formData.specialties : null,
-                    genres: formData.genres.length > 0 ? formData.genres : null
+                    genres: formData.genres.length > 0 ? formData.genres : null,
+                    social_links: Object.keys(formData.social_links).some(k => (formData.social_links as any)[k]) ? formData.social_links : null
                 })
                 .select()
                 .single()
@@ -126,7 +123,7 @@ export default function CreateProfilePage() {
                     >
                         <ArrowLeft className="w-5 h-5 text-white" />
                     </button>
-                    <span className="font-bold text-lg text-white">프로필 생성 ({step}/5)</span>
+                    <span className="font-bold text-lg text-white">프로필 생성 ({step}/6)</span>
                 </div>
             </div>
 
@@ -186,6 +183,33 @@ export default function CreateProfilePage() {
                                         onChange={e => setFormData({ ...formData, location: e.target.value })}
                                     />
                                 </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-white/80 mb-2">
+                                        성별
+                                    </label>
+                                    <div className="flex gap-2">
+                                        {([
+                                            { value: 'male', label: '남성' },
+                                            { value: 'female', label: '여성' },
+                                            { value: 'other', label: '기타' },
+                                        ] as const).map(option => (
+                                            <button
+                                                key={option.value}
+                                                type="button"
+                                                onClick={() => setFormData({ ...formData, gender: formData.gender === option.value ? '' : option.value })}
+                                                className={cn(
+                                                    'flex-1 py-3 rounded-lg border text-sm font-medium transition-all',
+                                                    formData.gender === option.value
+                                                        ? 'border-primary bg-primary/10 text-primary'
+                                                        : 'border-neutral-800 text-white/60 hover:bg-neutral-900'
+                                                )}
+                                            >
+                                                {option.label}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
                             </div>
                         </motion.div>
                     )}
@@ -201,28 +225,15 @@ export default function CreateProfilePage() {
                         >
                             <div>
                                 <h2 className="text-2xl font-bold text-white mb-2">전문 분야</h2>
-                                <p className="text-white/60">주요 활동 영역을 선택하세요 (복수 선택 가능)</p>
+                                <p className="text-white/60">주요 활동 영역을 선택하세요 (선택 순서 = 우선순위)</p>
                             </div>
 
-                            <div className="grid grid-cols-1 gap-3">
-                                {SPECIALTIES.map(({ value, label }) => (
-                                    <button
-                                        key={value}
-                                        onClick={() => toggleSpecialty(value)}
-                                        className={cn(
-                                            'flex items-center justify-between p-4 rounded-lg border transition-all',
-                                            formData.specialties.includes(value)
-                                                ? 'border-primary bg-primary/10'
-                                                : 'border-neutral-800 hover:bg-neutral-900'
-                                        )}
-                                    >
-                                        <span className="font-medium text-white">{label}</span>
-                                        {formData.specialties.includes(value) && (
-                                            <Check className="w-5 h-5 text-primary" />
-                                        )}
-                                    </button>
-                                ))}
-                            </div>
+                            <PriorityMultiSelect
+                                options={SPECIALTIES}
+                                selected={formData.specialties}
+                                onChange={setSpecialties}
+                                variant="list"
+                            />
                         </motion.div>
                     )}
 
@@ -237,44 +248,15 @@ export default function CreateProfilePage() {
                         >
                             <div>
                                 <h2 className="text-2xl font-bold text-white mb-2">장르</h2>
-                                <p className="text-white/60">주로 하는 장르를 선택하세요 (복수 선택 가능)</p>
+                                <p className="text-white/60">주로 하는 장르를 선택하세요 (선택 순서 = 우선순위)</p>
                             </div>
 
-                            <div className="flex flex-wrap gap-2">
-                                {GENRES.map(genre => (
-                                    <button
-                                        key={genre}
-                                        onClick={() => toggleGenre(genre)}
-                                        className={cn(
-                                            'px-4 py-2 rounded-full border transition-all',
-                                            formData.genres.includes(genre)
-                                                ? 'border-primary bg-primary text-black font-semibold'
-                                                : 'border-neutral-800 text-white hover:bg-neutral-900'
-                                        )}
-                                    >
-                                        {genre}
-                                    </button>
-                                ))}
-                            </div>
-
-                            {formData.genres.length > 0 && (
-                                <div className="bg-neutral-900 border border-neutral-800 rounded-lg p-4">
-                                    <p className="text-white/60 text-sm mb-2">선택된 장르:</p>
-                                    <div className="flex flex-wrap gap-2">
-                                        {formData.genres.map(genre => (
-                                            <span
-                                                key={genre}
-                                                className="px-3 py-1 bg-primary/20 text-primary rounded-full text-sm flex items-center gap-1"
-                                            >
-                                                {genre}
-                                                <button onClick={() => toggleGenre(genre)}>
-                                                    <X className="w-3 h-3" />
-                                                </button>
-                                            </span>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
+                            <PriorityMultiSelect
+                                options={GENRES.map(g => ({ value: g, label: g }))}
+                                selected={formData.genres}
+                                onChange={setGenres}
+                                variant="pills"
+                            />
                         </motion.div>
                     )}
 
@@ -300,10 +282,31 @@ export default function CreateProfilePage() {
                         </motion.div>
                     )}
 
-                    {/* Step 5: Bio & Review */}
+                    {/* Step 5: SNS Links */}
                     {step === 5 && (
                         <motion.div
                             key="step5"
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -20 }}
+                            className="space-y-6"
+                        >
+                            <div>
+                                <h2 className="text-2xl font-bold text-white mb-2">SNS 연결</h2>
+                                <p className="text-white/60">소셜 미디어 계정을 연결하세요 (선택)</p>
+                            </div>
+
+                            <SocialLinksInput
+                                value={formData.social_links}
+                                onChange={(links) => setFormData({ ...formData, social_links: links })}
+                            />
+                        </motion.div>
+                    )}
+
+                    {/* Step 6: Bio & Review */}
+                    {step === 6 && (
+                        <motion.div
+                            key="step6"
                             initial={{ opacity: 0, x: 20 }}
                             animate={{ opacity: 1, x: 0 }}
                             exit={{ opacity: 0, x: -20 }}
@@ -349,10 +352,11 @@ export default function CreateProfilePage() {
 
                                 {formData.specialties.length > 0 && (
                                     <div>
-                                        <p className="text-white/40 text-xs mb-2">전문 분야</p>
+                                        <p className="text-white/40 text-xs mb-2">전문 분야 (우선순위)</p>
                                         <div className="flex flex-wrap gap-1">
-                                            {formData.specialties.map(s => (
-                                                <span key={s} className="px-2 py-1 bg-neutral-800 text-white/80 text-xs rounded">
+                                            {formData.specialties.map((s, i) => (
+                                                <span key={s} className="px-2 py-1 bg-neutral-800 text-white/80 text-xs rounded flex items-center gap-1">
+                                                    <span className="w-4 h-4 rounded-full bg-primary text-black text-[10px] font-bold flex items-center justify-center flex-shrink-0">{i + 1}</span>
                                                     {SPECIALTIES.find(sp => sp.value === s)?.label}
                                                 </span>
                                             ))}
@@ -362,13 +366,37 @@ export default function CreateProfilePage() {
 
                                 {formData.genres.length > 0 && (
                                     <div>
-                                        <p className="text-white/40 text-xs mb-2">장르</p>
+                                        <p className="text-white/40 text-xs mb-2">장르 (우선순위)</p>
                                         <div className="flex flex-wrap gap-1">
-                                            {formData.genres.map(g => (
-                                                <span key={g} className="px-2 py-1 bg-neutral-800 text-white/80 text-xs rounded">
+                                            {formData.genres.map((g, i) => (
+                                                <span key={g} className="px-2 py-1 bg-neutral-800 text-white/80 text-xs rounded flex items-center gap-1">
+                                                    <span className="w-4 h-4 rounded-full bg-primary text-black text-[10px] font-bold flex items-center justify-center flex-shrink-0">{i + 1}</span>
                                                     {g}
                                                 </span>
                                             ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {(formData.social_links.instagram || formData.social_links.twitter || formData.social_links.youtube) && (
+                                    <div>
+                                        <p className="text-white/40 text-xs mb-2">SNS</p>
+                                        <div className="flex flex-wrap gap-2">
+                                            {formData.social_links.instagram && (
+                                                <span className="px-2 py-1 bg-neutral-800 text-white/80 text-xs rounded flex items-center gap-1">
+                                                    📷 @{formData.social_links.instagram}
+                                                </span>
+                                            )}
+                                            {formData.social_links.twitter && (
+                                                <span className="px-2 py-1 bg-neutral-800 text-white/80 text-xs rounded flex items-center gap-1">
+                                                    𝕏 @{formData.social_links.twitter}
+                                                </span>
+                                            )}
+                                            {formData.social_links.youtube && (
+                                                <span className="px-2 py-1 bg-neutral-800 text-white/80 text-xs rounded flex items-center gap-1">
+                                                    ▶ {formData.social_links.youtube}
+                                                </span>
+                                            )}
                                         </div>
                                     </div>
                                 )}
@@ -392,7 +420,7 @@ export default function CreateProfilePage() {
                         </button>
                     )}
                     <button
-                        onClick={step === 5 ? handleFinish : nextStep}
+                        onClick={step === 6 ? handleFinish : nextStep}
                         disabled={(step === 1 && !formData.stage_name) || loading}
                         className="flex-1 px-6 py-3 rounded-lg font-bold text-black bg-primary hover:bg-primary/90 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
@@ -400,8 +428,8 @@ export default function CreateProfilePage() {
                             <Loader2 className="w-5 h-5 animate-spin" />
                         ) : (
                             <>
-                                {step === 5 ? '프로필 생성 완료' : '다음'}
-                                {step !== 5 && <ChevronRight className="w-5 h-5" />}
+                                {step === 6 ? '프로필 생성 완료' : '다음'}
+                                {step !== 6 && <ChevronRight className="w-5 h-5" />}
                             </>
                         )}
                     </button>

@@ -4,6 +4,8 @@ import { CheckCircle2, MapPin, Share2, ChevronLeft } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { InstagramIcon, XTwitterIcon, YoutubeIcon } from "./SocialLinksInput";
+import type { SocialLinks } from "@/lib/supabase";
 
 interface ProfileHeaderProps {
     dancer: {
@@ -15,11 +17,37 @@ interface ProfileHeaderProps {
         isClaimed: boolean;
         location: string;
         stats: { followers: string; views: string };
+        socialLinks?: SocialLinks | null;
     };
+}
+
+function getSocialUrl(platform: string, value: string): string {
+    // If user already entered a full URL, use it as-is
+    if (value.startsWith("http://") || value.startsWith("https://")) {
+        return value;
+    }
+    // Strip leading @ if present
+    const clean = value.replace(/^@/, "");
+    switch (platform) {
+        case "instagram":
+            return `https://www.instagram.com/${clean}`;
+        case "twitter":
+            return `https://x.com/${clean}`;
+        case "youtube":
+            // If it starts with @, it's a channel handle
+            if (value.startsWith("@")) {
+                return `https://www.youtube.com/${value}`;
+            }
+            return `https://www.youtube.com/${clean}`;
+        default:
+            return value;
+    }
 }
 
 export default function ProfileHeader({ dancer }: ProfileHeaderProps) {
     const router = useRouter();
+    const socialLinks = dancer.socialLinks;
+    const hasSocialLinks = socialLinks && (socialLinks.instagram || socialLinks.twitter || socialLinks.youtube);
 
     // Tidal Style: Full Bleed Hero with Centered Content
     return (
@@ -75,6 +103,45 @@ export default function ProfileHeader({ dancer }: ProfileHeaderProps) {
 
                     {/* Subtitle / Role */}
                     {/* <p className="text-sm font-medium text-white/70 mb-6 uppercase tracking-wider">{dancer.role}</p> */}
+
+                    {/* Social Links */}
+                    {hasSocialLinks && (
+                        <div className="flex items-center gap-3 mb-5">
+                            {socialLinks.instagram && (
+                                <a
+                                    href={getSocialUrl("instagram", socialLinks.instagram)}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="p-2.5 bg-white/10 backdrop-blur-md rounded-full text-white hover:bg-white/20 transition-all hover:scale-110 border border-white/10"
+                                    title={`Instagram: @${socialLinks.instagram}`}
+                                >
+                                    <InstagramIcon className="w-4 h-4" />
+                                </a>
+                            )}
+                            {socialLinks.twitter && (
+                                <a
+                                    href={getSocialUrl("twitter", socialLinks.twitter)}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="p-2.5 bg-white/10 backdrop-blur-md rounded-full text-white hover:bg-white/20 transition-all hover:scale-110 border border-white/10"
+                                    title={`X: @${socialLinks.twitter}`}
+                                >
+                                    <XTwitterIcon className="w-4 h-4" />
+                                </a>
+                            )}
+                            {socialLinks.youtube && (
+                                <a
+                                    href={getSocialUrl("youtube", socialLinks.youtube)}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="p-2.5 bg-white/10 backdrop-blur-md rounded-full text-white hover:bg-white/20 transition-all hover:scale-110 border border-white/10"
+                                    title={`YouTube: ${socialLinks.youtube}`}
+                                >
+                                    <YoutubeIcon className="w-4 h-4" />
+                                </a>
+                            )}
+                        </div>
+                    )}
 
                     {/* Main Action Buttons (Proprosal / Portfolio) */}
                     <div className="flex gap-2.5 w-full justify-center max-w-[240px] mb-8">

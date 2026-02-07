@@ -6,6 +6,12 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
 // Database Types
+export interface SocialLinks {
+    instagram?: string
+    twitter?: string
+    youtube?: string
+}
+
 export interface Dancer {
     id: string
     owner_id: string | null
@@ -17,6 +23,8 @@ export interface Dancer {
     specialties: string[] | null
     genres: string[] | null
     location: string | null
+    social_links: SocialLinks | null
+    gender: 'male' | 'female' | 'other' | null
     is_verified: boolean
     created_at: string
 }
