@@ -370,6 +370,22 @@ export default function InviteDancerPage() {
             {/* Bottom Sheet: Invite Details & Send Button — 내비게이션 바 위에 표시 */}
             {selectedDancerIds.size > 0 && (
                 <div className="fixed bottom-16 left-0 right-0 bg-neutral-900 border-t border-neutral-800 p-4 pb-5 space-y-3 z-50 shadow-[0_-4px_20px_rgba(0,0,0,0.5)]">
+                    {/* 역할 빠른 선택 */}
+                    <div className="flex gap-1.5 flex-wrap">
+                        {['메인 댄서', '백업 댄서', '공동 안무', '게스트', '디렉터'].map(r => (
+                            <button
+                                key={r}
+                                type="button"
+                                onClick={() => setRoleInput(r)}
+                                className={`text-[11px] px-2.5 py-1 rounded-full transition ${roleInput === r
+                                    ? 'bg-primary/20 text-primary border border-primary/30'
+                                    : 'bg-neutral-800 text-white/40 border border-neutral-700 hover:text-white/60'
+                                }`}
+                            >
+                                {r}
+                            </button>
+                        ))}
+                    </div>
                     <div className="flex gap-2">
                         <input
                             type="text"

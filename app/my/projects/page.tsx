@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '@/lib/auth-context'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Loader2, Briefcase, Users, Calendar, ChevronRight, Plus, TrendingUp, TrendingDown } from 'lucide-react'
+import { ArrowLeft, Loader2, Briefcase, Users, Calendar, ChevronRight, Plus, TrendingUp, TrendingDown, ArrowDownRight } from 'lucide-react'
 import Link from 'next/link'
 import { useProjects } from '@/hooks/useProjects'
 import { supabase } from '@/lib/supabase'
@@ -178,38 +178,51 @@ function ProjectCard({ project, userId, myDancerIds }: { project: Project; userI
                     <span className="ml-auto">{getRelativeTime(project.created_at)}</span>
                 </div>
 
-                {/* 오너 전용: 순수익 미니 요약 */}
-                {isOwner && (() => {
-                    const ownerDancerIds = isOwner ? myDancerIds : []
-                    // 오너 본인 제안은 수입이므로 지출에서 제외
-                    const ownerFee = (project.proposals || [])
-                        .find((p: any) => p.status === 'accepted' && ownerDancerIds.includes(p.dancer_id))?.fee || 0
-                    const revenue = project.budget || ownerFee || 0
-                    const expense = (project.proposals || [])
-                        .filter((p: any, i: number, arr: any[]) => {
-                            if (p.status !== 'accepted') return false
-                            if (ownerDancerIds.includes(p.dancer_id)) return false
-                            return arr.findIndex((x: any) => x.dancer_id === p.dancer_id && x.status === 'accepted') === i
-                        })
-                        .reduce((acc: number, p: any) => acc + (p.fee || 0), 0)
-                    const net = revenue - expense
-                    if (revenue === 0 && expense === 0) return null
-                    return (
-                        <div className="flex items-center gap-3 text-[11px] pt-1.5 mt-1 border-t border-neutral-800/40">
-                            {revenue > 0 && (
-                                <span className="text-blue-400/60">매출 {revenue.toLocaleString()}</span>
-                            )}
-                            {expense > 0 && (
-                                <span className="text-red-400/60">지출 {expense.toLocaleString()}</span>
-                            )}
-                            {revenue > 0 && (
-                                <span className={`ml-auto flex items-center gap-0.5 font-semibold ${net >= 0 ? 'text-green-400/70' : 'text-red-400/70'}`}>
-                                    {net >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-                                    순수익 {net.toLocaleString()}
-                                </span>
-                            )}
-                        </div>
-                    )
+                {/* 재무 미니 요약: 오너 / 참여자 관점 분리 */}
+                {(() => {
+                    if (isOwner) {
+                        // 오너 시점: 매출(클라이언트 예산) - 지출(댄서 섭외비) = 순수익
+                        const ownerFee = (project.proposals || [])
+                            .find((p: any) => p.status === 'accepted' && myDancerIds.includes(p.dancer_id))?.fee || 0
+                        const revenue = project.budget || ownerFee || 0
+                        const expense = (project.proposals || [])
+                            .filter((p: any, i: number, arr: any[]) => {
+                                if (p.status !== 'accepted') return false
+                                if (myDancerIds.includes(p.dancer_id)) return false
+                                return arr.findIndex((x: any) => x.dancer_id === p.dancer_id && x.status === 'accepted') === i
+                            })
+                            .reduce((acc: number, p: any) => acc + (p.fee || 0), 0)
+                        const net = revenue - expense
+                        if (revenue === 0 && expense === 0) return null
+                        return (
+                            <div className="flex items-center gap-3 text-[11px] pt-1.5 mt-1 border-t border-neutral-800/40">
+                                {revenue > 0 && (
+                                    <span className="text-blue-400/60">내 매출 {revenue.toLocaleString()}</span>
+                                )}
+                                {expense > 0 && (
+                                    <span className="text-red-400/60">내 지출 {expense.toLocaleString()}</span>
+                                )}
+                                {revenue > 0 && (
+                                    <span className={`ml-auto flex items-center gap-0.5 font-semibold ${net >= 0 ? 'text-green-400/70' : 'text-red-400/70'}`}>
+                                        {net >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                                        순수익 {net.toLocaleString()}
+                                    </span>
+                                )}
+                            </div>
+                        )
+                    } else {
+                        // 참여자 시점: 제안받은 금액 = 내 매출
+                        const myProposal = (project.proposals || [])
+                            .find((p: any) => p.status === 'accepted' && myDancerIds.includes(p.dancer_id))
+                        if (!myProposal?.fee) return null
+                        return (
+                            <div className="flex items-center gap-3 text-[11px] pt-1.5 mt-1 border-t border-neutral-800/40">
+                                <ArrowDownRight className="w-3 h-3 text-blue-400/60" />
+                                <span className="text-blue-400/60 font-medium">내 매출</span>
+                                <span className="ml-auto text-blue-400/80 font-semibold">{myProposal.fee.toLocaleString()}원</span>
+                            </div>
+                        )
+                    }
                 })()}
             </div>
         </Link>

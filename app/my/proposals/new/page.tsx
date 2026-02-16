@@ -56,13 +56,22 @@ export default function NewProposalPage() {
 
             if (projectError) throw projectError
 
+            const CATEGORY_ROLE_MAP: Record<string, string> = {
+                choreo: '안무제작',
+                broadcast: '출연',
+                performance: '공연',
+                workshop: '워크샵 강사',
+                judge: '심사위원',
+            }
+            const ownerRole = CATEGORY_ROLE_MAP[formData.category] || '담당'
+
             const { error: proposalError } = await supabase
                 .from('proposals')
                 .insert({
                     project_id: project.id,
                     dancer_id: dancer.id,
                     sender_id: user!.id,
-                    role: formData.projectTitle,
+                    role: ownerRole,
                     fee: formData.fee ? parseInt(formData.fee) : null,
                     details: formData.message,
                     status: 'pending'

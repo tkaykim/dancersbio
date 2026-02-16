@@ -116,14 +116,51 @@ export default function ProjectDetailPage() {
         }
         updates.status = statusMap[value] || 'recruiting'
         const { error } = await supabase.from('projects').update(updates).eq('id', project.id)
-        if (!error) setProject({ ...project, ...updates })
+        if (!error) {
+            setProject({ ...project, ...updates })
+            if (value === 'completed') {
+                await generateCareerEntries(project)
+            }
+        }
     }
 
     const updateProgress = async (value: ProgressStatus) => {
         if (!project) return
         if (getProjectStatuses(project).confirmation !== 'confirmed') return
         const { error } = await supabase.from('projects').update({ progress_status: value }).eq('id', project.id)
-        if (!error) setProject({ ...project, progress_status: value })
+        if (!error) {
+            setProject({ ...project, progress_status: value })
+            if (value === 'completed') {
+                await generateCareerEntries(project)
+            }
+        }
+    }
+
+    const generateCareerEntries = async (proj: Project) => {
+        const accepted = (proj.proposals || []).filter(p => p.status === 'accepted')
+        if (accepted.length === 0) return
+
+        const year = proj.start_date ? proj.start_date.substring(0, 4) : new Date().getFullYear().toString()
+        const month = proj.start_date ? proj.start_date.substring(5, 7) : ''
+        const careerType = proj.category || 'other'
+
+        const entries = accepted.map(p => ({
+            dancer_id: p.dancer_id,
+            type: careerType,
+            title: proj.title,
+            details: {
+                year,
+                month,
+                role: p.role || '참여',
+                description: proj.description || '',
+                project_id: proj.id,
+            }
+        }))
+
+        const { error } = await supabase.from('careers').insert(entries)
+        if (!error) {
+            alert(`${accepted.length}명의 참여 댄서에게 경력이 자동 등록되었습니다.`)
+        }
     }
 
     const saveNotes = async () => {
@@ -254,38 +291,60 @@ export default function ProjectDetailPage() {
                     </div>
                 </div>
 
-                {/* ───── 참여 댄서(비오너) 시점: 본인 제안 정보 ───── */}
+                {/* ───── 참여 댄서(비오너) 시점: 본인 재무 + 참여 정보 + 수락/거절 ───── */}
                 {!isOwner && myProposal && (
-                    <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 space-y-2">
-                        <div className="flex items-center gap-2 mb-1">
-                            <Eye className="w-4 h-4 text-primary/70" />
-                            <h3 className="text-sm font-bold text-white">나의 참여 정보</h3>
-                        </div>
-                        <div className="space-y-1.5 text-sm">
-                            {myProposal.role && (
-                                <div className="flex justify-between">
-                                    <span className="text-white/40">역할</span>
-                                    <span className="text-white font-medium">{myProposal.role}</span>
+                    <div className="space-y-3">
+                        {/* 내 매출 카드 */}
+                        {myProposal.fee && myProposal.status === 'accepted' && (
+                            <div className="bg-blue-500/5 border border-blue-500/20 rounded-xl p-4">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <ArrowDownRight className="w-4 h-4 text-blue-400" />
+                                        <span className="text-sm font-bold text-white">이 프로젝트 내 매출</span>
+                                    </div>
+                                    <span className="text-lg font-bold text-blue-400">{myProposal.fee.toLocaleString()}원</span>
                                 </div>
-                            )}
-                            {myProposal.fee && (
-                                <div className="flex justify-between">
-                                    <span className="text-white/40">제안 금액</span>
-                                    <span className="text-primary font-bold">{myProposal.fee.toLocaleString()}원</span>
-                                </div>
-                            )}
-                            {myProposal.details && (
-                                <div className="pt-1.5 border-t border-white/5">
-                                    <span className="text-white/40 text-xs">메시지</span>
-                                    <p className="text-white/70 text-sm mt-0.5">{myProposal.details}</p>
-                                </div>
-                            )}
-                            <div className="flex justify-between">
-                                <span className="text-white/40">상태</span>
-                                <span className={`text-xs font-semibold ${myProposal.status === 'accepted' ? 'text-green-400' : myProposal.status === 'declined' ? 'text-red-400' : 'text-yellow-400'}`}>
-                                    {myProposal.status === 'accepted' ? '수락됨' : myProposal.status === 'declined' ? '거절됨' : '대기 중'}
-                                </span>
+                                <p className="text-[11px] text-white/30 mt-1.5">프로젝트 담당자가 나에게 제안한 금액이며, 나의 매출로 잡힙니다.</p>
                             </div>
+                        )}
+
+                        {/* 참여 상세 정보 */}
+                        <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 space-y-2">
+                            <div className="flex items-center gap-2 mb-1">
+                                <Eye className="w-4 h-4 text-primary/70" />
+                                <h3 className="text-sm font-bold text-white">나의 참여 정보</h3>
+                            </div>
+                            <div className="space-y-1.5 text-sm">
+                                {myProposal.role && (
+                                    <div className="flex justify-between">
+                                        <span className="text-white/40">역할</span>
+                                        <span className="text-white font-medium">{myProposal.role}</span>
+                                    </div>
+                                )}
+                                {myProposal.fee && (
+                                    <div className="flex justify-between">
+                                        <span className="text-white/40">제안 금액</span>
+                                        <span className="text-primary font-bold">{myProposal.fee.toLocaleString()}원</span>
+                                    </div>
+                                )}
+                                {myProposal.details && (
+                                    <div className="pt-1.5 border-t border-white/5">
+                                        <span className="text-white/40 text-xs">메시지</span>
+                                        <p className="text-white/70 text-sm mt-0.5">{myProposal.details}</p>
+                                    </div>
+                                )}
+                                <div className="flex justify-between">
+                                    <span className="text-white/40">상태</span>
+                                    <span className={`text-xs font-semibold ${myProposal.status === 'accepted' ? 'text-green-400' : myProposal.status === 'declined' ? 'text-red-400' : 'text-yellow-400'}`}>
+                                        {myProposal.status === 'accepted' ? '수락됨' : myProposal.status === 'declined' ? '거절됨' : '대기 중'}
+                                    </span>
+                                </div>
+                            </div>
+
+                            {/* 수락/거절 버튼 (대기 중인 경우) */}
+                            {(myProposal.status === 'pending' || myProposal.status === 'negotiating') && (
+                                <ParticipantActions proposalId={myProposal.id} projectId={project.id} onUpdate={fetchProject} />
+                            )}
                         </div>
                     </div>
                 )}
@@ -387,7 +446,7 @@ export default function ProjectDetailPage() {
                     ) : (
                         <div className="space-y-2">
                             {acceptedProposals.map(p => (
-                                <DancerRow key={p.id} proposal={p} showFee={isOwner} />
+                                <DancerRow key={p.id} proposal={p} showFee={isOwner} feeLabel="지출" />
                             ))}
                         </div>
                     )}
@@ -403,7 +462,7 @@ export default function ProjectDetailPage() {
                             </h2>
                             <div className="space-y-2">
                                 {pendingProposals.map(p => (
-                                    <DancerRow key={p.id} proposal={p} showFee={true} />
+                                    <DancerRow key={p.id} proposal={p} showFee={true} feeLabel="지출" />
                                 ))}
                             </div>
                         </section>
@@ -419,7 +478,7 @@ export default function ProjectDetailPage() {
                             </h2>
                             <div className="space-y-2 opacity-50">
                                 {declinedProposals.map(p => (
-                                    <DancerRow key={p.id} proposal={p} showFee={true} />
+                                    <DancerRow key={p.id} proposal={p} showFee={true} feeLabel="지출" />
                                 ))}
                             </div>
                         </section>
@@ -514,7 +573,7 @@ function ProjectFinanceSummary({
             {/* 헤더 */}
             <div className="px-4 pt-4 pb-2 flex items-center gap-2">
                 <CircleDollarSign className="w-4 h-4 text-primary/60" />
-                <h3 className="text-sm font-bold text-white">프로젝트 재무</h3>
+                <h3 className="text-sm font-bold text-white">내 재무 요약</h3>
             </div>
 
             {/* 매출 / 지출 / 순수익 그리드 */}
@@ -522,20 +581,26 @@ function ProjectFinanceSummary({
                 <div className="bg-neutral-900 p-3 text-center">
                     <div className="flex items-center justify-center gap-1 mb-1">
                         <ArrowDownRight className="w-3 h-3 text-blue-400" />
-                        <span className="text-[10px] text-white/35 font-medium">매출</span>
+                        <span className="text-[10px] text-white/35 font-medium">내 매출</span>
                     </div>
                     <p className={`text-sm font-bold ${hasRevenue ? 'text-blue-400' : 'text-white/20'}`}>
                         {hasRevenue ? `${revenue.toLocaleString()}` : '미설정'}
                     </p>
+                    {hasRevenue && (
+                        <p className="text-[9px] text-white/20 mt-0.5">클라이언트 지급</p>
+                    )}
                 </div>
                 <div className="bg-neutral-900 p-3 text-center">
                     <div className="flex items-center justify-center gap-1 mb-1">
                         <ArrowUpRight className="w-3 h-3 text-red-400" />
-                        <span className="text-[10px] text-white/35 font-medium">확정 지출</span>
+                        <span className="text-[10px] text-white/35 font-medium">내 지출</span>
                     </div>
                     <p className={`text-sm font-bold ${confirmedExpense > 0 ? 'text-red-400' : 'text-white/20'}`}>
                         {confirmedExpense > 0 ? `${confirmedExpense.toLocaleString()}` : '0'}
                     </p>
+                    {confirmedExpense > 0 && (
+                        <p className="text-[9px] text-white/20 mt-0.5">댄서 섭외비</p>
+                    )}
                 </div>
                 <div className="bg-neutral-900 p-3 text-center">
                     <div className="flex items-center justify-center gap-1 mb-1">
@@ -607,10 +672,56 @@ function ProjectFinanceSummary({
     )
 }
 
-function DancerRow({ proposal, showFee }: { proposal: any; showFee: boolean }) {
+function ParticipantActions({ proposalId, projectId, onUpdate }: { proposalId: string; projectId: string; onUpdate: () => void }) {
+    const [acting, setActing] = useState(false)
+
+    const handleAction = async (action: 'accepted' | 'declined') => {
+        if (acting) return
+        const msg = action === 'accepted' ? '이 제안을 수락하시겠습니까?' : '이 제안을 거절하시겠습니까?'
+        if (!confirm(msg)) return
+
+        setActing(true)
+        try {
+            const { error } = await supabase
+                .from('proposals')
+                .update({ status: action })
+                .eq('id', proposalId)
+
+            if (error) throw error
+            onUpdate()
+        } catch {
+            alert('처리 중 오류가 발생했습니다.')
+        } finally {
+            setActing(false)
+        }
+    }
+
+    return (
+        <div className="flex gap-2 pt-2 mt-1 border-t border-white/5">
+            <button
+                onClick={() => handleAction('declined')}
+                disabled={acting}
+                className="flex-1 py-2.5 text-sm font-semibold text-red-400 bg-red-500/10 rounded-lg hover:bg-red-500/20 transition disabled:opacity-50"
+            >
+                거절
+            </button>
+            <button
+                onClick={() => handleAction('accepted')}
+                disabled={acting}
+                className="flex-1 py-2.5 text-sm font-bold text-black bg-primary rounded-lg hover:bg-primary/90 transition disabled:opacity-50 flex items-center justify-center gap-1"
+            >
+                {acting ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
+                수락
+            </button>
+        </div>
+    )
+}
+
+function DancerRow({ proposal, showFee, feeLabel }: { proposal: any; showFee: boolean; feeLabel?: '지출' | '매출' }) {
     const dancer = proposal.dancers
     const statusInfo = PROPOSAL_STATUS_ICON[proposal.status] || PROPOSAL_STATUS_ICON.pending
     const StatusIcon = statusInfo.icon
+    const feeColor = feeLabel === '매출' ? 'text-blue-400/70' : 'text-red-400/70'
 
     return (
         <Link href={`/profile/${dancer.id}`} className="block">
@@ -634,7 +745,7 @@ function DancerRow({ proposal, showFee }: { proposal: any; showFee: boolean }) {
                     <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/5 text-white/40 flex-shrink-0">{proposal.role}</span>
                 )}
                 {showFee && proposal.fee && (
-                    <span className="text-xs text-primary/70 flex-shrink-0">{proposal.fee.toLocaleString()}원</span>
+                    <span className={`text-xs flex-shrink-0 ${feeColor}`}>{proposal.fee.toLocaleString()}원</span>
                 )}
                 <StatusIcon className={`w-4 h-4 flex-shrink-0 ${statusInfo.color}`} />
             </div>

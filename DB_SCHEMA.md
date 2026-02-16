@@ -100,6 +100,8 @@ Supabase Auth와 1:1로 매핑되는 최상위 사용자 테이블입니다.
 
 ### 3.5. `proposals` (제안서)
 특정 프로젝트(Project)에 댄서(Dancer)를 초대하는 연결 테이블입니다.
+*   프로젝트 오너가 댄서를 초대하면, 해당 댄서의 `dancer_id`와 함께 `role`(역할), `fee`(금액)이 기록됩니다.
+*   제안 금액은 **발신자에게는 지출, 수신 댄서에게는 매출**로 해석됩니다.
 
 | Column | Type | Nullable | Description |
 | :--- | :--- | :--- | :--- |
@@ -107,11 +109,25 @@ Supabase Auth와 1:1로 매핑되는 최상위 사용자 테이블입니다.
 | `project_id` | uuid | No | FK `projects` |
 | `dancer_id` | uuid | No | FK `dancers` (수신자) |
 | `sender_id` | uuid | No | FK `users` (발신자 - 추적용) |
-| `fee` | int | Yes | 제안 금액 |
-| **`status`** | text | No | 'pending', 'accepted', 'declined' |
+| `fee` | int | Yes | 제안 금액 (발신자 지출 / 수신자 매출) |
+| `role` | text | Yes | 역할 (예: '안무제작', '메인 댄서', '백업 댄서' 등) |
+| `details` | text | Yes | 제안 메시지/설명 |
+| **`status`** | text | No | `'pending'` \| `'accepted'` \| `'declined'` \| `'negotiating'` |
+| `negotiation_history` | jsonb | Yes | 협상/메시지 이력 배열 |
+| `sender_last_read_at` | timestamptz | Yes | 발신자 마지막 읽은 시각 |
+| `receiver_last_read_at` | timestamptz | Yes | 수신자 마지막 읽은 시각 |
+| `created_at` | timestamptz | No | 생성일 (default: `now()`) |
+
+**역할(role) 가이드:**
+*   프로젝트 오너 본인(안무가): `'안무제작'`, `'출연'`, `'공연'`, `'워크샵 강사'`, `'심사위원'` 등 (카테고리 기반 자동 할당)
+*   초대된 댄서: `'메인 댄서'`, `'백업 댄서'`, `'공동 안무'`, `'게스트'`, `'디렉터'` 등 (자유 입력 + 빠른 선택)
+
+**경력 연결:**
+*   프로젝트 완료 시(`progress_status = 'completed'`), 참여 확정된(`status = 'accepted'`) 모든 댄서의 `careers` 테이블에 자동으로 경력 항목이 생성됩니다.
 
 ### 3.6. `careers` (포트폴리오)
 JSONB를 활용하여 다양한 활동 유형을 유연하게 저장합니다.
+프로젝트 완료 시 자동 생성된 경력은 `details.project_id`로 원본 프로젝트를 추적합니다.
 
 | Column | Type | Nullable | Description |
 | :--- | :--- | :--- | :--- |
