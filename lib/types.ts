@@ -5,7 +5,7 @@ export interface Proposal {
     sender_id: string
     role: string
     fee: number | null
-    status: 'pending' | 'accepted' | 'declined' | 'negotiating'
+    status: 'pending' | 'accepted' | 'declined' | 'negotiating' | 'cancelled'
     sender_last_read_at: string | null
     receiver_last_read_at: string | null
     negotiation_history: NegotiationHistoryItem[] | null
@@ -59,6 +59,7 @@ export type ProjectVisibility = 'private' | 'public'
 export interface Project {
     id: string
     owner_id: string
+    parent_project_id: string | null
     client_profile_id: string | null
     pm_dancer_id: string | null
     contract_amount: number | null
@@ -77,6 +78,8 @@ export interface Project {
     due_date: string | null
     notes: string | null
     created_at: string
+    deleted_at: string | null
+    archived_at: string | null
     clients?: {
         company_name: string | null
         contact_person: string | null

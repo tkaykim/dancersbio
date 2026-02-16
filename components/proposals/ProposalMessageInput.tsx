@@ -27,7 +27,7 @@ export default function ProposalMessageInput({ status, onSendMessage }: Proposal
         }
     }
 
-    const isClosed = status === 'accepted' || status === 'declined'
+    const isClosed = status === 'accepted' || status === 'declined' || status === 'cancelled'
 
     return (
         <div className="flex-shrink-0 bg-neutral-900 border-t border-neutral-800 p-3">

@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from 'react'
 import { XCircle, Ban, Loader2 } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { supabase } from '@/lib/supabase'
+import { ensurePmCareer } from '@/lib/ensure-pm-career'
+import { syncProjectStatusIfNoActiveProposals } from '@/lib/sync-project-status-on-proposal'
 import ProposalChat from './ProposalChat'
 import ProposalMessageInput from './ProposalMessageInput'
 import type { Proposal, ProposalTab } from '@/lib/types'
@@ -38,6 +40,7 @@ export default function ProposalDetailModal({ proposal, activeTab, onClose, onUp
             .eq('id', proposal.id)
         
         if (!error) {
+            await syncProjectStatusIfNoActiveProposals(supabase, proposal.project_id, 'cancelled')
             alert('제안이 취소되었습니다.')
             onRefresh()
             onClose()
@@ -92,6 +95,10 @@ export default function ProposalDetailModal({ proposal, activeTab, onClose, onUp
                             .update(projectUpdates)
                             .eq('id', proposal.project_id)
                     }
+                    // PM 경력 자동 생성 (엠바고/공개 시점에만 프로필에 노출)
+                    if (projectUpdates.pm_dancer_id) {
+                        await ensurePmCareer(supabase, proj, proposal.dancer_id)
+                    }
                 }
             } catch { /* non-critical */ }
         } else if (type === 'offer') {
@@ -123,6 +130,9 @@ export default function ProposalDetailModal({ proposal, activeTab, onClose, onUp
             .eq('id', proposal.id)
 
         if (!error) {
+            if (type === 'decline') {
+                await syncProjectStatusIfNoActiveProposals(supabase, proposal.project_id, 'declined')
+            }
             onRefresh()
         } else {
             alert('메시지 전송 실패')

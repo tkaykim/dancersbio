@@ -31,6 +31,7 @@ export default function InviteDancerPage() {
 
     const [projectTitle, setProjectTitle] = useState('')
     const [existingDancerIds, setExistingDancerIds] = useState<Set<string>>(new Set())
+    const [sourceProject, setSourceProject] = useState<Record<string, unknown> | null>(null)
 
     const [searchQuery, setSearchQuery] = useState('')
     const [genderFilter, setGenderFilter] = useState<string | null>(null)
@@ -49,21 +50,42 @@ export default function InviteDancerPage() {
 
     const [activeTab, setActiveTab] = useState<'frequent' | 'search'>('frequent')
 
+    const [isBriefProject, setIsBriefProject] = useState(false)
+    const [clientCannotInvite, setClientCannotInvite] = useState(false)
+
     const fetchData = useCallback(async () => {
         if (!user || !projectId) return
         setLoading(true)
+        setClientCannotInvite(false)
         try {
-            // Fetch project info & existing proposals
+            // Fetch project info: parent_project_id, pm_dancer_id로 브리프 여부·초대 권한 판단
             const { data: project } = await supabase
                 .from('projects')
-                .select('title, proposals (dancer_id)')
+                .select('id, title, parent_project_id, owner_id, pm_dancer_id, client_profile_id, category, visibility, embargo_date, description, due_date, start_date, end_date, confirmation_status, progress_status, proposals (dancer_id)')
                 .eq('id', projectId)
                 .single()
 
             if (project) {
                 setProjectTitle(project.title)
-                const ids = new Set((project.proposals as any[])?.map((p: any) => p.dancer_id) || [])
-                setExistingDancerIds(ids)
+                let existingIds = new Set((project.proposals as any[])?.map((p: any) => p.dancer_id) || [])
+                // 브리프인 경우: 자식 프로젝트에 이미 제안된 댄서도 제외
+                if (project.parent_project_id == null) {
+                    const { data: childProjects } = await supabase.from('projects').select('id').eq('parent_project_id', projectId)
+                    if (childProjects?.length) {
+                        const { data: childProposals } = await supabase.from('proposals').select('dancer_id').in('project_id', childProjects.map(c => c.id))
+                        childProposals?.forEach((p: { dancer_id: string }) => existingIds.add(p.dancer_id))
+                    }
+                }
+                setExistingDancerIds(existingIds)
+                const brief = project.parent_project_id == null
+                setIsBriefProject(brief)
+                setSourceProject(project as Record<string, unknown>)
+                // 파생 프로젝트이고 PM이 있는 경우: 오너(클라이언트)는 섭외 불가
+                if (!brief && project.pm_dancer_id && project.owner_id === user.id) {
+                    const { data: myDancers } = await supabase.from('dancers').select('id').or(`owner_id.eq.${user.id},manager_id.eq.${user.id}`)
+                    const myDancerIds = (myDancers || []).map((d: { id: string }) => d.id)
+                    if (!myDancerIds.includes(project.pm_dancer_id)) setClientCannotInvite(true)
+                }
             }
 
             // Fetch all verified dancers
@@ -155,20 +177,62 @@ export default function InviteDancerPage() {
         if (selectedDancerIds.size === 0 || !user) return
         setSending(true)
         try {
-            const proposals = Array.from(selectedDancerIds).map(dancerId => ({
-                project_id: projectId,
-                dancer_id: dancerId,
-                sender_id: user.id,
-                fee: feeInput ? parseInt(feeInput) : null,
-                role: roleInput || null,
-                details: messageInput || null,
-                status: 'pending',
-            }))
+            const fee = feeInput ? parseInt(feeInput) : null
+            const role = roleInput || null
+            const details = messageInput || null
 
-            const { error } = await supabase.from('proposals').insert(proposals)
-            if (error) throw error
-
-            alert(`${selectedDancerIds.size}명의 댄서에게 제안을 보냈습니다!`)
+            // 브리프(원본) 프로젝트에 여러 명에게 제안 시: 수신자별로 프로젝트 복제 후 각각 1건 제안. 제안 수신자 = 해당 프로젝트 PM(최초 제안 시점에 지정, 1프로젝트 1PM)
+            if (isBriefProject && sourceProject) {
+                for (const dancerId of selectedDancerIds) {
+                    const { data: cloned, error: cloneErr } = await supabase
+                        .from('projects')
+                        .insert({
+                            owner_id: sourceProject.owner_id,
+                            client_profile_id: sourceProject.client_profile_id ?? null,
+                            parent_project_id: projectId,
+                            title: sourceProject.title,
+                            category: sourceProject.category ?? null,
+                            visibility: sourceProject.visibility ?? 'private',
+                            embargo_date: sourceProject.embargo_date ?? null,
+                            description: sourceProject.description ?? null,
+                            due_date: sourceProject.due_date ?? null,
+                            start_date: sourceProject.start_date ?? null,
+                            end_date: sourceProject.end_date ?? null,
+                            confirmation_status: 'negotiating',
+                            progress_status: 'idle',
+                            contract_amount: fee,
+                            pm_dancer_id: dancerId,
+                        })
+                        .select('id')
+                        .single()
+                    if (cloneErr) throw cloneErr
+                    const { error: propErr } = await supabase.from('proposals').insert({
+                        project_id: cloned.id,
+                        dancer_id: dancerId,
+                        sender_id: user.id,
+                        fee,
+                        role,
+                        details,
+                        status: 'pending',
+                    })
+                    if (propErr) throw propErr
+                }
+                alert(`${selectedDancerIds.size}명의 안무가에게 각각 별도 프로젝트로 제안을 보냈습니다. 각 프로젝트의 PM은 제안을 받은 댄서로 자동 지정됩니다.`)
+            } else {
+                // 이미 파생 프로젝트이거나 PM이 초대하는 경우: 동일 프로젝트에 여러 제안
+                const proposals = Array.from(selectedDancerIds).map(dancerId => ({
+                    project_id: projectId,
+                    dancer_id: dancerId,
+                    sender_id: user.id,
+                    fee,
+                    role,
+                    details,
+                    status: 'pending',
+                }))
+                const { error } = await supabase.from('proposals').insert(proposals)
+                if (error) throw error
+                alert(`${selectedDancerIds.size}명의 댄서에게 제안을 보냈습니다!`)
+            }
             router.push(`/my/projects/${projectId}`)
         } catch (err: any) {
             alert('오류: ' + err.message)
@@ -181,6 +245,26 @@ export default function InviteDancerPage() {
         return (
             <div className="min-h-screen flex items-center justify-center bg-background">
                 <Loader2 className="w-8 h-8 text-primary animate-spin" />
+            </div>
+        )
+    }
+
+    if (clientCannotInvite) {
+        return (
+            <div className="min-h-screen bg-background p-6 pb-20">
+                <div className="flex items-center gap-4 mb-6">
+                    <Link href={`/my/projects/${projectId}`} className="text-white/70 hover:text-white">
+                        <ArrowLeft className="w-6 h-6" />
+                    </Link>
+                    <h1 className="text-lg font-bold text-white">댄서 초대</h1>
+                </div>
+                <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 text-center">
+                    <p className="text-sm text-amber-200/90 font-medium mb-1">댄서 섭외는 PM만 가능합니다</p>
+                    <p className="text-xs text-white/50">이 프로젝트의 세부 섭외·예산은 PM만 확인하고 관리할 수 있습니다.</p>
+                    <Link href={`/my/projects/${projectId}`} className="inline-block mt-4 text-xs font-semibold text-primary hover:underline">
+                        프로젝트로 돌아가기
+                    </Link>
+                </div>
             </div>
         )
     }

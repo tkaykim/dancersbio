@@ -8,13 +8,21 @@ import type { Project } from '@/lib/types'
 export function useProjects() {
     const { user } = useAuth()
     const [projects, setProjects] = useState<Project[]>([])
+    const [archivedProjectIds, setArchivedProjectIds] = useState<Set<string>>(new Set())
     const [loading, setLoading] = useState(true)
 
     const fetchProjects = useCallback(async () => {
         if (!user) return
         setLoading(true)
         try {
-            // 1. Projects I own
+            // 0. 내가 보관한 프로젝트 ID (개인별 보관)
+            const { data: archived } = await supabase
+                .from('user_project_archives')
+                .select('project_id')
+                .eq('user_id', user.id)
+            setArchivedProjectIds(new Set((archived || []).map((r: { project_id: string }) => r.project_id)))
+
+            // 1. Projects I own (삭제된 것 제외)
             const { data: owned } = await supabase
                 .from('projects')
                 .select(`
@@ -24,6 +32,7 @@ export function useProjects() {
                     proposals (id, dancer_id, sender_id, fee, status, role, created_at, dancers (id, stage_name, profile_img, genres))
                 `)
                 .eq('owner_id', user.id)
+                .is('deleted_at', null)
                 .order('created_at', { ascending: false })
 
             // 2. Projects where I have an accepted proposal (as a dancer)
@@ -56,6 +65,7 @@ export function useProjects() {
                                 proposals (id, dancer_id, sender_id, fee, status, role, created_at, dancers (id, stage_name, profile_img, genres))
                             `)
                             .in('id', uniqueIds)
+                            .is('deleted_at', null)
                             .order('created_at', { ascending: false })
 
                         participatingProjects = (participated as any) || []
@@ -76,5 +86,5 @@ export function useProjects() {
         if (user) fetchProjects()
     }, [user, fetchProjects])
 
-    return { projects, loading, refetch: fetchProjects }
+    return { projects, archivedProjectIds, loading, refetch: fetchProjects }
 }

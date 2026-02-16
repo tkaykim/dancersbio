@@ -1,9 +1,9 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { useAuth } from '@/lib/auth-context'
-import { useRouter } from 'next/navigation'
-import { ArrowLeft, Loader2, Briefcase, Users, Calendar, ChevronRight, Plus, EyeOff } from 'lucide-react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { ArrowLeft, Loader2, Briefcase, Users, Calendar, ChevronRight, Plus, EyeOff, Archive } from 'lucide-react'
 import Link from 'next/link'
 import { useProjects } from '@/hooks/useProjects'
 import { supabase } from '@/lib/supabase'
@@ -37,10 +37,12 @@ function isActiveProject(p: Project): boolean {
     return true
 }
 
-export default function ProjectsPage() {
+function ProjectsPageInner() {
     const { user, loading: authLoading } = useAuth()
     const router = useRouter()
-    const { projects, loading } = useProjects()
+    const searchParams = useSearchParams()
+    const viewArchived = searchParams.get('view') === 'archived'
+    const { projects, archivedProjectIds, loading } = useProjects()
     const [myDancerIds, setMyDancerIds] = useState<string[]>([])
 
     useEffect(() => {
@@ -53,6 +55,11 @@ export default function ProjectsPage() {
             .then(({ data }) => setMyDancerIds((data || []).map((d: { id: string }) => d.id)))
     }, [user])
 
+    const notArchived = projects.filter((p: Project) => !archivedProjectIds.has(p.id))
+    const archivedProjects = projects.filter((p: Project) => archivedProjectIds.has(p.id))
+    const activeProjects = notArchived.filter(isActiveProject)
+    const pastProjects = notArchived.filter(p => !isActiveProject(p))
+
     if (authLoading || loading) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-background">
@@ -61,8 +68,40 @@ export default function ProjectsPage() {
         )
     }
 
-    const activeProjects = projects.filter(isActiveProject)
-    const pastProjects = projects.filter(p => !isActiveProject(p))
+    if (viewArchived) {
+        return (
+            <div className="min-h-screen bg-background pb-20">
+                <div className="sticky top-0 bg-background border-b border-neutral-800 z-10">
+                    <div className="px-6 py-4 flex items-center gap-4">
+                        <Link href="/my/projects"><ArrowLeft className="w-6 h-6 text-white" /></Link>
+                        <h1 className="text-xl font-bold text-white">보관함</h1>
+                    </div>
+                </div>
+                <div className="p-4 space-y-4">
+                    <p className="text-xs text-white/40 px-1">보관한 프로젝트는 여기에서만 보입니다. 프로젝트 상세에서 보관 해제할 수 있습니다.</p>
+                    {archivedProjects.length === 0 ? (
+                        <div className="text-center py-16">
+                            <Archive className="w-12 h-12 text-white/10 mx-auto mb-3" />
+                            <p className="text-white/40 text-sm">보관한 프로젝트가 없습니다</p>
+                            <Link href="/my/projects" className="text-primary text-xs mt-2 inline-block hover:underline">프로젝트 목록으로</Link>
+                        </div>
+                    ) : (
+                        <section className="space-y-3">
+                            {archivedProjects.map(project => (
+                                <ProjectCard
+                                    key={project.id}
+                                    project={project}
+                                    userId={user!.id}
+                                    myDancerIds={myDancerIds}
+                                    isArchived
+                                />
+                            ))}
+                        </section>
+                    )}
+                </div>
+            </div>
+        )
+    }
 
     return (
         <div className="min-h-screen bg-background pb-20">
@@ -115,12 +154,39 @@ export default function ProjectsPage() {
                         ))}
                     </section>
                 )}
+
+                {archivedProjects.length > 0 && (
+                    <section className="space-y-3 pt-2 border-t border-neutral-800/50">
+                        <Link
+                            href="/my/projects?view=archived"
+                            className="flex items-center justify-between px-3 py-2.5 rounded-xl bg-neutral-900/50 border border-neutral-800 text-white/60 hover:text-white hover:bg-neutral-800/50 transition"
+                        >
+                            <span className="flex items-center gap-2 text-sm font-medium">
+                                <Archive className="w-4 h-4" />
+                                보관함
+                            </span>
+                            <span className="text-xs text-white/40">{archivedProjects.length}개</span>
+                        </Link>
+                    </section>
+                )}
             </div>
         </div>
     )
 }
 
-function ProjectCard({ project, userId, myDancerIds }: { project: Project; userId: string; myDancerIds: string[] }) {
+export default function ProjectsPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center bg-background">
+                <Loader2 className="w-8 h-8 text-primary animate-spin" />
+            </div>
+        }>
+            <ProjectsPageInner />
+        </Suspense>
+    )
+}
+
+function ProjectCard({ project, userId, myDancerIds, isArchived }: { project: Project; userId: string; myDancerIds: string[]; isArchived?: boolean }) {
     const { confirmation, progress } = getProjectStatuses(project)
     const confirmLabel = CONFIRMATION_LABELS[confirmation] || CONFIRMATION_LABELS.negotiating
     const progressLabel = PROGRESS_LABELS[progress] || PROGRESS_LABELS.idle
@@ -138,6 +204,7 @@ function ProjectCard({ project, userId, myDancerIds }: { project: Project; userI
     }
     const acceptedCount = Array.from(uniqueDancerMap.values()).filter(s => s === 'accepted').length
     const totalCount = uniqueDancerMap.size
+    const isClientOnly = isOwner && !isPm
 
     const myProposal = proposals.find((p: any) => myDancerIds.includes(p.dancer_id) && activeStatuses.includes(p.status))
     const pmRevenue = proposals.filter((p: any) => p.dancer_id === project.pm_dancer_id && activeStatuses.includes(p.status)).reduce((a: number, p: any) => a + (p.fee || 0), 0)
@@ -165,6 +232,12 @@ function ProjectCard({ project, userId, myDancerIds }: { project: Project; userI
                             {isOwner && (
                                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">내 프로젝트</span>
                             )}
+                            {isOwner && project.parent_project_id == null && (
+                                <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 font-medium">브리프</span>
+                            )}
+                            {isOwner && project.parent_project_id != null && (
+                                <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/5 text-white/40 font-medium">파생</span>
+                            )}
                             {isPm && (
                                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-400 font-medium">PM</span>
                             )}
@@ -182,6 +255,11 @@ function ProjectCard({ project, userId, myDancerIds }: { project: Project; userI
                                     {isEmbargoActive(project.embargo_date) && <span className="text-[8px] text-red-400 ml-0.5">(엠바고)</span>}
                                 </span>
                             )}
+                            {isArchived && (
+                                <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-white/50 font-medium flex items-center gap-0.5">
+                                    <Archive className="w-2.5 h-2.5" /> 보관됨
+                                </span>
+                            )}
                         </div>
                         <h3 className="text-white font-bold text-sm truncate">{project.title}</h3>
                         {project.clients?.company_name && (
@@ -194,7 +272,7 @@ function ProjectCard({ project, userId, myDancerIds }: { project: Project; userI
                 <div className="flex items-center gap-4 text-[11px] text-white/30">
                     <div className="flex items-center gap-1">
                         <Users className="w-3 h-3" />
-                        <span>참여 {acceptedCount}/{totalCount}명</span>
+                        <span>{isClientOnly ? `참여 확정 ${acceptedCount}명` : `참여 ${acceptedCount}/${totalCount}명`}</span>
                     </div>
                     {project.start_date && (
                         <div className="flex items-center gap-1">

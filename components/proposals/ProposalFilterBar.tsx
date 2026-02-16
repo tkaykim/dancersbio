@@ -17,6 +17,7 @@ export function getProposalDisplayStatus(proposal: Proposal): string {
 
     if (confirmation === 'cancelled') return 'cancelled'
     if (confirmation === 'completed') return 'completed'
+    if (proposal.status === 'cancelled') return 'cancelled'
     if (proposal.status === 'declined') return 'declined'
     if (proposal.status === 'accepted') return 'confirmed'
     return 'negotiating' // pending, negotiating

@@ -7,13 +7,16 @@ import { supabase } from '@/lib/supabase'
 import {
     ArrowLeft, Loader2, Users, Calendar, Edit3, Plus,
     CheckCircle, Clock, XCircle, User as UserIcon, Save, Handshake, Play,
-    Eye, EyeOff, ChevronDown, ChevronUp, ShieldAlert, Target, Ban,
+    Eye, EyeOff, ChevronDown, ChevronUp, ChevronRight, ShieldAlert, Target, Ban,
+    Archive, ArchiveRestore,
 } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { getRelativeTime, getProjectStatuses, isEmbargoActive, formatEmbargoDate, getKSTDateString, isProjectPublic } from '@/lib/utils'
 import type { Project, ConfirmationStatus, ProgressStatus } from '@/lib/types'
 import TaskManager from '@/components/projects/TaskManager'
+import { ensurePmCareer } from '@/lib/ensure-pm-career'
+import { syncProjectStatusIfNoActiveProposals } from '@/lib/sync-project-status-on-proposal'
 
 const CONFIRMATION_OPTIONS: { value: ConfirmationStatus; label: string; color: string }[] = [
     { value: 'negotiating', label: '협상 중', color: 'text-yellow-400 bg-yellow-500/10' },
@@ -73,6 +76,10 @@ export default function ProjectDetailPage() {
                 .single()
 
             if (error) throw error
+            if ((data as any)?.deleted_at) {
+                router.replace('/my/projects')
+                return
+            }
             setProject(data as any)
             setNotes(data.notes || '')
             setBasicInfo({ description: data.description || '', due_date: data.due_date || '' })
@@ -194,6 +201,7 @@ export default function ProjectDetailPage() {
         if (!confirm('이 제안을 취소하시겠습니까?\n취소된 제안은 복구할 수 없습니다.')) return
         const { error } = await supabase.from('proposals').update({ status: 'cancelled' }).eq('id', proposalId)
         if (!error) {
+            if (project?.id) await syncProjectStatusIfNoActiveProposals(supabase, project.id, 'cancelled')
             alert('제안이 취소되었습니다.')
             fetchProject()
         } else {
@@ -212,12 +220,63 @@ export default function ProjectDetailPage() {
         }
     }
 
+    const [archiving, setArchiving] = useState(false)
+    const [isArchivedByMe, setIsArchivedByMe] = useState(false)
+
+    useEffect(() => {
+        if (!user || !project?.id) return
+        supabase.from('user_project_archives').select('project_id').eq('user_id', user.id).eq('project_id', project.id).maybeSingle()
+            .then(({ data }) => setIsArchivedByMe(!!data))
+    }, [user?.id, project?.id])
+
+    const handleArchive = async () => {
+        if (!project || !user) return
+        setArchiving(true)
+        const { error } = await supabase.from('user_project_archives').upsert({ user_id: user.id, project_id: project.id }, { onConflict: 'user_id,project_id' })
+        setArchiving(false)
+        if (!error) {
+            setIsArchivedByMe(true)
+            router.push('/my/projects?view=archived')
+        } else {
+            alert('보관 처리에 실패했습니다.')
+        }
+    }
+    const handleUnarchive = async () => {
+        if (!project || !user) return
+        setArchiving(true)
+        const { error } = await supabase.from('user_project_archives').delete().eq('user_id', user.id).eq('project_id', project.id)
+        setArchiving(false)
+        if (!error) {
+            setIsArchivedByMe(false)
+        } else {
+            alert('보관 해제에 실패했습니다.')
+        }
+    }
+
     const [myDancerIds, setMyDancerIds] = useState<string[]>([])
+    const [childProjects, setChildProjects] = useState<Array<{ id: string; title: string; confirmation_status?: string; progress_status?: string; proposals?: Array<{ id: string; dancer_id: string; status: string; dancers?: { stage_name: string } }> }>>([])
+
     useEffect(() => {
         if (!user) return
         supabase.from('dancers').select('id').or(`owner_id.eq.${user.id},manager_id.eq.${user.id}`)
             .then(({ data }) => setMyDancerIds((data || []).map((d: { id: string }) => d.id)))
     }, [user])
+
+    useEffect(() => {
+        if (!project || project.parent_project_id != null) {
+            setChildProjects([])
+            return
+        }
+        supabase
+            .from('projects')
+            .select(`
+                id, title, confirmation_status, progress_status,
+                proposals (id, dancer_id, status, dancers (id, stage_name))
+            `)
+            .eq('parent_project_id', project.id)
+            .order('created_at', { ascending: false })
+            .then(({ data }) => setChildProjects((data as any) || []))
+    }, [project?.id, project?.parent_project_id])
 
     const myProposal = useMemo(() => {
         if (!project?.proposals) return null
@@ -273,6 +332,11 @@ export default function ProjectDetailPage() {
                                 <span className="flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded bg-orange-500/15 text-orange-400 shrink-0">
                                     <EyeOff className="w-2.5 h-2.5" />
                                     {embargoActive ? '엠바고' : '비공개'}
+                                </span>
+                            )}
+                            {isArchivedByMe && (
+                                <span className="flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded bg-white/10 text-white/50 shrink-0">
+                                    <Archive className="w-2.5 h-2.5" /> 내 보관함
                                 </span>
                             )}
                         </div>
@@ -340,14 +404,54 @@ export default function ProjectDetailPage() {
                                     <span className="flex items-center gap-1 text-red-400/50"><Target className="w-3 h-3" />마감 {project.due_date}</span>
                                 )}
                                 <span className="flex items-center gap-1"><Users className="w-3 h-3" />확정 {acceptedProposals.length}명</span>
-                                {pendingProposals.length > 0 && <span className="text-yellow-400/50">대기 {pendingProposals.length}</span>}
+                                {pendingProposals.length > 0 && !(isOwner && !isPm) && <span className="text-yellow-400/50">대기 {pendingProposals.length}</span>}
                             </div>
+                        </div>
+                    )}
+                    {isOwner && !isPm && (project.contract_amount != null || acceptedProposals.some((p: any) => p.dancer_id === project.pm_dancer_id)) && (
+                        <div className="mt-2 pt-2 border-t border-neutral-800/50">
+                            <p className="text-[11px] text-white/40">PM에게 할당한 예산</p>
+                            <p className="text-sm font-semibold text-primary/80">
+                                {project.contract_amount != null
+                                    ? `${project.contract_amount.toLocaleString()}원`
+                                    : (() => {
+                                        const pmProp = acceptedProposals.find((p: any) => p.dancer_id === project.pm_dancer_id)
+                                        return pmProp?.fee != null ? `${(pmProp.fee as number).toLocaleString()}원` : '미정'
+                                    })()}
+                            </p>
                         </div>
                     )}
                 </div>
 
-                {/* ── 오너 전용: PM 미지정 시 참여 확정 댄서 중 PM 지정 ── */}
-                {isOwner && !project.pm_dancer_id && acceptedProposals.length > 0 && (
+                {/* ── 브리프: 파생된 프로젝트(안무가별) 목록 ── */}
+                {isOwner && project.parent_project_id == null && childProjects.length > 0 && (
+                    <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-3">
+                        <h3 className="text-xs font-semibold text-white/40 mb-2">파생된 프로젝트 (안무가별)</h3>
+                        <p className="text-[11px] text-white/30 mb-3">각 안무가에게 보낸 제안이 별도 프로젝트로 진행됩니다. 수락 시 해당 프로젝트의 PM이 됩니다.</p>
+                        <ul className="space-y-2">
+                            {childProjects.map((child: any) => {
+                                const prop = child.proposals?.[0]
+                                const statusLabel = !prop ? '-' : prop.status === 'accepted' ? '수락' : prop.status === 'declined' ? '거절' : prop.status === 'cancelled' ? '취소됨' : '대기'
+                                const statusColor = prop?.status === 'accepted' ? 'text-green-400' : prop?.status === 'declined' || prop?.status === 'cancelled' ? 'text-red-400' : 'text-yellow-400'
+                                return (
+                                    <li key={child.id}>
+                                        <Link href={`/my/projects/${child.id}`} className="flex items-center justify-between py-2 px-3 rounded-lg bg-neutral-800/50 hover:bg-neutral-800 border border-neutral-700/50">
+                                            <div className="min-w-0">
+                                                <span className="text-sm font-medium text-white block truncate">{child.title}</span>
+                                                <span className="text-[11px] text-white/50">{prop?.dancers?.stage_name ?? '수신자'} · </span>
+                                                <span className={`text-[11px] font-medium ${statusColor}`}>{statusLabel}</span>
+                                            </div>
+                                            <ChevronRight className="w-4 h-4 text-white/30 shrink-0 ml-2" />
+                                        </Link>
+                                    </li>
+                                )
+                            })}
+                        </ul>
+                    </div>
+                )}
+
+                {/* ── 오너 전용: PM 미지정 시 참여 확정 댄서 중 PM 지정 (파생/단일 프로젝트만) ── */}
+                {isOwner && project.parent_project_id != null && !project.pm_dancer_id && acceptedProposals.length > 0 && (
                     <div className="bg-amber-500/5 border border-amber-500/20 rounded-xl p-3">
                         <p className="text-xs font-medium text-amber-200/90 mb-2">프로젝트 PM 지정</p>
                         <p className="text-[11px] text-white/50 mb-2">댄서 초대·할일 관리는 PM에게도 열립니다. 참여 확정 댄서 중 한 명을 PM으로 지정하세요.</p>
@@ -366,11 +470,12 @@ export default function ProjectDetailPage() {
                     </div>
                 )}
 
-                {/* ── 댄서 초대 (오너 또는 PM) ── */}
-                {canRecruit && canManageProject && (
+                {/* ── 댄서 초대: 브리프는 오너(클라이언트)만, 파생/단일은 PM만(클라이언트는 섭외 내역 비공개) ── */}
+                {((canRecruit && isPm) || (isOwner && project.parent_project_id == null)) && (
                     <Link href={`/my/projects/${project.id}/invite`}
                         className="flex items-center justify-center gap-2 w-full py-3 bg-primary text-black font-bold rounded-xl hover:bg-primary/90 transition">
-                        <Plus className="w-5 h-5" /> 댄서 초대하기
+                        <Plus className="w-5 h-5" />
+                        {project.parent_project_id == null ? '안무가에게 제안 보내기' : '댄서 초대하기'}
                     </Link>
                 )}
 
@@ -402,44 +507,57 @@ export default function ProjectDetailPage() {
                     </div>
                 )}
 
-                {/* ── 참여 댄서 목록 ── */}
-                <section className="space-y-2">
-                    <h2 className="text-xs font-semibold text-white/40 flex items-center gap-1.5">
-                        <CheckCircle className="w-3.5 h-3.5 text-green-400" />
-                        참여 확정 ({acceptedProposals.length})
-                    </h2>
-                    {acceptedProposals.length === 0 ? (
-                        <p className="text-xs text-white/20 py-3 text-center">아직 참여 확정된 댄서가 없습니다</p>
-                    ) : (
-                        <div className="space-y-1.5">
-                            {acceptedProposals.map(p => <DancerRow key={p.id} proposal={p} showFee={isPm} />)}
-                        </div>
-                    )}
-                </section>
-
-                {/* 대기 중 */}
-                {canManageProject && pendingProposals.length > 0 && (
-                    <section className="space-y-2">
-                        <h2 className="text-xs font-semibold text-white/40 flex items-center gap-1.5">
-                            <Clock className="w-3.5 h-3.5 text-yellow-400" />
-                            응답 대기 ({pendingProposals.length})
-                        </h2>
-                        <div className="space-y-1.5">
-                            {pendingProposals.map(p => <DancerRow key={p.id} proposal={p} showFee={isPm} showCancelButton={true} onCancel={() => cancelProposal(p.id)} />)}
+                {/* ── 참여 댄서 목록: 클라이언트(오너·비PM)는 인원 수만 표시, PM/참여자는 목록·금액 표시 ── */}
+                {isOwner && !isPm ? (
+                    <section className="bg-neutral-900/50 border border-neutral-800/50 rounded-xl p-3">
+                        <p className="text-xs text-white/40">PM이 섭외한 인원만 집계됩니다. 세부 인원·금액은 PM만 확인할 수 있습니다.</p>
+                        <div className="flex flex-wrap gap-3 mt-2 text-[11px] text-white/50">
+                            <span className="flex items-center gap-1"><CheckCircle className="w-3 h-3 text-green-400/60" /> 참여 확정 {acceptedProposals.length}명</span>
+                            {pendingProposals.length > 0 && <span className="flex items-center gap-1"><Clock className="w-3 h-3 text-yellow-400/60" /> 응답 대기 {pendingProposals.length}명</span>}
+                            {declinedProposals.length > 0 && <span className="flex items-center gap-1"><XCircle className="w-3 h-3 text-red-400/60" /> 거절 {declinedProposals.length}명</span>}
                         </div>
                     </section>
-                )}
+                ) : (
+                    <>
+                        <section className="space-y-2">
+                            <h2 className="text-xs font-semibold text-white/40 flex items-center gap-1.5">
+                                <CheckCircle className="w-3.5 h-3.5 text-green-400" />
+                                참여 확정 ({acceptedProposals.length})
+                            </h2>
+                            {acceptedProposals.length === 0 ? (
+                                <p className="text-xs text-white/20 py-3 text-center">아직 참여 확정된 댄서가 없습니다</p>
+                            ) : (
+                                <div className="space-y-1.5">
+                                    {acceptedProposals.map(p => <DancerRow key={p.id} proposal={p} showFee={isPm} />)}
+                                </div>
+                            )}
+                        </section>
 
-                {/* 거절 */}
-                {canManageProject && declinedProposals.length > 0 && (
-                    <section className="space-y-2 opacity-40">
-                        <h2 className="text-xs font-semibold text-white/40 flex items-center gap-1.5">
-                            <XCircle className="w-3.5 h-3.5 text-red-400" /> 거절 ({declinedProposals.length})
-                        </h2>
-                        <div className="space-y-1.5">
-                            {declinedProposals.map(p => <DancerRow key={p.id} proposal={p} showFee={isPm} />)}
-                        </div>
-                    </section>
+                        {/* 대기 중 */}
+                        {canManageProject && pendingProposals.length > 0 && (
+                            <section className="space-y-2">
+                                <h2 className="text-xs font-semibold text-white/40 flex items-center gap-1.5">
+                                    <Clock className="w-3.5 h-3.5 text-yellow-400" />
+                                    응답 대기 ({pendingProposals.length})
+                                </h2>
+                                <div className="space-y-1.5">
+                                    {pendingProposals.map(p => <DancerRow key={p.id} proposal={p} showFee={isPm} showCancelButton={true} onCancel={() => cancelProposal(p.id)} />)}
+                                </div>
+                            </section>
+                        )}
+
+                        {/* 거절 */}
+                        {canManageProject && declinedProposals.length > 0 && (
+                            <section className="space-y-2 opacity-40">
+                                <h2 className="text-xs font-semibold text-white/40 flex items-center gap-1.5">
+                                    <XCircle className="w-3.5 h-3.5 text-red-400" /> 거절 ({declinedProposals.length})
+                                </h2>
+                                <div className="space-y-1.5">
+                                    {declinedProposals.map(p => <DancerRow key={p.id} proposal={p} showFee={isPm} />)}
+                                </div>
+                            </section>
+                        )}
+                    </>
                 )}
 
                 {/* ── 안내 메시지 ── */}
@@ -560,6 +678,29 @@ export default function ProjectDetailPage() {
                             </div>
                         </button>
                         {showEmbargoSettings && <EmbargoPanel project={project} onUpdate={fetchProject} />}
+                    </div>
+                )}
+
+                {/* ── 개인 보관: 내 목록에서만 숨김. 다른 참여자/클라이언트에게는 영향 없음 ── */}
+                {canManageProject && (
+                    <div className="bg-neutral-900/70 border border-neutral-800/50 rounded-xl p-3 space-y-2">
+                        <p className="text-[11px] text-white/40 font-medium">보관</p>
+                        <p className="text-[10px] text-white/25">보관하면 내 프로젝트 목록에서만 숨겨지고 보관함에서 볼 수 있습니다. 다른 참여자나 클라이언트에게는 영향을 주지 않는 개인 기능입니다.</p>
+                        <div className="flex flex-wrap gap-2">
+                            {isArchivedByMe ? (
+                                <button onClick={handleUnarchive} disabled={archiving}
+                                    className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium bg-white/10 text-white hover:bg-white/15 transition disabled:opacity-50">
+                                    {archiving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ArchiveRestore className="w-3.5 h-3.5" />}
+                                    보관 해제
+                                </button>
+                            ) : (
+                                <button onClick={handleArchive} disabled={archiving}
+                                    className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium bg-white/10 text-white hover:bg-white/15 transition disabled:opacity-50">
+                                    {archiving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Archive className="w-3.5 h-3.5" />}
+                                    보관하기
+                                </button>
+                            )}
+                        </div>
                     </div>
                 )}
             </div>
@@ -809,9 +950,13 @@ function ParticipantActions({ proposalId, projectId, dancerId, onUpdate }: { pro
             const { error } = await supabase.from('proposals').update({ status: action }).eq('id', proposalId)
             if (error) throw error
 
-            // 수락 시 자동 PM 지정 + 프로젝트 상태 전환
+            if (action === 'declined') {
+                await syncProjectStatusIfNoActiveProposals(supabase, projectId, 'declined')
+            }
+
+            // 수락 시 자동 PM 지정 + 프로젝트 상태 전환 + PM 경력 자동 생성
             if (action === 'accepted') {
-                const { data: proj } = await supabase.from('projects').select('pm_dancer_id, confirmation_status').eq('id', projectId).single()
+                const { data: proj } = await supabase.from('projects').select('id, title, category, start_date, description, pm_dancer_id, confirmation_status').eq('id', projectId).single()
                 if (proj) {
                     const updates: Record<string, any> = {}
                     if (!proj.pm_dancer_id) updates.pm_dancer_id = dancerId
@@ -821,6 +966,9 @@ function ParticipantActions({ proposalId, projectId, dancerId, onUpdate }: { pro
                     }
                     if (Object.keys(updates).length > 0) {
                         await supabase.from('projects').update(updates).eq('id', projectId)
+                    }
+                    if (updates.pm_dancer_id) {
+                        await ensurePmCareer(supabase, proj, dancerId)
                     }
                 }
             }

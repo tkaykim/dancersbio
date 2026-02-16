@@ -29,6 +29,12 @@ export function getProjectStatuses(project: any): { confirmation: string; progre
   }
 }
 
+/** 진행 불가 상태(취소/거절/완료)일 때만 삭제 가능 */
+export function isProjectDeletable(project: any): boolean {
+  const { confirmation } = getProjectStatuses(project)
+  return confirmation === 'declined' || confirmation === 'cancelled' || confirmation === 'completed'
+}
+
 // ─────────────────────────────────────────────────
 // 엠바고 / 공개여부 관련 유틸리티 (KST 기준)
 // ─────────────────────────────────────────────────
