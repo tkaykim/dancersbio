@@ -1,11 +1,12 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useAuth } from '@/lib/auth-context'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft, Loader2, Briefcase, Users, Calendar, ChevronRight, Plus, TrendingUp, TrendingDown } from 'lucide-react'
 import Link from 'next/link'
 import { useProjects } from '@/hooks/useProjects'
+import { supabase } from '@/lib/supabase'
 import { getRelativeTime, getProjectStatuses } from '@/lib/utils'
 import type { Project } from '@/lib/types'
 
@@ -40,10 +41,22 @@ export default function ProjectsPage() {
     const { user, loading: authLoading } = useAuth()
     const router = useRouter()
     const { projects, loading } = useProjects()
+    const [myDancerIds, setMyDancerIds] = useState<string[]>([])
 
     useEffect(() => {
         if (!authLoading && !user) router.push('/auth/signin')
     }, [user, authLoading, router])
+
+    useEffect(() => {
+        if (!user) return
+        supabase
+            .from('dancers')
+            .select('id')
+            .or(`owner_id.eq.${user.id},manager_id.eq.${user.id}`)
+            .then(({ data }) => {
+                setMyDancerIds((data || []).map(d => d.id))
+            })
+    }, [user])
 
     if (authLoading || loading) {
         return (
@@ -84,7 +97,7 @@ export default function ProjectsPage() {
                         </div>
                     ) : (
                         activeProjects.map(project => (
-                            <ProjectCard key={project.id} project={project} userId={user!.id} />
+                            <ProjectCard key={project.id} project={project} userId={user!.id} myDancerIds={myDancerIds} />
                         ))
                     )}
                 </section>
@@ -93,7 +106,7 @@ export default function ProjectsPage() {
                     <section className="space-y-3">
                         <h2 className="text-sm font-semibold text-white/50 px-1">지난 프로젝트 ({pastProjects.length})</h2>
                         {pastProjects.map(project => (
-                            <ProjectCard key={project.id} project={project} userId={user!.id} />
+                            <ProjectCard key={project.id} project={project} userId={user!.id} myDancerIds={myDancerIds} />
                         ))}
                     </section>
                 )}
@@ -102,7 +115,7 @@ export default function ProjectsPage() {
     )
 }
 
-function ProjectCard({ project, userId }: { project: Project; userId: string }) {
+function ProjectCard({ project, userId, myDancerIds }: { project: Project; userId: string; myDancerIds: string[] }) {
     const { confirmation, progress } = getProjectStatuses(project)
     const confirmLabel = CONFIRMATION_LABELS[confirmation] || CONFIRMATION_LABELS.negotiating
     const progressLabel = PROGRESS_LABELS[progress] || PROGRESS_LABELS.idle
@@ -167,11 +180,16 @@ function ProjectCard({ project, userId }: { project: Project; userId: string }) 
 
                 {/* 오너 전용: 순수익 미니 요약 */}
                 {isOwner && (() => {
-                    const revenue = project.budget || 0
+                    const ownerDancerIds = isOwner ? myDancerIds : []
+                    // 오너 본인 제안은 수입이므로 지출에서 제외
+                    const ownerFee = (project.proposals || [])
+                        .find((p: any) => p.status === 'accepted' && ownerDancerIds.includes(p.dancer_id))?.fee || 0
+                    const revenue = project.budget || ownerFee || 0
                     const expense = (project.proposals || [])
                         .filter((p: any, i: number, arr: any[]) => {
                             if (p.status !== 'accepted') return false
-                            return arr.findIndex((x: any) => x.dancer_id === p.dancer_id) === i
+                            if (ownerDancerIds.includes(p.dancer_id)) return false
+                            return arr.findIndex((x: any) => x.dancer_id === p.dancer_id && x.status === 'accepted') === i
                         })
                         .reduce((acc: number, p: any) => acc + (p.fee || 0), 0)
                     const net = revenue - expense

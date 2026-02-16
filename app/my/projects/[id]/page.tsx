@@ -184,9 +184,19 @@ export default function ProjectDetailPage() {
         return Array.from(map.values())
     })()
 
+    // 오너 본인의 dancer 프로필로 온 제안 vs 다른 댄서에게 보낸 제안 분리
+    const ownerDancerIds = isOwner ? myDancerIds : []
+    const isOwnerProposal = (p: any) => ownerDancerIds.includes(p.dancer_id)
+
     const acceptedProposals = deduplicatedProposals.filter(p => p.status === 'accepted')
     const pendingProposals = deduplicatedProposals.filter(p => p.status === 'pending' || p.status === 'negotiating')
     const declinedProposals = deduplicatedProposals.filter(p => p.status === 'declined')
+
+    // 재무용: 오너 본인 제안은 수입, 타 댄서 제안은 지출
+    const ownerAcceptedProposal = acceptedProposals.find(isOwnerProposal)
+    const otherAcceptedProposals = acceptedProposals.filter(p => !isOwnerProposal(p))
+    const otherPendingProposals = pendingProposals.filter(p => !isOwnerProposal(p))
+
     const canRecruit = confirmation === 'confirmed' && progress === 'recruiting'
 
     return (
@@ -285,8 +295,9 @@ export default function ProjectDetailPage() {
                     <OwnerOnlySection label="담당자만 보임">
                         <ProjectFinanceSummary
                             budget={project.budget}
-                            acceptedProposals={acceptedProposals}
-                            pendingProposals={pendingProposals}
+                            ownerAcceptedFee={ownerAcceptedProposal?.fee || null}
+                            otherAcceptedProposals={otherAcceptedProposals}
+                            otherPendingProposals={otherPendingProposals}
                         />
                     </OwnerOnlySection>
                 )}
@@ -478,16 +489,22 @@ export default function ProjectDetailPage() {
 
 function ProjectFinanceSummary({
     budget,
-    acceptedProposals,
-    pendingProposals,
+    ownerAcceptedFee,
+    otherAcceptedProposals,
+    otherPendingProposals,
 }: {
     budget: number | null
-    acceptedProposals: any[]
-    pendingProposals: any[]
+    ownerAcceptedFee: number | null
+    otherAcceptedProposals: any[]
+    otherPendingProposals: any[]
 }) {
-    const revenue = budget || 0
-    const confirmedExpense = acceptedProposals.reduce((acc: number, p: any) => acc + (p.fee || 0), 0)
-    const pendingExpense = pendingProposals.reduce((acc: number, p: any) => acc + (p.fee || 0), 0)
+    // 매출: 예산 또는 본인 수령 제안 금액 (둘 다 있으면 예산 우선)
+    const revenue = budget || ownerAcceptedFee || 0
+    // 본인 수령액 (예산과 별도로 기록된 경우)
+    const myFee = ownerAcceptedFee || 0
+    // 지출: 다른 댄서에게 지불하기로 한 금액만 (본인 제안 제외)
+    const confirmedExpense = otherAcceptedProposals.reduce((acc: number, p: any) => acc + (p.fee || 0), 0)
+    const pendingExpense = otherPendingProposals.reduce((acc: number, p: any) => acc + (p.fee || 0), 0)
     const netProfit = revenue - confirmedExpense
     const projectedProfit = revenue - confirmedExpense - pendingExpense
     const hasRevenue = revenue > 0
@@ -541,6 +558,16 @@ function ProjectFinanceSummary({
 
             {/* 상세 내역 */}
             <div className="px-4 pb-4 space-y-1.5">
+                {/* 본인 수령액 (예산과 다를 경우 표시) */}
+                {myFee > 0 && budget && budget !== myFee && (
+                    <div className="flex items-center justify-between text-xs">
+                        <div className="flex items-center gap-1.5 text-white/30">
+                            <Wallet className="w-3 h-3" />
+                            내 수령 제안액
+                        </div>
+                        <span className="text-blue-400/70 font-medium">{myFee.toLocaleString()}원</span>
+                    </div>
+                )}
                 {/* 대기 중 예상 지출 */}
                 {pendingExpense > 0 && (
                     <div className="flex items-center justify-between text-xs">
@@ -561,11 +588,11 @@ function ProjectFinanceSummary({
                     </div>
                 )}
                 {/* 인원별 평균 */}
-                {acceptedProposals.length > 0 && confirmedExpense > 0 && (
+                {otherAcceptedProposals.length > 0 && confirmedExpense > 0 && (
                     <div className="flex items-center justify-between text-xs">
-                        <span className="text-white/30">확정 인원 {acceptedProposals.length}명 평균</span>
+                        <span className="text-white/30">섭외 댄서 {otherAcceptedProposals.length}명 평균</span>
                         <span className="text-white/40">
-                            {Math.round(confirmedExpense / acceptedProposals.length).toLocaleString()}원/인
+                            {Math.round(confirmedExpense / otherAcceptedProposals.length).toLocaleString()}원/인
                         </span>
                     </div>
                 )}
