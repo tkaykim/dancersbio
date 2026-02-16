@@ -67,40 +67,6 @@ export default function ProposalDetailModal({ proposal, activeTab, onClose, onUp
         } else if (type === 'accept') {
             updateData.status = 'accepted'
             messageText = "제안을 수락했습니다."
-            // 제안 수락 시 프로젝트 상태 자동 전환 + 자동 PM 지정
-            try {
-                const { data: proj } = await supabase
-                    .from('projects')
-                    .select('*')
-                    .eq('id', proposal.project_id)
-                    .single()
-                if (proj) {
-                    const projectUpdates: Record<string, any> = {}
-
-                    // PM이 없으면 수락한 댄서를 자동 PM 지정
-                    if (!proj.pm_dancer_id) {
-                        projectUpdates.pm_dancer_id = proposal.dancer_id
-                    }
-
-                    if (proj.confirmation_status === 'negotiating') {
-                        projectUpdates.confirmation_status = 'confirmed'
-                        projectUpdates.progress_status = 'recruiting'
-                    } else if (proj.status === 'recruiting') {
-                        projectUpdates.status = 'active'
-                    }
-
-                    if (Object.keys(projectUpdates).length > 0) {
-                        await supabase
-                            .from('projects')
-                            .update(projectUpdates)
-                            .eq('id', proposal.project_id)
-                    }
-                    // PM 경력 자동 생성 (엠바고/공개 시점에만 프로필에 노출)
-                    if (projectUpdates.pm_dancer_id) {
-                        await ensurePmCareer(supabase, proj, proposal.dancer_id)
-                    }
-                }
-            } catch { /* non-critical */ }
         } else if (type === 'offer') {
             updateData.status = 'negotiating'
         } else if (type === 'text') {
@@ -129,14 +95,52 @@ export default function ProposalDetailModal({ proposal, activeTab, onClose, onUp
             .update(updateData)
             .eq('id', proposal.id)
 
-        if (!error) {
-            if (type === 'decline') {
-                await syncProjectStatusIfNoActiveProposals(supabase, proposal.project_id, 'declined')
-            }
-            onRefresh()
-        } else {
+        if (error) {
             alert('메시지 전송 실패')
+            return
         }
+
+        // 제안 수락 시: 제안이 먼저 'accepted'로 반영된 뒤 프로젝트 상태 전환(RLS 정책 충족)
+        if (type === 'accept') {
+            try {
+                const { data: proj } = await supabase
+                    .from('projects')
+                    .select('*')
+                    .eq('id', proposal.project_id)
+                    .single()
+                if (proj) {
+                    const projectUpdates: Record<string, any> = {}
+                    if (!proj.pm_dancer_id) projectUpdates.pm_dancer_id = proposal.dancer_id
+                    if (proj.confirmation_status === 'negotiating') {
+                        projectUpdates.confirmation_status = 'confirmed'
+                        projectUpdates.progress_status = 'recruiting'
+                    } else if (proj.status === 'recruiting') {
+                        projectUpdates.status = 'active'
+                    }
+                    if (Object.keys(projectUpdates).length > 0) {
+                        const { error: projectError } = await supabase
+                            .from('projects')
+                            .update(projectUpdates)
+                            .eq('id', proposal.project_id)
+                        if (projectError) {
+                            console.error('프로젝트 상태 전환 실패:', projectError)
+                            alert('제안은 수락되었으나 프로젝트 상태 반영에 실패했습니다. 프로젝트 페이지에서 확인해 주세요.')
+                        }
+                    }
+                    if (projectUpdates.pm_dancer_id) {
+                        await ensurePmCareer(supabase, proj, proposal.dancer_id)
+                    }
+                }
+            } catch (err) {
+                console.error('프로젝트 상태 전환 중 오류:', err)
+                alert('제안은 수락되었으나 프로젝트 상태 반영 중 오류가 발생했습니다.')
+            }
+        }
+
+        if (type === 'decline') {
+            await syncProjectStatusIfNoActiveProposals(supabase, proposal.project_id, 'declined')
+        }
+        onRefresh()
     }
 
     if (!user) return null
@@ -180,11 +184,13 @@ export default function ProposalDetailModal({ proposal, activeTab, onClose, onUp
                     <ProposalChat proposal={proposal} userId={user.id} />
                 </div>
 
-                {/* Message input */}
-                <ProposalMessageInput
-                    status={proposal.status}
-                    onSendMessage={handleSendMessage}
-                />
+                {/* Message input: pb-20으로 하단 네비에 가려져 수락하기 클릭이 막히지 않도록 함 */}
+                <div className="flex-shrink-0 pb-20 lg:pb-3">
+                    <ProposalMessageInput
+                        status={proposal.status}
+                        onSendMessage={handleSendMessage}
+                    />
+                </div>
             </div>
         </div>
     )

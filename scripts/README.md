@@ -1,7 +1,12 @@
 # Playwright MCP – 터미널 없이 사용하기
 
-Cursor에서 Playwright MCP는 기본적으로 **localhost:8931**에 떠 있는 서버에 연결합니다.  
-아래 중 한 가지 방식으로 서버를 켜 두면 됩니다.
+이 프로젝트에는 **프로젝트 수준 MCP 설정**이 포함되어 있습니다.  
+`.cursor/mcp.json`에 Playwright MCP가 등록되어 있으므로, Cursor가 이 프로젝트를 열면 **자동으로 Playwright MCP를 사용할 수 있습니다** (stdio 방식).
+
+- **처음 적용 시**: Cursor에서 `Cmd+Shift+P` → "Developer: Reload Window" 실행하거나 Cursor를 재시작하면 MCP가 로드됩니다.
+- **MCP 확인**: Cursor 설정 → Features → MCP에서 "playwright" 서버가 켜져 있는지 확인할 수 있습니다.
+
+아래는 **터미널에서 서버를 직접 띄워서** 사용하는 방식(예: localhost:8931)입니다. 프로젝트 MCP로 충분하면 생략 가능합니다.
 
 ## 방법 1: 로그인 시 자동 실행 (권장)
 

@@ -556,6 +556,7 @@ function NewProposalPage() {
                             {fee && <span>인당 {parseInt(fee).toLocaleString()}원</span>}
                         </div>
                         <button
+                            data-testid="submit-proposal"
                             onClick={handleSubmit}
                             disabled={sending || !canSubmit}
                             className="w-full py-3 bg-primary text-black font-bold rounded-xl hover:bg-primary/90 transition disabled:opacity-50 flex items-center justify-center gap-2"
