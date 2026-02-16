@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
-import { XCircle } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { XCircle, Ban, Loader2 } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { supabase } from '@/lib/supabase'
 import ProposalChat from './ProposalChat'
@@ -19,12 +19,33 @@ interface ProposalDetailModalProps {
 export default function ProposalDetailModal({ proposal, activeTab, onClose, onUpdate, onRefresh }: ProposalDetailModalProps) {
     const { user } = useAuth()
     const chatContainerRef = useRef<HTMLDivElement>(null)
+    const [cancelling, setCancelling] = useState(false)
 
     useEffect(() => {
         if (chatContainerRef.current) {
             chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight
         }
     }, [proposal.negotiation_history])
+
+    const handleCancelProposal = async () => {
+        if (!user || cancelling) return
+        if (!confirm('이 제안을 취소하시겠습니까?\n취소된 제안은 복구할 수 없습니다.')) return
+        
+        setCancelling(true)
+        const { error } = await supabase
+            .from('proposals')
+            .update({ status: 'cancelled' })
+            .eq('id', proposal.id)
+        
+        if (!error) {
+            alert('제안이 취소되었습니다.')
+            onRefresh()
+            onClose()
+        } else {
+            alert('오류가 발생했습니다.')
+        }
+        setCancelling(false)
+    }
 
     const handleSendMessage = async (type: 'text' | 'offer' | 'decline' | 'accept', content?: string, fee?: number) => {
         if (!user) return
@@ -43,7 +64,7 @@ export default function ProposalDetailModal({ proposal, activeTab, onClose, onUp
         } else if (type === 'accept') {
             updateData.status = 'accepted'
             messageText = "제안을 수락했습니다."
-            // 제안 수락 시 프로젝트 상태 자동 전환
+            // 제안 수락 시 프로젝트 상태 자동 전환 + 자동 PM 지정
             try {
                 const { data: proj } = await supabase
                     .from('projects')
@@ -51,18 +72,24 @@ export default function ProposalDetailModal({ proposal, activeTab, onClose, onUp
                     .eq('id', proposal.project_id)
                     .single()
                 if (proj) {
-                    // 마이그레이션 후 스키마
-                    if (proj.confirmation_status === 'negotiating') {
-                        await supabase
-                            .from('projects')
-                            .update({ confirmation_status: 'confirmed', progress_status: 'recruiting' })
-                            .eq('id', proposal.project_id)
+                    const projectUpdates: Record<string, any> = {}
+
+                    // PM이 없으면 수락한 댄서를 자동 PM 지정
+                    if (!proj.pm_dancer_id) {
+                        projectUpdates.pm_dancer_id = proposal.dancer_id
                     }
-                    // 마이그레이션 전 스키마
-                    else if (proj.status === 'recruiting') {
+
+                    if (proj.confirmation_status === 'negotiating') {
+                        projectUpdates.confirmation_status = 'confirmed'
+                        projectUpdates.progress_status = 'recruiting'
+                    } else if (proj.status === 'recruiting') {
+                        projectUpdates.status = 'active'
+                    }
+
+                    if (Object.keys(projectUpdates).length > 0) {
                         await supabase
                             .from('projects')
-                            .update({ status: 'active' })
+                            .update(projectUpdates)
                             .eq('id', proposal.project_id)
                     }
                 }
@@ -104,6 +131,9 @@ export default function ProposalDetailModal({ proposal, activeTab, onClose, onUp
 
     if (!user) return null
 
+    const isSender = proposal.sender_id === user.id
+    const canCancel = activeTab === 'outbox' && isSender && (proposal.status === 'pending' || proposal.status === 'negotiating')
+
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm" onClick={onClose}>
             <div
@@ -112,15 +142,27 @@ export default function ProposalDetailModal({ proposal, activeTab, onClose, onUp
             >
                 {/* Header */}
                 <div className="flex-shrink-0 bg-neutral-900 border-b border-neutral-800 p-4 flex justify-between items-center z-10 rounded-t-2xl">
-                    <div>
+                    <div className="flex-1 min-w-0 mr-2">
                         <h2 className="font-bold text-white text-lg line-clamp-1">{proposal.projects.title}</h2>
                         <p className="text-white/50 text-xs text-left">
                             {activeTab === 'inbox' ? proposal.sender?.name : proposal.dancers.stage_name}
                         </p>
                     </div>
-                    <button onClick={onClose} className="p-2 text-white/50 hover:text-white">
-                        <XCircle className="w-6 h-6" />
-                    </button>
+                    <div className="flex items-center gap-1">
+                        {canCancel && (
+                            <button
+                                onClick={handleCancelProposal}
+                                disabled={cancelling}
+                                className="p-2 text-red-400/60 hover:text-red-400 disabled:opacity-50 transition"
+                                title="제안 취소"
+                            >
+                                {cancelling ? <Loader2 className="w-5 h-5 animate-spin" /> : <Ban className="w-5 h-5" />}
+                            </button>
+                        )}
+                        <button onClick={onClose} className="p-2 text-white/50 hover:text-white">
+                            <XCircle className="w-6 h-6" />
+                        </button>
+                    </div>
                 </div>
 
                 {/* Chat area */}

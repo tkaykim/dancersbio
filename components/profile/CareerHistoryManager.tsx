@@ -142,10 +142,16 @@ export default function CareerHistoryManager({ dancerId }: CareerHistoryManagerP
         if (!formData.title) return alert('제목을 입력해주세요')
 
         setSaving(true)
+        // date 컬럼: year/month로 구성, 없으면 현재 날짜
+        const dateStr = formData.year
+            ? `${formData.year}-${(formData.month || '01').padStart(2, '0')}-01`
+            : new Date().toISOString().split('T')[0]
+
         const careerData = {
             dancer_id: dancerId,
             type: formData.type,
             title: formData.title,
+            date: dateStr,
             details: {
                 year: formData.year,
                 month: formData.month,

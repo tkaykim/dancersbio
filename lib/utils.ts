@@ -29,6 +29,58 @@ export function getProjectStatuses(project: any): { confirmation: string; progre
   }
 }
 
+// ─────────────────────────────────────────────────
+// 엠바고 / 공개여부 관련 유틸리티 (KST 기준)
+// ─────────────────────────────────────────────────
+
+/**
+ * 현재 한국시각(KST, UTC+9) 날짜를 YYYY-MM-DD 형태로 반환
+ */
+export function getKSTDateString(): string {
+  const now = new Date()
+  const kst = new Date(now.getTime() + (9 * 60 * 60 * 1000))
+  return kst.toISOString().split('T')[0]
+}
+
+/**
+ * 한국시각(KST) 기준으로 엠바고가 아직 유효한지 확인
+ * 엠바고 날짜 당일까지 비공개, 다음날 00:00 KST부터 공개
+ * 
+ * @param embargoDate - 엠바고 날짜 (YYYY-MM-DD), null이면 엠바고 없음
+ * @returns true = 아직 엠바고 중 (비공개 유지), false = 엠바고 해제됨/없음
+ */
+export function isEmbargoActive(embargoDate: string | null | undefined): boolean {
+  if (!embargoDate) return false
+  const todayKST = getKSTDateString()
+  return todayKST <= embargoDate
+}
+
+/**
+ * 프로젝트가 공개 가능한 상태인지 확인 (KST 기준)
+ * - visibility가 'public'이고 엠바고가 해제되었으면 공개
+ * - visibility가 'private'여도 엠바고가 만료되었으면 자동 공개 대상
+ */
+export function isProjectPublic(visibility: string, embargoDate: string | null | undefined): boolean {
+  if (isEmbargoActive(embargoDate)) return false
+  if (visibility === 'public') return true
+  // 엠바고가 만료된 private 프로젝트 → 자동 공개 대상
+  if (embargoDate && !isEmbargoActive(embargoDate)) return true
+  return false
+}
+
+/**
+ * 엠바고 날짜를 KST 기준 사람이 읽기 좋은 형태로 포맷
+ */
+export function formatEmbargoDate(embargoDate: string): string {
+  const d = new Date(embargoDate + 'T00:00:00+09:00')
+  return d.toLocaleDateString('ko-KR', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    timeZone: 'Asia/Seoul',
+  })
+}
+
 export function getRelativeTime(dateStr: string): string {
   const now = new Date()
   const date = new Date(dateStr)

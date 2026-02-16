@@ -34,7 +34,7 @@ function ClaimContent() {
     const [note, setNote] = useState('')
     const [loading, setLoading] = useState(true)
     const [submitting, setSubmitting] = useState(false)
-    const [step, setStep] = useState<'confirm' | 'success' | 'error' | 'already_claimed' | 'already_requested'>('confirm')
+    const [step, setStep] = useState<'confirm' | 'success' | 'error' | 'already_claimed' | 'already_requested' | 'already_owned'>('confirm')
     const [errorMsg, setErrorMsg] = useState('')
 
     useEffect(() => {
@@ -80,6 +80,17 @@ function ClaimContent() {
                 if (data.owner_id === user!.id) {
                     setErrorMsg('이미 본인의 프로필입니다.')
                     setStep('already_claimed')
+                    return
+                }
+                // 소유권 요청(claim): 계정당 내 프로필 1개만 허용
+                const { data: existingOwned } = await supabase
+                    .from('dancers')
+                    .select('id')
+                    .eq('owner_id', user!.id)
+                    .limit(1)
+                    .maybeSingle()
+                if (existingOwned) {
+                    setStep('already_owned')
                     return
                 }
             }
@@ -304,6 +315,32 @@ function ClaimContent() {
                             className="block w-full py-3 bg-neutral-800 text-white font-medium rounded-xl hover:bg-neutral-700 transition"
                         >
                             마이페이지로 이동
+                        </Link>
+                    </div>
+                )}
+
+                {/* Step: Already Owned (내 프로필 1개 제한) */}
+                {step === 'already_owned' && (
+                    <div className="w-full max-w-md text-center py-16 animate-in fade-in">
+                        <div className="w-20 h-20 bg-amber-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                            <AlertTriangle className="w-10 h-10 text-amber-400" />
+                        </div>
+                        <h2 className="text-2xl font-bold mb-2">내 프로필은 1개만 보유할 수 있습니다</h2>
+                        <p className="text-white/60 mb-6 text-sm">
+                            이미 소유한 댄서 프로필이 있습니다. 추가로 소유권을 요청할 수 없습니다.<br />
+                            다른 댄서 프로필은 <strong className="text-white">매니저 권한 요청</strong>으로 관리할 수 있습니다.
+                        </p>
+                        <Link
+                            href="/my/profiles"
+                            className="block w-full py-3 bg-primary text-black font-bold rounded-xl hover:bg-primary/90 transition mb-3"
+                        >
+                            내 프로필로 이동
+                        </Link>
+                        <Link
+                            href="/onboarding"
+                            className="block w-full py-3 bg-neutral-800 text-white font-medium rounded-xl hover:bg-neutral-700 transition"
+                        >
+                            매니저 권한 요청하기
                         </Link>
                     </div>
                 )}

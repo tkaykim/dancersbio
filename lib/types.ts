@@ -54,10 +54,14 @@ export type ProposalTab = 'inbox' | 'outbox'
 export type ConfirmationStatus = 'negotiating' | 'confirmed' | 'declined' | 'cancelled' | 'completed'
 export type ProgressStatus = 'idle' | 'recruiting' | 'in_progress' | 'completed' | 'cancelled'
 
+export type ProjectVisibility = 'private' | 'public'
+
 export interface Project {
     id: string
     owner_id: string
     client_profile_id: string | null
+    pm_dancer_id: string | null
+    contract_amount: number | null
     title: string
     description: string | null
     category: string | null
@@ -65,9 +69,12 @@ export interface Project {
     status?: string
     confirmation_status?: ConfirmationStatus
     progress_status?: ProgressStatus
+    visibility: ProjectVisibility
+    embargo_date: string | null
     budget: number | null
     start_date: string | null
     end_date: string | null
+    due_date: string | null
     notes: string | null
     created_at: string
     clients?: {
@@ -77,6 +84,10 @@ export interface Project {
     owner?: {
         name: string | null
     }
+    pm_dancer?: {
+        id: string
+        stage_name: string
+    } | null
     proposals?: ProjectProposal[]
 }
 
@@ -119,4 +130,27 @@ export interface ProfileRequest {
         name: string | null
         email: string | null
     }
+}
+
+export type TaskStatus = 'pending' | 'in_progress' | 'completed' | 'cancelled'
+export type TaskPriority = 'low' | 'medium' | 'high'
+
+export interface ProjectTask {
+    id: string
+    project_id: string
+    title: string
+    description: string | null
+    status: TaskStatus
+    priority: TaskPriority | null
+    due_date: string | null
+    assigned_to: string | null
+    created_by: string
+    completed_at: string | null
+    created_at: string
+    updated_at: string
+    assigned_dancer?: {
+        id: string
+        stage_name: string
+        profile_img: string | null
+    } | null
 }

@@ -109,7 +109,7 @@ function ProposalsPage() {
                         </Link>
                         <h1 className="text-xl font-bold text-white">제안 관리</h1>
                     </div>
-                    {activeTab === 'inbox' && (
+                    {activeTab === 'outbox' && (
                         <Link
                             href="/my/proposals/new"
                             className="p-2 bg-neutral-800 rounded-full text-primary hover:bg-neutral-700 transition"
@@ -119,8 +119,8 @@ function ProposalsPage() {
                     )}
                 </div>
 
-                {/* Profile Filter */}
-                {allProfiles.length > 0 && (
+                {/* Profile Filter — inbox 탭에서만 표시 (받은 제안은 댄서 프로필 기준 필터링) */}
+                {activeTab === 'inbox' && allProfiles.length > 0 && (
                     <div className="px-6 pb-2">
                         <div className="relative">
                             <select
@@ -191,7 +191,11 @@ function ProposalsPage() {
                         <p className="text-white/60">
                             {proposals.length > 0 && (searchQuery || statusFilter || categoryFilter)
                                 ? '검색 조건에 맞는 제안이 없습니다.'
-                                : activeTab === 'inbox' ? '받은 제안이 없습니다.' : '보낸 제안이 없습니다.'
+                                : activeTab === 'inbox'
+                                    ? (allProfiles.length === 0
+                                        ? '댄서 프로필이 없어 받은 제안을 확인할 수 없습니다.'
+                                        : '받은 제안이 없습니다.')
+                                    : '보낸 제안이 없습니다.'
                             }
                         </p>
                         {proposals.length > 0 && (searchQuery || statusFilter || categoryFilter) && (
@@ -202,9 +206,14 @@ function ProposalsPage() {
                                 필터 초기화
                             </button>
                         )}
+                        {activeTab === 'inbox' && allProfiles.length === 0 && (
+                            <p className="text-white/40 text-xs mt-2">
+                                받은 제안은 댄서 프로필에 대해 수신됩니다.
+                            </p>
+                        )}
                         {activeTab === 'outbox' && proposals.length === 0 && (
                             <Link href="/my/proposals/new" className="inline-block mt-4 px-6 py-2 bg-primary text-black font-bold rounded-full text-sm">
-                                제안 보내기
+                                댄서에게 제안 보내기
                             </Link>
                         )}
                     </div>

@@ -1,9 +1,9 @@
 'use client'
 
-import { useEffect } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { useAuth } from '@/lib/auth-context'
-import { useRouter } from 'next/navigation'
-import { ArrowLeft, User as UserIcon, Users, Edit, ExternalLink, Share2, Loader2, Plus, CheckCircle, AlertCircle, Mail, Clock, Crown, Shield } from 'lucide-react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { ArrowLeft, User as UserIcon, Edit, ExternalLink, Share2, Loader2, Plus, CheckCircle, AlertCircle, Mail, Clock, Crown, Shield } from 'lucide-react'
 import Link from 'next/link'
 import { useMyProfiles } from '@/hooks/useMyProfiles'
 import type { ProfileStats } from '@/hooks/useMyProfiles'
@@ -25,16 +25,37 @@ function calcCompleteness(dancer: any, careerCount: number): { score: number; to
     return { score, total: checks.length, missing }
 }
 
-export default function ProfilesPage() {
+export default function ProfilesPageWrapper() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center bg-background">
+                <Loader2 className="w-8 h-8 text-primary animate-spin" />
+            </div>
+        }>
+            <ProfilesPage />
+        </Suspense>
+    )
+}
+
+function ProfilesPage() {
     const { user, loading: authLoading } = useAuth()
     const router = useRouter()
+    const searchParams = useSearchParams()
     const { ownedDancers, managedDancers, profileStats, loading } = useMyProfiles()
+    const [showOneProfileMessage, setShowOneProfileMessage] = useState(false)
 
     useEffect(() => {
         if (!authLoading && !user) {
             router.push('/auth/signin')
         }
     }, [user, authLoading, router])
+
+    useEffect(() => {
+        if (searchParams.get('message') === 'one_profile_only') {
+            setShowOneProfileMessage(true)
+            router.replace('/my/profiles', { scroll: false })
+        }
+    }, [searchParams, router])
 
     const handleShare = (dancer: any) => {
         const url = `${window.location.origin}/profile/${dancer.slug || dancer.id}`
@@ -65,6 +86,21 @@ export default function ProfilesPage() {
             </div>
 
             <div className="p-6 space-y-6">
+                {/* 내 프로필 1개 제한 안내 (프로필 생성 페이지에서 리다이렉트된 경우) */}
+                {showOneProfileMessage && (
+                    <div className="rounded-xl bg-amber-500/5 border border-amber-500/20 p-3 text-sm text-amber-200/90">
+                        <p className="font-medium">내 프로필은 계정당 1개만 보유할 수 있습니다.</p>
+                        <p className="text-xs text-white/50 mt-1">다른 댄서 프로필은 매니저 권한으로 관리할 수 있어요.</p>
+                        <button
+                            type="button"
+                            onClick={() => setShowOneProfileMessage(false)}
+                            className="text-xs text-amber-400 hover:underline mt-2"
+                        >
+                            닫기
+                        </button>
+                    </div>
+                )}
+
                 {/* Profile Count Summary Chips */}
                 {(ownedDancers.length > 0 || managedDancers.length > 0) && (
                     <div className="flex items-center gap-2">
@@ -115,14 +151,28 @@ export default function ProfilesPage() {
                     </div>
                 )}
 
-                {/* Add Profile Button */}
-                <Link
-                    href="/onboarding"
-                    className="flex items-center justify-center gap-2 w-full py-4 border border-dashed border-neutral-700 rounded-2xl text-white/60 hover:text-white hover:border-primary/50 transition-colors"
-                >
-                    <Plus className="w-5 h-5" />
-                    <span className="font-medium text-sm">새 프로필 추가</span>
-                </Link>
+                {/* Add Profile / Manager CTA */}
+                {ownedDancers.length >= 1 ? (
+                    <div className="rounded-2xl border border-dashed border-neutral-700 p-4 text-center">
+                        <p className="text-white/50 text-sm mb-2">내 프로필은 1개만 보유할 수 있습니다</p>
+                        <p className="text-white/40 text-xs mb-3">다른 댄서 프로필을 매니저 권한으로 관리하려면</p>
+                        <Link
+                            href="/onboarding"
+                            className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-500/20 border border-blue-500/30 text-blue-300 rounded-xl text-sm font-medium hover:bg-blue-500/30 transition-colors"
+                        >
+                            <Shield className="w-4 h-4" />
+                            매니저 권한 요청하기
+                        </Link>
+                    </div>
+                ) : (
+                    <Link
+                        href="/onboarding"
+                        className="flex items-center justify-center gap-2 w-full py-4 border border-dashed border-neutral-700 rounded-2xl text-white/60 hover:text-white hover:border-primary/50 transition-colors"
+                    >
+                        <Plus className="w-5 h-5" />
+                        <span className="font-medium text-sm">새 프로필 추가</span>
+                    </Link>
+                )}
             </div>
         </div>
     )

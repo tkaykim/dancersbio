@@ -39,7 +39,7 @@ export function useProjects() {
                     .from('proposals')
                     .select('project_id')
                     .in('dancer_id', dancerIds)
-                    .eq('status', 'accepted')
+                    .in('status', ['accepted', 'pending', 'negotiating'])
 
                 if (acceptedProposals && acceptedProposals.length > 0) {
                     const projectIds = [...new Set(acceptedProposals.map(p => p.project_id))]

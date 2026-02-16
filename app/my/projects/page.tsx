@@ -3,11 +3,11 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '@/lib/auth-context'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Loader2, Briefcase, Users, Calendar, ChevronRight, Plus, TrendingUp, TrendingDown, ArrowDownRight } from 'lucide-react'
+import { ArrowLeft, Loader2, Briefcase, Users, Calendar, ChevronRight, Plus, EyeOff } from 'lucide-react'
 import Link from 'next/link'
 import { useProjects } from '@/hooks/useProjects'
 import { supabase } from '@/lib/supabase'
-import { getRelativeTime, getProjectStatuses } from '@/lib/utils'
+import { getRelativeTime, getProjectStatuses, isProjectPublic, isEmbargoActive } from '@/lib/utils'
 import type { Project } from '@/lib/types'
 
 const CONFIRMATION_LABELS: Record<string, { label: string; color: string }> = {
@@ -49,13 +49,8 @@ export default function ProjectsPage() {
 
     useEffect(() => {
         if (!user) return
-        supabase
-            .from('dancers')
-            .select('id')
-            .or(`owner_id.eq.${user.id},manager_id.eq.${user.id}`)
-            .then(({ data }) => {
-                setMyDancerIds((data || []).map(d => d.id))
-            })
+        supabase.from('dancers').select('id').or(`owner_id.eq.${user.id},manager_id.eq.${user.id}`)
+            .then(({ data }) => setMyDancerIds((data || []).map((d: { id: string }) => d.id)))
     }, [user])
 
     if (authLoading || loading) {
@@ -97,7 +92,12 @@ export default function ProjectsPage() {
                         </div>
                     ) : (
                         activeProjects.map(project => (
-                            <ProjectCard key={project.id} project={project} userId={user!.id} myDancerIds={myDancerIds} />
+                            <ProjectCard
+                                key={project.id}
+                                project={project}
+                                userId={user!.id}
+                                myDancerIds={myDancerIds}
+                            />
                         ))
                     )}
                 </section>
@@ -106,7 +106,12 @@ export default function ProjectsPage() {
                     <section className="space-y-3">
                         <h2 className="text-sm font-semibold text-white/50 px-1">지난 프로젝트 ({pastProjects.length})</h2>
                         {pastProjects.map(project => (
-                            <ProjectCard key={project.id} project={project} userId={user!.id} myDancerIds={myDancerIds} />
+                            <ProjectCard
+                                key={project.id}
+                                project={project}
+                                userId={user!.id}
+                                myDancerIds={myDancerIds}
+                            />
                         ))}
                     </section>
                 )}
@@ -120,9 +125,12 @@ function ProjectCard({ project, userId, myDancerIds }: { project: Project; userI
     const confirmLabel = CONFIRMATION_LABELS[confirmation] || CONFIRMATION_LABELS.negotiating
     const progressLabel = PROGRESS_LABELS[progress] || PROGRESS_LABELS.idle
     const isOwner = project.owner_id === userId
+    const isPm = project.pm_dancer_id != null && myDancerIds.includes(project.pm_dancer_id)
+    const proposals = project.proposals || []
+    const activeStatuses = ['accepted', 'pending', 'negotiating']
 
     const uniqueDancerMap = new Map<string, string>()
-    for (const p of project.proposals || []) {
+    for (const p of proposals) {
         const existing = uniqueDancerMap.get(p.dancer_id)
         if (!existing || p.status === 'accepted') {
             uniqueDancerMap.set(p.dancer_id, p.status)
@@ -130,6 +138,10 @@ function ProjectCard({ project, userId, myDancerIds }: { project: Project; userI
     }
     const acceptedCount = Array.from(uniqueDancerMap.values()).filter(s => s === 'accepted').length
     const totalCount = uniqueDancerMap.size
+
+    const myProposal = proposals.find((p: any) => myDancerIds.includes(p.dancer_id) && activeStatuses.includes(p.status))
+    const pmRevenue = proposals.filter((p: any) => p.dancer_id === project.pm_dancer_id && activeStatuses.includes(p.status)).reduce((a: number, p: any) => a + (p.fee || 0), 0)
+    const totalExpense = proposals.filter((p: any) => p.dancer_id !== project.pm_dancer_id && activeStatuses.includes(p.status)).reduce((a: number, p: any) => a + (p.fee || 0), 0)
 
     return (
         <Link href={`/my/projects/${project.id}`} className="block">
@@ -150,10 +162,25 @@ function ProjectCard({ project, userId, myDancerIds }: { project: Project; userI
                                     {CATEGORY_LABELS[project.category] || project.category}
                                 </span>
                             )}
-                            {isOwner ? (
+                            {isOwner && (
                                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">내 프로젝트</span>
-                            ) : (
-                                <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 font-medium">참여 중</span>
+                            )}
+                            {isPm && (
+                                <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-400 font-medium">PM</span>
+                            )}
+                            {!isOwner && !isPm && myProposal && (
+                                <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${myProposal.status === 'accepted'
+                                    ? 'bg-blue-500/10 text-blue-400'
+                                    : 'bg-yellow-500/10 text-yellow-400'
+                                }`}>
+                                    {myProposal.status === 'accepted' ? '참여 중' : '제안 검토 중'}
+                                </span>
+                            )}
+                            {!isProjectPublic(project.visibility, project.embargo_date) && (
+                                <span className="text-[10px] px-2 py-0.5 rounded-full bg-orange-500/10 text-orange-400 font-medium flex items-center gap-0.5">
+                                    <EyeOff className="w-2.5 h-2.5" /> 비공개
+                                    {isEmbargoActive(project.embargo_date) && <span className="text-[8px] text-red-400 ml-0.5">(엠바고)</span>}
+                                </span>
                             )}
                         </div>
                         <h3 className="text-white font-bold text-sm truncate">{project.title}</h3>
@@ -178,52 +205,24 @@ function ProjectCard({ project, userId, myDancerIds }: { project: Project; userI
                     <span className="ml-auto">{getRelativeTime(project.created_at)}</span>
                 </div>
 
-                {/* 재무 미니 요약: 오너 / 참여자 관점 분리 */}
-                {(() => {
-                    if (isOwner) {
-                        // 오너 시점: 매출(클라이언트 예산) - 지출(댄서 섭외비) = 순수익
-                        const ownerFee = (project.proposals || [])
-                            .find((p: any) => p.status === 'accepted' && myDancerIds.includes(p.dancer_id))?.fee || 0
-                        const revenue = project.budget || ownerFee || 0
-                        const expense = (project.proposals || [])
-                            .filter((p: any, i: number, arr: any[]) => {
-                                if (p.status !== 'accepted') return false
-                                if (myDancerIds.includes(p.dancer_id)) return false
-                                return arr.findIndex((x: any) => x.dancer_id === p.dancer_id && x.status === 'accepted') === i
-                            })
-                            .reduce((acc: number, p: any) => acc + (p.fee || 0), 0)
-                        const net = revenue - expense
-                        if (revenue === 0 && expense === 0) return null
-                        return (
-                            <div className="flex items-center gap-3 text-[11px] pt-1.5 mt-1 border-t border-neutral-800/40">
-                                {revenue > 0 && (
-                                    <span className="text-blue-400/60">내 매출 {revenue.toLocaleString()}</span>
-                                )}
-                                {expense > 0 && (
-                                    <span className="text-red-400/60">내 지출 {expense.toLocaleString()}</span>
-                                )}
-                                {revenue > 0 && (
-                                    <span className={`ml-auto flex items-center gap-0.5 font-semibold ${net >= 0 ? 'text-green-400/70' : 'text-red-400/70'}`}>
-                                        {net >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-                                        순수익 {net.toLocaleString()}
-                                    </span>
-                                )}
-                            </div>
-                        )
-                    } else {
-                        // 참여자 시점: 제안받은 금액 = 내 매출
-                        const myProposal = (project.proposals || [])
-                            .find((p: any) => p.status === 'accepted' && myDancerIds.includes(p.dancer_id))
-                        if (!myProposal?.fee) return null
-                        return (
-                            <div className="flex items-center gap-3 text-[11px] pt-1.5 mt-1 border-t border-neutral-800/40">
-                                <ArrowDownRight className="w-3 h-3 text-blue-400/60" />
-                                <span className="text-blue-400/60 font-medium">내 매출</span>
-                                <span className="ml-auto text-blue-400/80 font-semibold">{myProposal.fee.toLocaleString()}원</span>
-                            </div>
-                        )
-                    }
-                })()}
+                {/* PM만 전체 매출/지출, 참여자는 본인 제안 단가만 */}
+                {isPm && (pmRevenue > 0 || totalExpense > 0) && (
+                    <div className="flex items-center gap-2 text-[10px] text-white/25 pt-1 mt-0.5 border-t border-neutral-800/30">
+                        {pmRevenue > 0 && <span className="text-blue-400/50">매출 {pmRevenue.toLocaleString()}</span>}
+                        {totalExpense > 0 && <><span>·</span><span className="text-red-400/50">지출 {totalExpense.toLocaleString()}</span></>}
+                        <span className={`ml-auto font-medium ${(pmRevenue - totalExpense) >= 0 ? 'text-green-400/50' : 'text-red-400/50'}`}>
+                            순익 {(pmRevenue - totalExpense).toLocaleString()}
+                        </span>
+                    </div>
+                )}
+                {!isPm && myProposal && (
+                    <div className="flex items-center gap-2 text-[10px] text-white/25 pt-1 mt-0.5 border-t border-neutral-800/30">
+                        <span className="text-white/40">내 제안 단가</span>
+                        <span className={myProposal.fee ? 'text-primary/70 font-medium' : 'text-yellow-400/50'}>
+                            {myProposal.fee ? `${(myProposal.fee as number).toLocaleString()}원` : '미정'}
+                        </span>
+                    </div>
+                )}
             </div>
         </Link>
     )

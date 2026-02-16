@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "mcp:playwright": "npx -y @playwright/mcp@0.0.68 --port 8931 --browser chromium"
   },
   "dependencies": {
     "@supabase/auth-helpers-nextjs": "^0.15.0",
@@ -22,10 +23,12 @@
     "tailwind-merge": "^3.4.0"
   },
   "devDependencies": {
+    "@playwright/mcp": "^0.0.68",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20.19.30",
     "@types/react": "^19.2.10",
     "@types/react-dom": "^19.2.3",
+    "dotenv": "^17.3.1",
     "eslint": "^9.39.2",
     "eslint-config-next": "^16.1.6",
     "tailwindcss": "^4",

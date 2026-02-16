@@ -41,6 +41,7 @@ export default function CreateProfilePage() {
     const { user, loading: authLoading } = useAuth()
     const [step, setStep] = useState(1)
     const [loading, setLoading] = useState(false)
+    const [ownedProfileCheck, setOwnedProfileCheck] = useState<boolean | null>(null)
     const [formData, setFormData] = useState({
         stage_name: '',
         korean_name: '',
@@ -56,8 +57,26 @@ export default function CreateProfilePage() {
     useEffect(() => {
         if (!authLoading && !user) {
             router.push('/auth/signin')
+            return
+        }
+        if (user) {
+            supabase
+                .from('dancers')
+                .select('id')
+                .eq('owner_id', user.id)
+                .limit(1)
+                .maybeSingle()
+                .then(({ data }) => {
+                    setOwnedProfileCheck(!!data)
+                })
         }
     }, [user, authLoading, router])
+
+    useEffect(() => {
+        if (ownedProfileCheck === true) {
+            router.replace('/my/profiles?message=one_profile_only')
+        }
+    }, [ownedProfileCheck, router])
 
     const setSpecialties = (specialties: string[]) => {
         setFormData(prev => ({ ...prev, specialties }))
@@ -104,7 +123,15 @@ export default function CreateProfilePage() {
         }
     }
 
-    if (authLoading) {
+    if (authLoading || ownedProfileCheck === null) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-background">
+                <Loader2 className="w-8 h-8 text-primary animate-spin" />
+            </div>
+        )
+    }
+
+    if (ownedProfileCheck === true) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-background">
                 <Loader2 className="w-8 h-8 text-primary animate-spin" />

@@ -143,13 +143,13 @@ export default function ProfileHeader({ dancer }: ProfileHeaderProps) {
                         </div>
                     )}
 
-                    {/* Main Action Buttons (Proprosal / Portfolio) */}
-                    <div className="flex gap-2.5 w-full justify-center max-w-[240px] mb-8">
-                        <Link href={`/proposal/${dancer.id}`} className="flex-1 bg-white text-black h-9 rounded-full font-bold text-[11px] uppercase tracking-wider hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
-                            Proposal
+                    {/* Main Action Buttons */}
+                    <div className="flex gap-2.5 w-full justify-center max-w-[260px] mb-8">
+                        <Link href={`/my/proposals/new?dancer_id=${dancer.id}`} className="flex-1 bg-white text-black h-9 rounded-full font-bold text-[11px] uppercase tracking-wider hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
+                            제안하기
                         </Link>
                         <button className="flex-1 bg-white/10 backdrop-blur-md text-white border border-white/10 h-9 rounded-full font-bold text-[11px] uppercase tracking-wider hover:bg-white/20 transition-colors flex items-center justify-center gap-2">
-                            Portfolio
+                            포트폴리오
                         </button>
                     </div>
 
