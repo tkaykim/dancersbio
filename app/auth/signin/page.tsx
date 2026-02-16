@@ -20,7 +20,7 @@ export default function SignInPage() {
 
         try {
             await signIn(email, password)
-            router.push('/dashboard')
+            router.push('/my')
         } catch (err: any) {
             setError(err.message || '로그인에 실패했습니다.')
         } finally {

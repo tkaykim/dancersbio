@@ -14,20 +14,42 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
+async function ensurePublicUserRecord(user: User) {
+    const { data } = await supabase
+        .from('users')
+        .select('id')
+        .eq('id', user.id)
+        .single()
+
+    if (!data) {
+        await supabase.from('users').insert({
+            id: user.id,
+            email: user.email!,
+            name: user.user_metadata?.name || user.email?.split('@')[0] || '',
+        })
+    }
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [user, setUser] = useState<User | null>(null)
     const [loading, setLoading] = useState(true)
 
     useEffect(() => {
-        // Check active session
         supabase.auth.getSession().then(({ data: { session } }) => {
-            setUser(session?.user ?? null)
+            const sessionUser = session?.user ?? null
+            setUser(sessionUser)
             setLoading(false)
+            if (sessionUser) {
+                ensurePublicUserRecord(sessionUser)
+            }
         })
 
-        // Listen for auth changes
         const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-            setUser(session?.user ?? null)
+            const sessionUser = session?.user ?? null
+            setUser(sessionUser)
+            if (sessionUser) {
+                ensurePublicUserRecord(sessionUser)
+            }
         })
 
         return () => subscription.unsubscribe()
@@ -41,12 +63,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             if (error) throw error
         },
         signUp: async (email: string, password: string, name: string) => {
-            const { error } = await supabase.auth.signUp({
+            const { data, error } = await supabase.auth.signUp({
                 email,
                 password,
                 options: { data: { name } }
             })
             if (error) throw error
+
+            if (data.user) {
+                await supabase.from('users').upsert({
+                    id: data.user.id,
+                    email,
+                    name,
+                })
+            }
         },
         signOut: async () => {
             const { error } = await supabase.auth.signOut()

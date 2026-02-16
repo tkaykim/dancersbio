@@ -21,7 +21,7 @@ function AuthCallbackContent() {
         } else {
             setStatus('success')
             setMessage('이메일 인증이 완료되었습니다!')
-            setTimeout(() => router.push('/dashboard'), 2000)
+            setTimeout(() => router.push('/my'), 2000)
         }
     }, [searchParams, router])
 
@@ -41,7 +41,7 @@ function AuthCallbackContent() {
                         <CheckCircle2 className="w-16 h-16 text-green-500 mx-auto mb-4" />
                         <h1 className="text-2xl font-bold text-white mb-2">인증 완료!</h1>
                         <p className="text-white/60 mb-6">{message}</p>
-                        <p className="text-white/40 text-sm">대시보드로 이동 중...</p>
+                        <p className="text-white/40 text-sm">마이페이지로 이동 중...</p>
                     </>
                 )}
 

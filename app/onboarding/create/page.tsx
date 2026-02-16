@@ -95,8 +95,8 @@ export default function CreateProfilePage() {
 
             if (error) throw error
 
-            alert('프로필이 생성되었습니다!')
-            router.push(`/profile/${data.id}`)
+            alert('프로필이 생성되었습니다! 관리자 승인 후 공개됩니다.')
+            router.push('/my/profiles')
         } catch (err: any) {
             alert('프로필 생성 실패: ' + err.message)
         } finally {

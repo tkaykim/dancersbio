@@ -1,8 +1,8 @@
-# 데이터베이스 설계 명세서 (Database Schema Specification) v2.1
+# 데이터베이스 설계 명세서 (Database Schema Specification) v2.2
 
 ## 1. 개요 (Overview)
 본 문서는 `dancers.bio` 서비스의 데이터 영속성 계층을 정의합니다. 
-**v2.1 변경사항**: `active_mode` 등 불필요한 모드 구분 필드를 제거하고, **모든 유저가 잠재적 클라이언트**가 될 수 있는 유연한 구조로 업데이트했습니다.
+**v2.2 변경사항**: 관리자 승인 워크플로우 추가. `users.role` 필드, `profile_requests` 테이블 신규 추가. `dancers.is_verified`를 관리자 승인 게이트로 활용.
 
 ---
 
@@ -24,9 +24,10 @@ Supabase Auth와 1:1로 매핑되는 최상위 사용자 테이블입니다.
 
 | Column | Type | Nullable | Description |
 | :--- | :--- | :--- | :--- |
-| `id` | uuid | Win | `auth.users.id` (PK) |
+| `id` | uuid | No | `auth.users.id` (PK) |
 | `email` | text | No | 고유 이메일 |
 | `name` | text | No | 실명 |
+| `role` | text | No | `'user'` \| `'admin'` (default: `'user'`) |
 | `created_at` | timestamptz | No | 가입일 |
 
 ### 3.2. `dancers` (아티스트 프로필)
@@ -34,11 +35,14 @@ Supabase Auth와 1:1로 매핑되는 최상위 사용자 테이블입니다.
 
 | Column | Type | Nullable | Description |
 | :--- | :--- | :--- | :--- |
+| Column | Type | Nullable | Description |
+| :--- | :--- | :--- | :--- |
 | `id` | uuid | No | PK |
 | **`owner_id`** | uuid | **Yes** | `users.id` (NULL = 미등록 상태) |
 | `manager_id` | uuid | Yes | `users.id` (매니저) |
 | `stage_name` | text | No | 활동명 (검색 인덱싱) |
 | `profile_img` | text | Yes | 대표 이미지 URL |
+| **`is_verified`** | boolean | No | **관리자 승인 여부** (default: `false`). `true`여야 공개 검색/리스팅에 노출 |
 | **`specialties`** | text[] | Yes | **['choreo', 'broadcast', 'battle']** (주요 활동 영역) |
 | **`genres`** | text[] | Yes | **['HipHop', 'Popping', 'Locking', 'Waacking', 'Voguing']** |
 | `location` | text | Yes | 주 활동 지역 |
@@ -57,7 +61,7 @@ Supabase Auth와 1:1로 매핑되는 최상위 사용자 테이블입니다.
 | `contact_person`| text | No | 담당자명 |
 
 ### 3.4. `projects` (업무/일감)
-모든 제안은 이 '프로젝트' 단위로 관리됩니다.
+모든 제안은 이 '프로젝트' 단위로 관리됩니다. 프로젝트는 **두 가지 상태 축**을 갖습니다.
 
 | Column | Type | Nullable | Description |
 | :--- | :--- | :--- | :--- |
@@ -65,7 +69,34 @@ Supabase Auth와 1:1로 매핑되는 최상위 사용자 테이블입니다.
 | **`owner_id`** | uuid | No | 생성자 (`users.id`) |
 | **`client_profile_id`** | uuid | **Yes** | 비즈니스 프로필 연결 (없으면 개인 자격) |
 | `title` | text | No | 프로젝트명 |
-| `status` | text | No | 'recruiting', 'active', 'done' |
+| `description` | text | Yes | 프로젝트 설명 |
+| `category` | text | Yes | `'choreo'` \| `'broadcast'` \| `'performance'` \| `'workshop'` \| `'judge'` |
+| **`confirmation_status`** | text | No | 클라이언트 ↔ 오너 간 확정 상태. `'negotiating'` \| `'confirmed'` \| `'declined'` \| `'cancelled'` \| `'completed'` |
+| **`progress_status`** | text | No | 내부 진행 상태. `'idle'` \| `'recruiting'` \| `'in_progress'` \| `'completed'` \| `'cancelled'` |
+| `budget` | int | Yes | 총 예산 (원) |
+| `start_date` | date | Yes | 시작일 |
+| `end_date` | date | Yes | 종료일 |
+| `notes` | text | Yes | 진행 메모/계획 |
+| `created_at` | timestamptz | No | 생성일 (default: `now()`) |
+
+**상태 흐름:**
+*   **축 1 — 확정 상태 (`confirmation_status`)**: 클라이언트와 프로젝트 오너 사이의 관계
+    *   `negotiating` → 협상/조율 중
+    *   `confirmed` → 진행 확정 (양측 합의)
+    *   `declined` → 거절됨
+    *   `cancelled` → 취소됨 (확정 후 취소)
+    *   `completed` → 완료
+*   **축 2 — 진행 상태 (`progress_status`)**: 프로젝트 오너 + 참여 댄서들의 내부 관리
+    *   `idle` → 대기 (confirmation이 확정되기 전)
+    *   `recruiting` → 모집 중 (confirmation이 `confirmed`일 때만 유효)
+    *   `in_progress` → 진행 중
+    *   `completed` → 진행 완료
+    *   `cancelled` → 취소됨
+
+**규칙:**
+*   `confirmation_status`가 `confirmed`가 되어야 `progress_status`를 `recruiting` 이상으로 변경 가능
+*   댄서 초대(모집)는 `confirmation_status === 'confirmed'` && `progress_status === 'recruiting'`일 때만 가능
+*   직접 프로젝트를 만드는 경우(이미 클라이언트와 확정된 상태): `confirmed` + `recruiting`으로 시작
 
 ### 3.5. `proposals` (제안서)
 특정 프로젝트(Project)에 댄서(Dancer)를 초대하는 연결 테이블입니다.
@@ -119,6 +150,28 @@ JSONB를 활용하여 다양한 활동 유형을 유연하게 저장합니다.
 | `created_at` | timestamptz | No | 등록일 |
 
 **Unique Constraint**: `(team_id, dancer_id)` - 한 댄서가 같은 팀에 중복 등록 불가
+
+### 3.9. `profile_requests` (프로필 권한 요청)
+프로필 소유권(claim) 또는 매니저 권한 요청을 관리자가 승인/거절하는 워크플로우입니다.
+
+| Column | Type | Nullable | Description |
+| :--- | :--- | :--- | :--- |
+| `id` | uuid | No | PK (default: `gen_random_uuid()`) |
+| `dancer_id` | uuid | No | FK `dancers` — 대상 프로필 |
+| `requester_id` | uuid | No | FK `users` — 요청한 사용자 |
+| `type` | text | No | `'claim'` \| `'manager'` |
+| `status` | text | No | `'pending'` \| `'approved'` \| `'rejected'` (default: `'pending'`) |
+| `note` | text | Yes | 요청자 메모 (사유 등) |
+| `reviewed_by` | uuid | Yes | FK `users` — 처리한 관리자 |
+| `reviewed_at` | timestamptz | Yes | 처리 시각 |
+| `created_at` | timestamptz | No | 요청 시각 (default: `now()`) |
+
+**Unique Constraint**: `(dancer_id, requester_id, type)` WHERE `status = 'pending'` — 동일 요청 중복 방지
+
+**워크플로우:**
+1. 사용자가 프로필 생성 → `is_verified = false` (승인 대기) → 관리자가 `is_verified = true`로 설정 시 공개
+2. 사용자가 기존 프로필 Claim 요청 → `profile_requests` 레코드 생성 → 관리자 승인 시 `dancers.owner_id` 업데이트
+3. 사용자가 매니저 권한 요청 → `profile_requests` 레코드 생성 → 관리자 승인 시 `dancers.manager_id` 업데이트
 
 ---
 

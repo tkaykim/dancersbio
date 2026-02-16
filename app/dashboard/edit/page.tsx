@@ -28,11 +28,9 @@ export default function EditDispatcher() {
             .eq('owner_id', user!.id)
 
         if (data && data.length === 1) {
-            // If only one profile, go directly to edit it
-            router.replace(`/dashboard/edit/${data[0].id}`)
+            router.replace(`/my/profiles/${data[0].id}/edit`)
         } else {
-            // If 0, or multiple, go to My Info to choose or create
-            router.replace('/profile/me')
+            router.replace('/my/profiles')
         }
     }
 

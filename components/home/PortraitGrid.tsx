@@ -34,7 +34,8 @@ export default function PortraitGrid({ category = "all" }: PortraitGridProps) {
                 console.error('Error fetching dancers:', error);
                 setDancers([]);
             } else {
-                setDancers((data as Dancer[]) || []);
+                const verified = ((data as Dancer[]) || []).filter((d: any) => d.is_verified !== false)
+                setDancers(verified);
             }
             setLoading(false);
         }

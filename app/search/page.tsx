@@ -50,7 +50,8 @@ export default function FindYourNamePage() {
             })
 
             if (error) throw error
-            setResults(data || [])
+            const verified = (data || []).filter((d: any) => d.is_verified !== false)
+            setResults(verified)
         } catch (err) {
             console.error('Search error:', err)
             setResults([])

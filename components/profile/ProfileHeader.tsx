@@ -171,18 +171,29 @@ export default function ProfileHeader({ dancer }: ProfileHeaderProps) {
                 </div>
             </div>
 
-            {/* Claim Banner (if needed) */}
+            {/* Claim Banner */}
             {!dancer.isClaimed && (
-                <div className="mx-6 mt-0 mb-6 p-4 bg-primary/10 border border-primary/20 rounded-xl flex justify-between items-center animate-pulse">
+                <div className="mx-6 mt-0 mb-3 p-4 bg-primary/10 border border-primary/20 rounded-xl flex justify-between items-center animate-pulse">
                     <div>
-                        <p className="text-xs text-primary font-bold mb-0.5">Are you {dancer.name}?</p>
-                        <p className="text-[10px] text-primary/70">Take control of this profile.</p>
+                        <p className="text-xs text-primary font-bold mb-0.5">본인의 프로필인가요?</p>
+                        <p className="text-[10px] text-primary/70">소유권을 요청하여 직접 관리하세요.</p>
                     </div>
                     <Link href={`/onboarding/claim?id=${dancer.id}`} className="text-xs bg-primary text-black px-4 py-2 rounded-full font-bold hover:opacity-80 transition-opacity">
-                        Claim Access
+                        소유권 요청
                     </Link>
                 </div>
             )}
+
+            {/* Manager Request Banner */}
+            <div className="mx-6 mt-0 mb-6 p-4 bg-blue-500/5 border border-blue-500/15 rounded-xl flex justify-between items-center">
+                <div>
+                    <p className="text-xs text-blue-400 font-bold mb-0.5">이 댄서의 매니저인가요?</p>
+                    <p className="text-[10px] text-blue-400/60">매니저 권한을 요청할 수 있습니다.</p>
+                </div>
+                <Link href={`/onboarding/claim?id=${dancer.id}&mode=manager`} className="text-xs bg-blue-500 text-white px-4 py-2 rounded-full font-bold hover:opacity-80 transition-opacity">
+                    매니저 요청
+                </Link>
+            </div>
         </div>
     );
 }
