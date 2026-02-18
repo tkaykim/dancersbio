@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useAdmin } from '@/hooks/useAdmin'
 import { supabase } from '@/lib/supabase'
-import { Loader2, Bell, Send, Smartphone, AlertCircle, MessageSquare, FileCheck, XCircle, CheckCircle } from 'lucide-react'
+import { Loader2, Bell, Send, Smartphone, AlertCircle, MessageSquare, FileCheck, XCircle, CheckCircle, ImagePlus, Type } from 'lucide-react'
 import AdminPageHeader from '@/components/admin/AdminPageHeader'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
@@ -33,7 +33,10 @@ export default function AdminPushPage() {
         targetType: 'all' as 'all' | 'user' | 'token',
         targetUserId: '',
         targetToken: '',
+        messageType: 'short' as 'short' | 'long' | 'image',
+        imageUrl: '' as string,
     })
+    const [imageUploading, setImageUploading] = useState(false)
     const [scenarioTarget, setScenarioTarget] = useState<'me' | 'user'>('me')
     const [scenarioTargetUserId, setScenarioTargetUserId] = useState('')
     const [scenarioSending, setScenarioSending] = useState<string | null>(null)
@@ -98,12 +101,13 @@ export default function AdminPushPage() {
         const { data: { session } } = await supabase.auth.getSession()
         const authToken = session?.access_token ?? SUPABASE_ANON_KEY
 
-        const body: { title: string; body: string; user_id?: string; token?: string } = {
+        const body: { title: string; body: string; user_id?: string; token?: string; image?: string } = {
             title: form.title,
             body: form.body,
         }
         if (form.targetType === 'user' && form.targetUserId) body.user_id = form.targetUserId
         else if (form.targetType === 'token' && form.targetToken.trim()) body.token = form.targetToken.trim()
+        if (form.messageType === 'image' && form.imageUrl.trim()) body.image = form.imageUrl.trim()
 
         try {
             const res = await fetch(`${SUPABASE_URL}/functions/v1/send-push`, {
@@ -117,9 +121,18 @@ export default function AdminPushPage() {
             })
             const data = await res.json().catch(() => ({}))
             if (res.ok) {
+                const sent = data.sent ?? 0
+                const total = data.total ?? 0
+                const results = (data.results ?? []) as { ok?: boolean; error?: string }[]
+                const failed = results.filter((r) => !r.ok)
+                const firstError = failed[0]?.error
+                let message = `발송 완료: ${sent}건 (대상 ${total}건)`
+                if (sent === 0 && total > 0 && firstError) {
+                    message += ` — 실패 사유: ${firstError}`
+                }
                 setSendResult({
-                    ok: true,
-                    message: `발송 완료: ${data.sent ?? 0}건 (대상 ${data.total ?? 0}건)`,
+                    ok: sent > 0,
+                    message,
                 })
             } else {
                 setSendResult({
@@ -279,6 +292,45 @@ export default function AdminPushPage() {
                             앱 푸시 테스트
                         </h3>
                         <div className="space-y-3">
+                            {/* 메시지 유형 */}
+                            <div>
+                                <p className="text-xs text-white/50 mb-2">메시지 유형</p>
+                                <div className="flex flex-wrap gap-2">
+                                    <label className="flex items-center gap-2 text-sm text-white/80 cursor-pointer">
+                                        <input
+                                            type="radio"
+                                            name="messageType"
+                                            checked={form.messageType === 'short'}
+                                            onChange={() => setForm({ ...form, messageType: 'short', imageUrl: '' })}
+                                            className="rounded border-neutral-600"
+                                        />
+                                        <Type className="w-4 h-4" />
+                                        짧은 메시지
+                                    </label>
+                                    <label className="flex items-center gap-2 text-sm text-white/80 cursor-pointer">
+                                        <input
+                                            type="radio"
+                                            name="messageType"
+                                            checked={form.messageType === 'long'}
+                                            onChange={() => setForm({ ...form, messageType: 'long', imageUrl: '' })}
+                                            className="rounded border-neutral-600"
+                                        />
+                                        <MessageSquare className="w-4 h-4" />
+                                        긴 메시지
+                                    </label>
+                                    <label className="flex items-center gap-2 text-sm text-white/80 cursor-pointer">
+                                        <input
+                                            type="radio"
+                                            name="messageType"
+                                            checked={form.messageType === 'image'}
+                                            onChange={() => setForm({ ...form, messageType: 'image' })}
+                                            className="rounded border-neutral-600"
+                                        />
+                                        <ImagePlus className="w-4 h-4" />
+                                        사진 첨부
+                                    </label>
+                                </div>
+                            </div>
                             <input
                                 type="text"
                                 placeholder="제목"
@@ -287,12 +339,57 @@ export default function AdminPushPage() {
                                 className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-white/40 focus:outline-none focus:border-primary text-sm"
                             />
                             <textarea
-                                placeholder="내용"
+                                placeholder={
+                                    form.messageType === 'short'
+                                        ? '짧은 메시지 (한 줄 권장, 알림 미리보기에 적합)'
+                                        : form.messageType === 'long'
+                                          ? '긴 메시지 (여러 줄 가능, 확장 시 전체 내용 표시)'
+                                          : '내용 (선택)'
+                                }
                                 value={form.body}
                                 onChange={(e) => setForm({ ...form, body: e.target.value })}
-                                rows={2}
+                                rows={form.messageType === 'long' ? 4 : 2}
                                 className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-white/40 focus:outline-none focus:border-primary resize-none text-sm"
                             />
+                            {form.messageType === 'image' && (
+                                <div className="space-y-2">
+                                    <p className="text-xs text-white/50">알림에 표시할 이미지 (JPEG/PNG/GIF/WebP, 최대 5MB)</p>
+                                    <input
+                                        type="file"
+                                        accept="image/jpeg,image/png,image/gif,image/webp"
+                                        className="w-full text-sm text-white/70 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-primary file:text-black file:font-medium"
+                                        onChange={async (e) => {
+                                            const file = e.target.files?.[0]
+                                            if (!file) return
+                                            setImageUploading(true)
+                                            try {
+                                                const name = `push-${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`
+                                                const { data, error } = await supabase.storage
+                                                    .from('push-assets')
+                                                    .upload(name, file, { cacheControl: '3600', upsert: false })
+                                                if (error) throw error
+                                                const { data: urlData } = supabase.storage.from('push-assets').getPublicUrl(data.path)
+                                                setForm((f) => ({ ...f, imageUrl: urlData.publicUrl }))
+                                            } catch (err) {
+                                                alert(err instanceof Error ? err.message : '이미지 업로드 실패')
+                                            } finally {
+                                                setImageUploading(false)
+                                                e.target.value = ''
+                                            }
+                                        }}
+                                    />
+                                    {form.imageUrl && (
+                                        <p className="text-xs text-primary truncate" title={form.imageUrl}>
+                                            ✓ 이미지 업로드됨
+                                        </p>
+                                    )}
+                                    {imageUploading && (
+                                        <p className="text-xs text-white/50 flex items-center gap-1">
+                                            <Loader2 className="w-3 h-3 animate-spin" /> 업로드 중...
+                                        </p>
+                                    )}
+                                </div>
+                            )}
                             <div className="flex flex-wrap gap-2">
                                 <label className="flex items-center gap-2 text-sm text-white/80">
                                     <input

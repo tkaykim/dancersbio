@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { useAuth } from '@/lib/auth-context';
 import { supabase } from '@/lib/supabase';
+import { useToast } from '@/components/push/ToastContext';
 import {
   checkPushPermission,
   requestPushPermission,
@@ -14,6 +15,7 @@ import {
 
 function usePushSetup() {
   const { user } = useAuth();
+  const { showToast } = useToast();
   const savedTokenRef = useRef<string | null>(null);
   const userIdRef = useRef<string | null>(null);
 
@@ -42,7 +44,13 @@ function usePushSetup() {
         const uid = userIdRef.current;
         if (uid) saveTokenToSupabase(token, uid);
       },
-      onNotificationReceived: () => {},
+      onNotificationReceived: (n) => {
+        const d = (n.data || {}) as { title?: string; body?: string; link?: string };
+        const title = n.title ?? d.title ?? '알림';
+        const body = n.body ?? d.body ?? '';
+        const link = d.link;
+        showToast(title, body, link);
+      },
       onNotificationActionPerformed: () => {},
     });
 
@@ -108,7 +116,13 @@ function usePushSetup() {
           savedTokenRef.current = newToken;
           await saveTokenToSupabase(newToken, user.id);
         },
-        onNotificationReceived: () => {},
+        onNotificationReceived: (n) => {
+          const d = (n.data || {}) as { title?: string; body?: string; link?: string };
+          const title = n.title ?? d.title ?? '알림';
+          const body = n.body ?? d.body ?? '';
+          const link = d.link;
+          showToast(title, body, link);
+        },
         onNotificationActionPerformed: (payload) => {
           const link = (payload.data as { link?: string })?.link;
           if (link && typeof window !== 'undefined') {

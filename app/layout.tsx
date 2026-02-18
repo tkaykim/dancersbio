@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/lib/auth-context";
 import LayoutSwitcher from "@/components/layout/LayoutSwitcher";
+import { ToastProvider } from "@/components/push/ToastContext";
 import PushNotificationProvider from "@/components/push/PushNotificationProvider";
 
 const geistSans = Geist({
@@ -31,9 +32,11 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-black`}
       >
         <AuthProvider>
-          <PushNotificationProvider>
-            <LayoutSwitcher>{children}</LayoutSwitcher>
-          </PushNotificationProvider>
+          <ToastProvider>
+            <PushNotificationProvider>
+              <LayoutSwitcher>{children}</LayoutSwitcher>
+            </PushNotificationProvider>
+          </ToastProvider>
         </AuthProvider>
       </body>
     </html>

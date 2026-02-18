@@ -70,17 +70,50 @@ async function getAccessToken(sa: ServiceAccount): Promise<string> {
   return data.access_token;
 }
 
+const EXPANDABLE_BODY_LENGTH = 80;
+
 async function sendFCM(
   accessToken: string,
   projectId: string,
   fcmToken: string,
   title: string,
   body: string,
-  data?: Record<string, string>
+  data?: Record<string, string>,
+  image?: string
 ): Promise<void> {
   const dataMap = data
     ? Object.fromEntries(Object.entries(data).map(([k, v]) => [k, String(v)]))
-    : undefined;
+    : ({} as Record<string, string>);
+  dataMap.title = title;
+  dataMap.body = body ?? "";
+  if (image && image.trim()) dataMap.image = image.trim();
+  if (data?.link) dataMap.link = data.link;
+
+  const useExpandable = (body?.length ?? 0) > EXPANDABLE_BODY_LENGTH || (image && image.trim());
+  const message: Record<string, unknown> = {
+    token: fcmToken,
+    data: dataMap,
+    android: {
+      priority: "high" as const,
+      ...(useExpandable
+        ? {}
+        : {
+            notification: {
+              channel_id: "default",
+              default_vibrate_timings: true,
+              default_light_settings: true,
+              ...(image?.trim() ? { image: image.trim() } : {}),
+            },
+          }),
+    },
+  };
+  if (!useExpandable) {
+    (message as any).notification = {
+      title: title || "(알림)",
+      body: body ?? "",
+      ...(image?.trim() ? { image: image.trim() } : {}),
+    };
+  }
   const res = await fetch(
     `https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`,
     {
@@ -89,13 +122,7 @@ async function sendFCM(
         Authorization: `Bearer ${accessToken}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        message: {
-          token: fcmToken,
-          notification: { title, body },
-          ...(dataMap && Object.keys(dataMap).length > 0 ? { data: dataMap } : {}),
-        },
-      }),
+      body: JSON.stringify({ message }),
     }
   );
   if (!res.ok) {
@@ -158,7 +185,14 @@ Deno.serve(async (req: Request) => {
     );
   }
 
-  let body: { user_id?: string; token?: string; title: string; body: string; data?: Record<string, string> };
+  let body: {
+    user_id?: string;
+    token?: string;
+    title: string;
+    body: string;
+    data?: Record<string, string>;
+    image?: string;
+  };
   try {
     body = (await req.json()) as typeof body;
   } catch {
@@ -168,7 +202,7 @@ Deno.serve(async (req: Request) => {
     );
   }
 
-  const { user_id, token: singleToken, title: title_ = "", body: body_ = "", data: data_ } = body;
+  const { user_id, token: singleToken, title: title_ = "", body: body_ = "", data: data_, image: image_ } = body;
   if (!title_ && !body_) {
     return new Response(
       JSON.stringify({ error: "title or body required" }),
@@ -211,7 +245,7 @@ Deno.serve(async (req: Request) => {
 
   for (const t of tokens) {
     try {
-      await sendFCM(accessToken, sa.project_id, t, title_ || "(알림)", body_, data_);
+      await sendFCM(accessToken, sa.project_id, t, title_ || "(알림)", body_, data_, image_);
       results.push({ token: t.slice(0, 20) + "...", ok: true });
     } catch (e) {
       results.push({ token: t.slice(0, 20) + "...", ok: false, error: String(e) });

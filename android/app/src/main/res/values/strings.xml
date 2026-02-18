@@ -4,4 +4,5 @@
     <string name="title_activity_main">DancersBio</string>
     <string name="package_name">com.dancersbio.app</string>
     <string name="custom_url_scheme">com.dancersbio.app</string>
+    <string name="default_notification_channel_id">default</string>
 </resources>
