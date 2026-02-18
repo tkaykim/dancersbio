@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import MobileContainer from "@/components/layout/MobileContainer";
-import BottomNav from "@/components/layout/BottomNav";
 import { AuthProvider } from "@/lib/auth-context";
+import LayoutSwitcher from "@/components/layout/LayoutSwitcher";
+import PushNotificationProvider from "@/components/push/PushNotificationProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -31,10 +31,9 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-black`}
       >
         <AuthProvider>
-          <MobileContainer className="pb-16">
-            {children}
-            <BottomNav />
-          </MobileContainer>
+          <PushNotificationProvider>
+            <LayoutSwitcher>{children}</LayoutSwitcher>
+          </PushNotificationProvider>
         </AuthProvider>
       </body>
     </html>

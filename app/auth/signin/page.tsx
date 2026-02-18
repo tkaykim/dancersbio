@@ -1,12 +1,14 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { Suspense, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
 import Link from 'next/link'
 
-export default function SignInPage() {
+function SignInContent() {
     const router = useRouter()
+    const searchParams = useSearchParams()
+    const redirectTo = searchParams.get('redirect') || '/my'
     const { signIn } = useAuth()
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
@@ -20,7 +22,7 @@ export default function SignInPage() {
 
         try {
             await signIn(email, password)
-            router.push('/my')
+            router.push(redirectTo)
         } catch (err: any) {
             setError(err.message || '로그인에 실패했습니다.')
         } finally {
@@ -92,5 +94,13 @@ export default function SignInPage() {
                 </div>
             </div>
         </div>
+    )
+}
+
+export default function SignInPage() {
+    return (
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-background text-white/60">로딩 중...</div>}>
+            <SignInContent />
+        </Suspense>
     )
 }

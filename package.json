@@ -7,6 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "cap:sync": "npx cap sync android",
+    "cap:android": "npx cap open android",
+    "build:cap": "npm run build && npx cap sync android",
     "mcp:playwright": "npx -y @playwright/mcp@0.0.68 --port 8931 --browser chromium",
     "test:e2e": "playwright test tests/e2e/full-flow.spec.ts",
     "test:e2e:headed": "playwright test tests/e2e/full-flow.spec.ts --headed"

@@ -1,286 +1,196 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
-import { useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { useAdmin } from '@/hooks/useAdmin'
 import { supabase } from '@/lib/supabase'
-import { Loader2, ShieldCheck, CheckCircle, XCircle, User as UserIcon, Eye } from 'lucide-react'
-import Link from 'next/link'
-import { getRelativeTime } from '@/lib/utils'
-import type { ProfileRequest } from '@/lib/types'
+import { getProjectStatuses, cn } from '@/lib/utils'
+import {
+    Users,
+    UserCheck,
+    Briefcase,
+    Send,
+    ClipboardList,
+    ChevronRight,
+    Loader2,
+    Bell,
+} from 'lucide-react'
 
-type AdminTab = 'profiles' | 'requests'
-
-interface PendingDancer {
-    id: string
-    stage_name: string
-    korean_name: string | null
-    profile_img: string | null
-    owner_id: string | null
-    genres: string[] | null
-    specialties: string[] | null
-    created_at: string
-    owner?: { name: string | null; email: string | null }
+interface DashboardStats {
+    usersCount: number
+    dancersVerified: number
+    dancersPending: number
+    projectsActive: number
+    proposalsPending: number
+    proposalsAccepted: number
+    proposalsDeclined: number
+    proposalsNegotiating: number
+    proposalsCancelled: number
+    requestsPending: number
+    pushTokensCount: number
+    pushMemberCount: number
 }
 
-export default function AdminPage() {
-    const router = useRouter()
-    const { isAdmin, loading: adminLoading, user } = useAdmin()
-    const [activeTab, setActiveTab] = useState<AdminTab>('profiles')
-    const [pendingDancers, setPendingDancers] = useState<PendingDancer[]>([])
-    const [requests, setRequests] = useState<ProfileRequest[]>([])
+export default function AdminDashboardPage() {
+    const { isAdmin } = useAdmin()
+    const [stats, setStats] = useState<DashboardStats | null>(null)
     const [loading, setLoading] = useState(true)
-    const [processing, setProcessing] = useState<string | null>(null)
 
     useEffect(() => {
-        if (!adminLoading && !isAdmin) {
-            router.replace('/my')
-        }
-    }, [isAdmin, adminLoading, router])
+        if (!isAdmin) return
+        loadStats()
+    }, [isAdmin])
 
-    const fetchData = useCallback(async () => {
+    async function loadStats() {
         setLoading(true)
         try {
-            if (activeTab === 'profiles') {
-                const { data } = await supabase
-                    .from('dancers')
-                    .select('id, stage_name, korean_name, profile_img, owner_id, genres, specialties, created_at, owner:users!owner_id(name, email)')
-                    .eq('is_verified', false)
-                    .order('created_at', { ascending: false })
+            const [usersRes, dancersRes, projectsRes, proposalsRes, requestsRes, pushRes] = await Promise.all([
+                supabase.from('users').select('id', { count: 'exact', head: true }),
+                supabase.from('dancers').select('id, is_verified', { count: 'exact' }),
+                supabase.from('projects').select('id, confirmation_status, progress_status, status').is('deleted_at', null),
+                supabase.from('proposals').select('id, status'),
+                supabase.from('profile_requests').select('id').eq('status', 'pending'),
+                supabase.from('push_tokens').select('id, user_id'),
+            ])
 
-                setPendingDancers((data as any) || [])
-            } else {
-                const { data } = await supabase
-                    .from('profile_requests')
-                    .select('*, dancers(id, stage_name, profile_img), requester:users!requester_id(name, email)')
-                    .eq('status', 'pending')
-                    .order('created_at', { ascending: false })
+            const usersCount = usersRes.count ?? 0
+            const dancers = (dancersRes.data ?? []) as { id: string; is_verified: boolean }[]
+            const dancersVerified = dancers.filter((d) => d.is_verified).length
+            const dancersPending = dancers.filter((d) => !d.is_verified).length
+            const projects = (projectsRes.data ?? []) as any[]
+            const projectsActive = projects.filter((p) => {
+                const { confirmation, progress } = getProjectStatuses(p)
+                if (confirmation === 'completed' || confirmation === 'declined' || confirmation === 'cancelled') return false
+                if (progress === 'completed' || progress === 'cancelled') return false
+                return true
+            }).length
+            const proposals = (proposalsRes.data ?? []) as { status: string }[]
+            const byStatus = (s: string) => proposals.filter((p) => p.status === s).length
+            const requestsPending = (requestsRes.data ?? []).length
+            const pushList = (pushRes.data ?? []) as { id: string; user_id: string }[]
+            const pushTokensCount = pushList.length
+            const pushMemberCount = new Set(pushList.map((p) => p.user_id)).size
 
-                setRequests((data as any) || [])
-            }
+            setStats({
+                usersCount,
+                dancersVerified,
+                dancersPending,
+                projectsActive,
+                proposalsPending: byStatus('pending'),
+                proposalsAccepted: byStatus('accepted'),
+                proposalsDeclined: byStatus('declined'),
+                proposalsNegotiating: byStatus('negotiating'),
+                proposalsCancelled: byStatus('cancelled'),
+                requestsPending,
+                pushTokensCount,
+                pushMemberCount,
+            })
         } catch (err) {
-            console.error('Admin fetch error:', err)
+            console.error('Admin dashboard stats error:', err)
         } finally {
             setLoading(false)
         }
-    }, [activeTab])
-
-    useEffect(() => {
-        if (isAdmin) {
-            fetchData()
-        }
-    }, [isAdmin, fetchData])
-
-    const approveProfile = async (dancerId: string) => {
-        setProcessing(dancerId)
-        try {
-            const { error } = await supabase
-                .from('dancers')
-                .update({ is_verified: true })
-                .eq('id', dancerId)
-
-            if (error) throw error
-            setPendingDancers(prev => prev.filter(d => d.id !== dancerId))
-        } catch (err) {
-            console.error('Approve error:', err)
-            alert('승인에 실패했습니다.')
-        } finally {
-            setProcessing(null)
-        }
     }
 
-    const handleRequest = async (request: ProfileRequest, action: 'approved' | 'rejected') => {
-        setProcessing(request.id)
-        try {
-            const { error: reqError } = await supabase
-                .from('profile_requests')
-                .update({
-                    status: action,
-                    reviewed_by: user!.id,
-                    reviewed_at: new Date().toISOString(),
-                })
-                .eq('id', request.id)
+    if (!isAdmin) return null
 
-            if (reqError) throw reqError
-
-            if (action === 'approved') {
-                const updateField = request.type === 'claim' ? 'owner_id' : 'manager_id'
-                const { error: dancerError } = await supabase
-                    .from('dancers')
-                    .update({ [updateField]: request.requester_id })
-                    .eq('id', request.dancer_id)
-
-                if (dancerError) throw dancerError
-            }
-
-            setRequests(prev => prev.filter(r => r.id !== request.id))
-        } catch (err) {
-            console.error('Handle request error:', err)
-            alert('처리에 실패했습니다.')
-        } finally {
-            setProcessing(null)
-        }
-    }
-
-    if (adminLoading) {
+    if (loading || !stats) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-background">
+            <div className="flex items-center justify-center min-h-[40vh]">
                 <Loader2 className="w-8 h-8 text-primary animate-spin" />
             </div>
         )
     }
 
-    if (!isAdmin) return null
+    const cards = [
+        {
+            title: '가입 회원',
+            value: stats.usersCount,
+            href: '/admin/users',
+            icon: Users,
+            desc: '전체 가입자',
+        },
+        {
+            title: '푸시 연결',
+            sub: `${stats.pushMemberCount}명 · ${stats.pushTokensCount}대`,
+            href: '/admin/push',
+            icon: Bell,
+            desc: '앱 알림 등록 현황',
+        },
+        {
+            title: '댄서 프로필 (승인)',
+            value: stats.dancersVerified,
+            href: '/admin/users',
+            icon: UserCheck,
+            desc: '공개 프로필',
+        },
+        {
+            title: '프로필 승인 대기',
+            value: stats.dancersPending,
+            href: '/admin/profiles-pending',
+            icon: UserCheck,
+            desc: '승인 필요',
+            highlight: stats.dancersPending > 0,
+        },
+        {
+            title: '진행 중 프로젝트',
+            value: stats.projectsActive,
+            href: '/admin/projects',
+            icon: Briefcase,
+            desc: '활성 프로젝트',
+        },
+        {
+            title: '제안 현황',
+            sub: `대기 ${stats.proposalsPending} · 수락 ${stats.proposalsAccepted} · 협상 ${stats.proposalsNegotiating} · 거절 ${stats.proposalsDeclined}`,
+            href: '/admin/proposals',
+            icon: Send,
+            desc: '제안서 상태별',
+        },
+        {
+            title: '권한 요청 대기',
+            value: stats.requestsPending,
+            href: '/admin/requests',
+            icon: ClipboardList,
+            desc: 'claim/매니저 요청',
+            highlight: stats.requestsPending > 0,
+        },
+    ]
 
     return (
-        <div className="min-h-screen bg-background pb-20">
-            {/* Header */}
-            <div className="sticky top-0 bg-background border-b border-neutral-800 z-10">
-                <div className="px-6 py-4 flex items-center gap-3">
-                    <ShieldCheck className="w-6 h-6 text-primary" />
-                    <h1 className="text-xl font-bold text-white">관리자</h1>
-                </div>
-
-                <div className="flex border-t border-neutral-800">
-                    <button
-                        onClick={() => setActiveTab('profiles')}
-                        className={`flex-1 py-3 text-sm font-medium relative ${activeTab === 'profiles' ? 'text-primary' : 'text-white/60'}`}
-                    >
-                        프로필 승인
-                        {activeTab === 'profiles' && <div className="absolute bottom-0 inset-x-0 h-0.5 bg-primary" />}
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('requests')}
-                        className={`flex-1 py-3 text-sm font-medium relative ${activeTab === 'requests' ? 'text-primary' : 'text-white/60'}`}
-                    >
-                        권한 요청
-                        {activeTab === 'requests' && <div className="absolute bottom-0 inset-x-0 h-0.5 bg-primary" />}
-                    </button>
-                </div>
+        <div className="w-full space-y-8">
+            <div>
+                <h1 className="text-2xl font-bold text-white md:text-3xl">대시보드</h1>
+                <p className="mt-1 text-sm text-white/50">서비스 현황 요약과 빠른 메뉴입니다.</p>
             </div>
 
-            <div className="p-4 space-y-3">
-                {loading ? (
-                    <div className="text-center py-16 text-white/40">로딩 중...</div>
-                ) : activeTab === 'profiles' ? (
-                    /* Pending Profiles */
-                    pendingDancers.length === 0 ? (
-                        <div className="text-center py-16">
-                            <CheckCircle className="w-12 h-12 text-green-400/30 mx-auto mb-3" />
-                            <p className="text-white/40 text-sm">승인 대기 중인 프로필이 없습니다</p>
-                        </div>
-                    ) : (
-                        pendingDancers.map(dancer => (
-                            <div key={dancer.id} className="bg-neutral-900 border border-neutral-800 rounded-xl p-4 space-y-3">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-12 h-12 bg-neutral-800 rounded-lg overflow-hidden flex-shrink-0">
-                                        {dancer.profile_img ? (
-                                            <img src={dancer.profile_img} alt={dancer.stage_name} className="w-full h-full object-cover" />
-                                        ) : (
-                                            <div className="w-full h-full flex items-center justify-center">
-                                                <UserIcon className="w-5 h-5 text-white/20" />
-                                            </div>
-                                        )}
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <h3 className="text-white font-bold truncate">
-                                            {dancer.stage_name}
-                                            {dancer.korean_name && <span className="text-white/40 font-normal ml-2 text-sm">{dancer.korean_name}</span>}
-                                        </h3>
-                                        <p className="text-xs text-white/40 truncate">
-                                            {dancer.owner?.name ? `등록자: ${dancer.owner.name} (${dancer.owner.email})` : '소유자 미연결'}
-                                        </p>
-                                        <p className="text-[11px] text-white/25">{getRelativeTime(dancer.created_at)}</p>
-                                    </div>
-                                    <Link
-                                        href={`/profile/${dancer.id}`}
-                                        className="p-2 bg-neutral-800 rounded-lg text-white/40 hover:text-white"
-                                    >
-                                        <Eye className="w-4 h-4" />
-                                    </Link>
-                                </div>
-
-                                {dancer.genres && dancer.genres.length > 0 && (
-                                    <div className="flex gap-1 flex-wrap">
-                                        {dancer.genres.slice(0, 5).map(g => (
-                                            <span key={g} className="text-[10px] bg-white/5 text-white/40 px-1.5 py-0.5 rounded">{g}</span>
-                                        ))}
-                                    </div>
-                                )}
-
-                                <div className="flex gap-2">
-                                    <button
-                                        onClick={() => approveProfile(dancer.id)}
-                                        disabled={processing === dancer.id}
-                                        className="flex-1 py-2.5 bg-green-500/10 text-green-400 font-semibold text-sm rounded-lg hover:bg-green-500/20 transition disabled:opacity-50 flex items-center justify-center gap-1.5"
-                                    >
-                                        {processing === dancer.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
-                                        승인
-                                    </button>
-                                </div>
+            <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
+                {cards.map((card) => (
+                    <Link
+                        key={card.href + card.title}
+                        href={card.href}
+                        className={cn(
+                            'group flex flex-col rounded-xl border bg-neutral-900/50 p-5 transition hover:border-neutral-600 hover:bg-neutral-900',
+                            card.highlight && 'ring-1 ring-primary/40 border-primary/30'
+                        )}
+                    >
+                        <div className="flex items-start justify-between gap-3">
+                            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-white/5 text-primary group-hover:bg-primary/10 transition">
+                                <card.icon className="h-5 w-5" />
                             </div>
-                        ))
-                    )
-                ) : (
-                    /* Pending Requests */
-                    requests.length === 0 ? (
-                        <div className="text-center py-16">
-                            <CheckCircle className="w-12 h-12 text-green-400/30 mx-auto mb-3" />
-                            <p className="text-white/40 text-sm">처리 대기 중인 요청이 없습니다</p>
+                            <ChevronRight className="h-5 w-5 shrink-0 text-white/20 group-hover:text-white/50 transition" />
                         </div>
-                    ) : (
-                        requests.map(req => (
-                            <div key={req.id} className="bg-neutral-900 border border-neutral-800 rounded-xl p-4 space-y-3">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-12 h-12 bg-neutral-800 rounded-lg overflow-hidden flex-shrink-0">
-                                        {req.dancers?.profile_img ? (
-                                            <img src={req.dancers.profile_img} alt={req.dancers.stage_name} className="w-full h-full object-cover" />
-                                        ) : (
-                                            <div className="w-full h-full flex items-center justify-center">
-                                                <UserIcon className="w-5 h-5 text-white/20" />
-                                            </div>
-                                        )}
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <div className="flex items-center gap-2 mb-0.5">
-                                            <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${req.type === 'claim'
-                                                ? 'bg-primary/10 text-primary'
-                                                : 'bg-blue-500/10 text-blue-400'
-                                                }`}>
-                                                {req.type === 'claim' ? '소유권 요청' : '매니저 요청'}
-                                            </span>
-                                        </div>
-                                        <h3 className="text-white font-bold text-sm truncate">{req.dancers?.stage_name}</h3>
-                                        <p className="text-xs text-white/40 truncate">
-                                            요청자: {req.requester?.name || '알 수 없음'} ({req.requester?.email})
-                                        </p>
-                                        {req.note && <p className="text-[11px] text-white/30 mt-1">"{req.note}"</p>}
-                                        <p className="text-[11px] text-white/25">{getRelativeTime(req.created_at)}</p>
-                                    </div>
-                                </div>
-
-                                <div className="flex gap-2">
-                                    <button
-                                        onClick={() => handleRequest(req, 'approved')}
-                                        disabled={processing === req.id}
-                                        className="flex-1 py-2.5 bg-green-500/10 text-green-400 font-semibold text-sm rounded-lg hover:bg-green-500/20 transition disabled:opacity-50 flex items-center justify-center gap-1.5"
-                                    >
-                                        {processing === req.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
-                                        승인
-                                    </button>
-                                    <button
-                                        onClick={() => handleRequest(req, 'rejected')}
-                                        disabled={processing === req.id}
-                                        className="flex-1 py-2.5 bg-red-500/10 text-red-400 font-semibold text-sm rounded-lg hover:bg-red-500/20 transition disabled:opacity-50 flex items-center justify-center gap-1.5"
-                                    >
-                                        <XCircle className="w-4 h-4" />
-                                        거절
-                                    </button>
-                                </div>
-                            </div>
-                        ))
-                    )
-                )}
+                        <div className="mt-4 flex-1 min-w-0">
+                            <p className="text-sm font-medium text-white/60">{card.title}</p>
+                            {card.value !== undefined && (
+                                <p className="mt-1 text-2xl font-bold text-white md:text-3xl">{card.value}</p>
+                            )}
+                            {card.sub && <p className="mt-1 text-sm text-white/70">{card.sub}</p>}
+                            {card.desc && (
+                                <p className="mt-0.5 text-xs text-white/40">{card.desc}</p>
+                            )}
+                        </div>
+                    </Link>
+                ))}
             </div>
         </div>
     )

@@ -52,6 +52,7 @@ Supabase Auth와 1:1로 매핑되는 최상위 사용자 테이블입니다.
 ### 3.3. `clients` (비즈니스 프로필)
 "비즈니스 명의"가 필요한 경우에만 등록합니다. (세금계산서 발행 등)
 *   **댄서가 개인 자격으로 제안할 때는 이 테이블이 없어도 됨.**
+*   **확장 컬럼**: 로고, 사업자번호, 이메일, 연락처, 주소, 소개(클라이언트 포털 회사 정보 등록용).
 
 | Column | Type | Nullable | Description |
 | :--- | :--- | :--- | :--- |
@@ -59,6 +60,27 @@ Supabase Auth와 1:1로 매핑되는 최상위 사용자 테이블입니다.
 | `owner_id` | uuid | No | `users.id` (소유자) |
 | `company_name` | text | Yes | 상호명 |
 | `contact_person`| text | No | 담당자명 |
+| `type` | text | No | `'company'` \| `'individual'` \| `'agency'` (default: `'company'`) |
+| `logo_url` | text | Yes | 회사 로고 URL |
+| `business_number` | text | Yes | 사업자번호 |
+| `email` | text | Yes | 회사 연락 이메일 |
+| `phone` | text | Yes | 연락처 |
+| `address` | text | Yes | 주소 |
+| `description` | text | Yes | 회사 소개 |
+| `created_at` | timestamptz | Yes | 등록일 |
+
+### 3.3.1. `client_members` (회사 소속 담당자 — 확장용)
+한 회사에 여러 담당자가 소속될 수 있도록 하는 junction 테이블. 당장은 1회사=1담당자(owner)로 운영.
+
+| Column | Type | Nullable | Description |
+| :--- | :--- | :--- | :--- |
+| `id` | uuid | No | PK |
+| `client_id` | uuid | No | FK `clients.id` |
+| `user_id` | uuid | No | FK `users.id` |
+| `role` | text | No | `'owner'` \| `'admin'` \| `'member'` |
+| `created_at` | timestamptz | Yes | 등록일 |
+
+**Unique**: `(client_id, user_id)` — 한 사용자가 같은 회사에 중복 소속 불가.
 
 ### 3.4. `projects` (업무/일감)
 모든 제안은 이 '프로젝트' 단위로 관리됩니다. 프로젝트는 **두 가지 상태 축**을 갖습니다.
