@@ -56,6 +56,15 @@ export type ProgressStatus = 'idle' | 'recruiting' | 'in_progress' | 'completed'
 
 export type ProjectVisibility = 'private' | 'public'
 
+export interface ProjectEventDate {
+    id: string
+    project_id: string
+    event_date: string
+    event_time: string | null
+    label: string | null
+    sort_order: number
+}
+
 export interface Project {
     id: string
     owner_id: string
@@ -92,7 +101,9 @@ export interface Project {
         stage_name: string
     } | null
     proposals?: ProjectProposal[]
+    event_dates?: ProjectEventDate[]
 }
+
 
 export interface ProjectProposal {
     id: string
@@ -102,6 +113,7 @@ export interface ProjectProposal {
     status: string
     role: string | null
     details: string | null
+    scheduled_date: string | null
     created_at: string
     dancers: {
         id: string

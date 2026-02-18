@@ -4,7 +4,7 @@ import { useEffect } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/lib/auth-context'
-import { LayoutDashboard, Building2, LogOut, ExternalLink, Loader2 } from 'lucide-react'
+import { LayoutDashboard, Building2, LogOut, ExternalLink, Loader2, User } from 'lucide-react'
 
 export default function ClientPortalLayout({
   children,
@@ -63,7 +63,19 @@ export default function ClientPortalLayout({
             회사 정보
           </Link>
         </nav>
-        <div className="p-2 border-t border-neutral-800 space-y-1">
+        <div className="p-2 border-t border-neutral-800 space-y-2">
+          <div className="px-3 py-2.5 rounded-lg bg-neutral-800/50 border border-neutral-700/50">
+            <p className="text-[10px] uppercase tracking-wider text-white/40 mb-1.5 flex items-center gap-1">
+              <User className="w-3 h-3" />
+              접속 계정
+            </p>
+            {user.user_metadata?.name && (
+              <p className="text-sm font-medium text-white truncate">{user.user_metadata.name}</p>
+            )}
+            <p className="text-xs text-white/60 truncate mt-0.5" title={user.email ?? ''}>
+              {user.email}
+            </p>
+          </div>
           <a
             href="/"
             target="_blank"

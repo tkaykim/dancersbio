@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/auth-context'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Loader2, Crown } from 'lucide-react'
+import { ArrowLeft, Loader2, Crown, Plus, Trash2, Calendar } from 'lucide-react'
 import Link from 'next/link'
 import { useMyProfiles } from '@/hooks/useMyProfiles'
 import { formatEmbargoDate, getKSTDateString } from '@/lib/utils'
@@ -29,6 +29,8 @@ export default function NewProjectPage() {
         companyName: '', contactPerson: '',
         pmDancerId: '', embargoDate: '',
     })
+    type EventDateRow = { date: string; time: string; label: string }
+    const [eventDates, setEventDates] = useState<EventDateRow[]>([{ date: '', time: '', label: '' }])
 
     useEffect(() => {
         if (allProfiles.length > 0 && !formData.pmDancerId) {
@@ -73,6 +75,20 @@ export default function NewProjectPage() {
             }).select('id').single()
 
             if (error) throw error
+
+            const validEventDates = eventDates.filter((r) => r.date.trim())
+            if (validEventDates.length > 0) {
+                await supabase.from('project_event_dates').insert(
+                    validEventDates.map((r, i) => ({
+                        project_id: project.id,
+                        event_date: r.date,
+                        event_time: r.time.trim() || null,
+                        label: r.label.trim() || null,
+                        sort_order: i,
+                    }))
+                )
+            }
+
             router.push(`/my/projects/${project.id}/invite`)
         } catch (err: any) {
             alert('오류: ' + err.message)
@@ -155,7 +171,71 @@ export default function NewProjectPage() {
                     </div>
                 </div>
 
-                {/* 일정 */}
+                {/* 행사 일정 (여러 날짜 + 선택 시각) */}
+                <div>
+                    <label className={labelClass}>
+                        <Calendar className="w-3.5 h-3.5 inline mr-0.5 text-primary" />
+                        행사 일정
+                    </label>
+                    <p className={hintClass}>날짜는 필수, 시각은 선택. 여러 일정을 추가할 수 있습니다 (예: 1일차 워크샵, 2일차 대회).</p>
+                    <div className="space-y-2">
+                        {eventDates.map((row, idx) => (
+                            <div key={idx} className="flex flex-wrap items-center gap-2">
+                                <input
+                                    type="date"
+                                    value={row.date}
+                                    onChange={(e) =>
+                                        setEventDates((prev) =>
+                                            prev.map((r, i) => (i === idx ? { ...r, date: e.target.value } : r))
+                                        )
+                                    }
+                                    className={`${inputClass} flex-1 min-w-[120px]`}
+                                />
+                                <input
+                                    type="time"
+                                    value={row.time}
+                                    onChange={(e) =>
+                                        setEventDates((prev) =>
+                                            prev.map((r, i) => (i === idx ? { ...r, time: e.target.value } : r))
+                                        )
+                                    }
+                                    className={`${inputClass} w-28`}
+                                    placeholder="시각(선택)"
+                                />
+                                <input
+                                    type="text"
+                                    value={row.label}
+                                    onChange={(e) =>
+                                        setEventDates((prev) =>
+                                            prev.map((r, i) => (i === idx ? { ...r, label: e.target.value } : r))
+                                        )
+                                    }
+                                    placeholder="예: 워크샵, 대회"
+                                    className={`${inputClass} flex-1 min-w-[100px] max-w-[140px]`}
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                        setEventDates((prev) => (prev.length > 1 ? prev.filter((_, i) => i !== idx) : prev))
+                                    }
+                                    className="p-2 rounded-lg text-white/50 hover:bg-white/10 hover:text-white"
+                                    aria-label="삭제"
+                                >
+                                    <Trash2 className="w-4 h-4" />
+                                </button>
+                            </div>
+                        ))}
+                        <button
+                            type="button"
+                            onClick={() => setEventDates((prev) => [...prev, { date: '', time: '', label: '' }])}
+                            className="flex items-center gap-1.5 text-sm text-primary hover:underline"
+                        >
+                            <Plus className="w-4 h-4" /> 일정 추가
+                        </button>
+                    </div>
+                </div>
+
+                {/* 시작일/종료일/마감일 (요약용, 선택) */}
                 <div className="grid grid-cols-3 gap-3">
                     <div>
                         <label className={labelClass}>시작일</label>

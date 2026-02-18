@@ -20,7 +20,7 @@ const CATEGORY_OPTIONS = [
     { value: 'judge', label: '심사' },
 ]
 
-const ROLE_PRESETS = ['메인 댄서', '백업 댄서', '공동 안무', '게스트', '디렉터']
+const ROLE_PRESETS = ['미정', '메인 댄서', '백업 댄서', '공동 안무', '게스트', '디렉터']
 
 export default function NewProposalPageWrapper() {
     return (
@@ -67,9 +67,10 @@ function NewProposalPage() {
     const [dancerSearch, setDancerSearch] = useState('')
     const [showDancerSearch, setShowDancerSearch] = useState(!preselectedDancerId)
 
-    // Proposal terms
+    // Proposal terms (비우면 미정)
     const [fee, setFee] = useState('')
     const [role, setRole] = useState('')
+    const [scheduledDate, setScheduledDate] = useState('')
     const [message, setMessage] = useState('')
 
     // Already proposed dancer IDs for selected project
@@ -203,13 +204,14 @@ function NewProposalPage() {
                 projectId = project.id
             }
 
-            // Create proposals
+            // Create proposals (역할·페이·일정 비우면 미정)
             const proposals = Array.from(selectedDancerIds).map(dancerId => ({
                 project_id: projectId,
                 dancer_id: dancerId,
                 sender_id: user.id,
-                fee: fee ? parseInt(fee) : null,
-                role: role || '참여 댄서',
+                fee: fee.trim() ? parseInt(fee) : null,
+                role: role.trim() || null,
+                scheduled_date: scheduledDate.trim() || null,
                 details: message || null,
                 status: 'pending',
             }))
@@ -499,8 +501,8 @@ function NewProposalPage() {
                             <button
                                 key={r}
                                 type="button"
-                                onClick={() => setRole(r)}
-                                className={`text-[11px] px-2.5 py-1 rounded-full transition ${role === r
+                                onClick={() => setRole(r === '미정' ? '' : r)}
+                                className={`text-[11px] px-2.5 py-1 rounded-full transition ${(r === '미정' ? !role : role === r)
                                     ? 'bg-primary/20 text-primary border border-primary/30'
                                     : 'bg-neutral-800 text-white/40 border border-neutral-700 hover:text-white/60'
                                 }`}
@@ -510,7 +512,17 @@ function NewProposalPage() {
                         ))}
                     </div>
 
+                    <p className="text-[11px] text-white/40 mb-2">비우면 미정으로 전달됩니다.</p>
                     <div className="space-y-3">
+                        <div>
+                            <label className={labelClass}>제안 일정</label>
+                            <input
+                                type="date"
+                                value={scheduledDate}
+                                onChange={e => setScheduledDate(e.target.value)}
+                                className={inputClass}
+                            />
+                        </div>
                         <div className="grid grid-cols-2 gap-3">
                             <div>
                                 <label className={labelClass}>역할</label>
@@ -518,7 +530,7 @@ function NewProposalPage() {
                                     type="text"
                                     value={role}
                                     onChange={e => setRole(e.target.value)}
-                                    placeholder="예: 메인 댄서"
+                                    placeholder="비우면 미정"
                                     className={inputClass}
                                 />
                             </div>
@@ -528,7 +540,7 @@ function NewProposalPage() {
                                     type="number"
                                     value={fee}
                                     onChange={e => setFee(e.target.value)}
-                                    placeholder="선택사항"
+                                    placeholder="비우면 미정"
                                     className={inputClass}
                                 />
                             </div>

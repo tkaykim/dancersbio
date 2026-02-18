@@ -5,71 +5,103 @@ import { Capacitor } from '@capacitor/core';
 import { useAuth } from '@/lib/auth-context';
 import { supabase } from '@/lib/supabase';
 import {
-  isPushSupported,
+  checkPushPermission,
   requestPushPermission,
   getFCMToken,
   addPushListeners,
   deleteFCMToken,
-  type NotificationPayload,
 } from '@/lib/push-notifications';
 
 function usePushSetup() {
   const { user } = useAuth();
   const savedTokenRef = useRef<string | null>(null);
 
+  async function saveTokenToSupabase(token: string, userId: string) {
+    const platform = Capacitor.getPlatform() === 'ios' ? 'ios' : Capacitor.getPlatform() === 'android' ? 'android' : 'web';
+    const { error } = await supabase.from('push_tokens').upsert(
+      { user_id: userId, token, platform, updated_at: new Date().toISOString() },
+      { onConflict: 'user_id,platform' }
+    );
+    if (error && typeof window !== 'undefined') {
+      console.warn('[Push] 토큰 저장 실패:', error.message);
+    }
+  }
+
+  // 1) 네이티브 진입 시 토큰 수신 리스너 등록(토큰이 비동기로 올 수 있음) + 권한 확인 후 getFCMToken 시도
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) return;
 
+    const removeListeners = addPushListeners({
+      onToken: (token) => {
+        savedTokenRef.current = token;
+      },
+      onNotificationReceived: () => {},
+      onNotificationActionPerformed: () => {},
+    });
+
+    const requestAndGetToken = async (): Promise<boolean> => {
+      const status = await checkPushPermission();
+      if (status === 'granted') {
+        const token = await getFCMToken();
+        if (token) savedTokenRef.current = token;
+        return true;
+      }
+      if (status === 'denied') return false;
+      const granted = await requestPushPermission();
+      if (granted) {
+        const token = await getFCMToken();
+        if (token) savedTokenRef.current = token;
+      }
+      return granted;
+    };
+
+    const id2Ref = { current: null as ReturnType<typeof setTimeout> | null };
+    const id1 = setTimeout(() => {
+      requestAndGetToken().then((ok) => {
+        if (!ok) id2Ref.current = setTimeout(requestAndGetToken, 3500);
+      });
+    }, 1800);
+
+    return () => {
+      removeListeners();
+      clearTimeout(id1);
+      if (id2Ref.current != null) clearTimeout(id2Ref.current);
+    };
+  }, []);
+
+  // 2) 로그인 시 ref에 있는 토큰을 DB에 저장 + 재시도
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform() || !user?.id) return;
+
     let removeListeners: (() => void) | undefined;
 
-    async function saveTokenToSupabase(token: string, userId: string) {
-      const platform = Capacitor.getPlatform() === 'ios' ? 'ios' : Capacitor.getPlatform() === 'android' ? 'android' : 'web';
-      const { error } = await supabase.from('push_tokens').upsert(
-        { user_id: userId, token, platform, updated_at: new Date().toISOString() },
-        { onConflict: 'user_id,platform' }
-      );
-      if (error && typeof window !== 'undefined') {
-        console.warn('[Push] 토큰 저장 실패:', error.message);
-      }
-    }
-
-    const setup = async () => {
-      const supported = await isPushSupported();
-      if (!supported) return;
-
-      const granted = await requestPushPermission();
-      if (!granted) return;
-
-      if (!user?.id) return;
-
-      let token = await getFCMToken();
+    const setupForUser = async () => {
+      let token = savedTokenRef.current ?? (await getFCMToken());
       if (token) {
         savedTokenRef.current = token;
         await saveTokenToSupabase(token, user.id);
       }
-
-      // FCM 토큰이 나중에 올 수 있음 (재시도 2회)
       const retryGetToken = async (attempt: number) => {
-        if (attempt > 2) return;
-        const t = await getFCMToken();
-        if (t && user?.id) {
+        if (attempt > 5) return;
+        const t = savedTokenRef.current ?? (await getFCMToken());
+        if (t) {
           savedTokenRef.current = t;
           await saveTokenToSupabase(t, user.id);
-        } else if (user?.id) {
-          setTimeout(() => retryGetToken(attempt + 1), 2000 * attempt);
+        } else {
+          setTimeout(() => retryGetToken(attempt + 1), 1500 * attempt);
         }
       };
-      setTimeout(() => retryGetToken(1), 2000);
-      setTimeout(() => retryGetToken(2), 5000);
+      setTimeout(() => retryGetToken(1), 1000);
+      setTimeout(() => retryGetToken(2), 3000);
+      setTimeout(() => retryGetToken(3), 6000);
+      setTimeout(() => retryGetToken(4), 10000);
 
       removeListeners = addPushListeners({
         onToken: async (newToken) => {
           savedTokenRef.current = newToken;
-          if (user?.id) await saveTokenToSupabase(newToken, user.id);
+          await saveTokenToSupabase(newToken, user.id);
         },
-        onNotificationReceived: (_notification) => {
-          // 앱이 포그라운드일 때 알림 수신 (필요 시 처리)
-        },
+        onNotificationReceived: () => {},
         onNotificationActionPerformed: (payload) => {
           const link = (payload.data as { link?: string })?.link;
           if (link && typeof window !== 'undefined') {
@@ -79,7 +111,7 @@ function usePushSetup() {
       });
     };
 
-    if (user?.id) setup();
+    setupForUser();
 
     return () => {
       removeListeners?.();

@@ -120,6 +120,20 @@ Supabase Auth와 1:1로 매핑되는 최상위 사용자 테이블입니다.
 *   댄서 초대(모집)는 `confirmation_status === 'confirmed'` && `progress_status === 'recruiting'`일 때만 가능
 *   직접 프로젝트를 만드는 경우(이미 클라이언트와 확정된 상태): `confirmed` + `recruiting`으로 시작
 
+### 3.4.1. `project_event_dates` (행사 일정)
+한 프로젝트에 **여러 개의 행사 일정**을 등록할 수 있습니다. (예: 1일차 워크샵, 2일차 대회)
+
+| Column | Type | Nullable | Description |
+| :--- | :--- | :--- | :--- |
+| `id` | uuid | No | PK |
+| `project_id` | uuid | No | FK `projects` |
+| `event_date` | date | No | 행사 날짜 |
+| `event_time` | time | Yes | 행사 시각 (선택) |
+| `label` | text | Yes | 일정 라벨 (예: '워크샵', '대회') |
+| `sort_order` | int | No | 표시 순서 (default: 0) |
+
+*   `project_event_dates`가 있으면 프로젝트 상세/클라이언트 포털에서 이 일정들을 표시하고, 없으면 기존 `start_date` ~ `end_date`를 사용합니다.
+
 ### 3.5. `proposals` (제안서)
 특정 프로젝트(Project)에 댄서(Dancer)를 초대하는 연결 테이블입니다.
 *   프로젝트 오너가 댄서를 초대하면, 해당 댄서의 `dancer_id`와 함께 `role`(역할), `fee`(금액)이 기록됩니다.
@@ -131,8 +145,9 @@ Supabase Auth와 1:1로 매핑되는 최상위 사용자 테이블입니다.
 | `project_id` | uuid | No | FK `projects` |
 | `dancer_id` | uuid | No | FK `dancers` (수신자) |
 | `sender_id` | uuid | No | FK `users` (발신자 - 추적용) |
-| `fee` | int | Yes | 제안 금액 (발신자 지출 / 수신자 매출) |
-| `role` | text | Yes | 역할 (예: '안무제작', '메인 댄서', '백업 댄서' 등) |
+| `fee` | int | Yes | 제안 금액 (발신자 지출 / 수신자 매출). 비우면 미정 |
+| `role` | text | Yes | 역할. 비우면 미정 |
+| **`scheduled_date`** | date | **Yes** | 제안 일정 (해당 댄서 출연 예정일). 비우면 미정 |
 | `details` | text | Yes | 제안 메시지/설명 |
 | **`status`** | text | No | `'pending'` \| `'accepted'` \| `'declined'` \| `'negotiating'` |
 | `negotiation_history` | jsonb | Yes | 협상/메시지 이력 배열 |

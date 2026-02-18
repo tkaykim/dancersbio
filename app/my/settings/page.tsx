@@ -16,8 +16,14 @@ export default function SettingsPage() {
     const [myTokens, setMyTokens] = useState<{ platform: string; updated_at: string }[]>([])
     const [registering, setRegistering] = useState(false)
     const [registerStatus, setRegisterStatus] = useState<string | null>(null)
-    const [notifyNewProposal, setNotifyNewProposal] = useState(true)
-    const [notifyProposalStatus, setNotifyProposalStatus] = useState(true)
+    const [notifyNewProposal, setNotifyNewProposal] = useState(() => {
+        if (typeof window === 'undefined') return true
+        return localStorage.getItem(NOTIFY_NEW_PROPOSAL_KEY) !== 'false'
+    })
+    const [notifyProposalStatus, setNotifyProposalStatus] = useState(() => {
+        if (typeof window === 'undefined') return true
+        return localStorage.getItem(NOTIFY_PROPOSAL_STATUS_KEY) !== 'false'
+    })
     const [isNativeApp, setIsNativeApp] = useState<boolean | null>(null)
 
     useEffect(() => {
@@ -76,12 +82,7 @@ export default function SettingsPage() {
                 setRegisterStatus('앱에서만 등록할 수 있습니다. Android/iOS 앱을 열어주세요.')
                 return
             }
-            const { isPushSupported, requestPushPermission, getFCMToken } = await import('@/lib/push-notifications')
-            const supported = await isPushSupported()
-            if (!supported) {
-                setRegisterStatus('이 기기에서는 푸시를 지원하지 않습니다.')
-                return
-            }
+            const { requestPushPermission, getFCMToken } = await import('@/lib/push-notifications')
             const granted = await requestPushPermission()
             if (!granted) {
                 setRegisterStatus('알림 권한이 필요합니다. 설정 → 앱 → 알림에서 허용 후 다시 시도해 주세요.')
@@ -110,16 +111,20 @@ export default function SettingsPage() {
         }
     }
 
-    const toggleNotifyNewProposal = () => {
-        const next = !notifyNewProposal
-        setNotifyNewProposal(next)
-        try { localStorage.setItem(NOTIFY_NEW_PROPOSAL_KEY, String(next)) } catch (_) {}
-    }
-    const toggleNotifyProposalStatus = () => {
-        const next = !notifyProposalStatus
-        setNotifyProposalStatus(next)
-        try { localStorage.setItem(NOTIFY_PROPOSAL_STATUS_KEY, String(next)) } catch (_) {}
-    }
+    const toggleNotifyNewProposal = useCallback(() => {
+        setNotifyNewProposal((prev) => {
+            const next = !prev
+            try { localStorage.setItem(NOTIFY_NEW_PROPOSAL_KEY, String(next)) } catch (_) {}
+            return next
+        })
+    }, [])
+    const toggleNotifyProposalStatus = useCallback(() => {
+        setNotifyProposalStatus((prev) => {
+            const next = !prev
+            try { localStorage.setItem(NOTIFY_PROPOSAL_STATUS_KEY, String(next)) } catch (_) {}
+            return next
+        })
+    }, [])
 
     const handleSignOut = async () => {
         if (confirm('로그아웃 하시겠습니까?')) {
@@ -189,24 +194,38 @@ export default function SettingsPage() {
                 <section id="notification" className="space-y-3 scroll-mt-4">
                     <h2 className="text-sm font-bold text-white/40 uppercase tracking-wider px-1">알림</h2>
                     <div className="bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden">
-                        <button type="button" onClick={toggleNotifyNewProposal} className="w-full px-5 py-4 flex items-center justify-between border-b border-neutral-800/50 hover:bg-neutral-800/50 active:bg-neutral-800 transition text-left">
-                            <div className="flex items-center gap-3">
+                        <div
+                            role="switch"
+                            aria-checked={notifyNewProposal}
+                            tabIndex={0}
+                            onClick={toggleNotifyNewProposal}
+                            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleNotifyNewProposal() } }}
+                            className="w-full px-5 py-4 flex items-center justify-between border-b border-neutral-800/50 hover:bg-neutral-800/50 active:bg-neutral-800 transition text-left cursor-pointer touch-manipulation min-h-[48px] select-none"
+                        >
+                            <div className="flex items-center gap-3 pointer-events-none">
                                 <Bell className="w-5 h-5 text-white/60" />
                                 <span className="text-white text-sm">새 제안 알림</span>
                             </div>
-                            <div className={`w-10 h-6 rounded-full flex items-center px-0.5 cursor-pointer touch-manipulation transition-colors ${notifyNewProposal ? 'bg-primary justify-end' : 'bg-neutral-700 justify-start'}`}>
-                                <div className="w-5 h-5 bg-white rounded-full" />
+                            <div className={`w-11 h-7 rounded-full flex items-center px-0.5 pointer-events-none flex-shrink-0 transition-colors ${notifyNewProposal ? 'bg-primary justify-end' : 'bg-neutral-700 justify-start'}`}>
+                                <div className="w-6 h-6 bg-white rounded-full shadow" />
                             </div>
-                        </button>
-                        <button type="button" onClick={toggleNotifyProposalStatus} className="w-full px-5 py-4 flex items-center justify-between border-b border-neutral-800/50 hover:bg-neutral-800/50 active:bg-neutral-800 transition text-left">
-                            <div className="flex items-center gap-3">
+                        </div>
+                        <div
+                            role="switch"
+                            aria-checked={notifyProposalStatus}
+                            tabIndex={0}
+                            onClick={toggleNotifyProposalStatus}
+                            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleNotifyProposalStatus() } }}
+                            className="w-full px-5 py-4 flex items-center justify-between border-b border-neutral-800/50 hover:bg-neutral-800/50 active:bg-neutral-800 transition text-left cursor-pointer touch-manipulation min-h-[48px] select-none"
+                        >
+                            <div className="flex items-center gap-3 pointer-events-none">
                                 <Bell className="w-5 h-5 text-white/60" />
                                 <span className="text-white text-sm">제안 상태 변경 알림</span>
                             </div>
-                            <div className={`w-10 h-6 rounded-full flex items-center px-0.5 cursor-pointer touch-manipulation transition-colors ${notifyProposalStatus ? 'bg-primary justify-end' : 'bg-neutral-700 justify-start'}`}>
-                                <div className="w-5 h-5 bg-white rounded-full" />
+                            <div className={`w-11 h-7 rounded-full flex items-center px-0.5 pointer-events-none flex-shrink-0 transition-colors ${notifyProposalStatus ? 'bg-primary justify-end' : 'bg-neutral-700 justify-start'}`}>
+                                <div className="w-6 h-6 bg-white rounded-full shadow" />
                             </div>
-                        </button>
+                        </div>
                         {/* 푸시 알림 (이 기기 등록) */}
                         <div className="px-5 py-4 space-y-3">
                             <div className="flex items-center gap-3">

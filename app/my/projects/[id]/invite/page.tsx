@@ -46,6 +46,7 @@ export default function InviteDancerPage() {
 
     const [feeInput, setFeeInput] = useState('')
     const [roleInput, setRoleInput] = useState('')
+    const [scheduledDateInput, setScheduledDateInput] = useState('')
     const [messageInput, setMessageInput] = useState('')
 
     const [activeTab, setActiveTab] = useState<'frequent' | 'search'>('frequent')
@@ -177,12 +178,19 @@ export default function InviteDancerPage() {
         if (selectedDancerIds.size === 0 || !user) return
         setSending(true)
         try {
-            const fee = feeInput ? parseInt(feeInput) : null
-            const role = roleInput || null
+            const fee = feeInput.trim() ? parseInt(feeInput) : null
+            const role = roleInput.trim() || null
+            const scheduled_date = scheduledDateInput.trim() || null
             const details = messageInput || null
 
             // 브리프(원본) 프로젝트에 여러 명에게 제안 시: 수신자별로 프로젝트 복제 후 각각 1건 제안. 제안 수신자 = 해당 프로젝트 PM(최초 제안 시점에 지정, 1프로젝트 1PM)
             if (isBriefProject && sourceProject) {
+                const { data: sourceEventDates } = await supabase
+                    .from('project_event_dates')
+                    .select('event_date, event_time, label, sort_order')
+                    .eq('project_id', projectId)
+                    .order('sort_order', { ascending: true })
+
                 for (const dancerId of selectedDancerIds) {
                     const { data: cloned, error: cloneErr } = await supabase
                         .from('projects')
@@ -206,12 +214,24 @@ export default function InviteDancerPage() {
                         .select('id')
                         .single()
                     if (cloneErr) throw cloneErr
+                    if (sourceEventDates?.length) {
+                        await supabase.from('project_event_dates').insert(
+                            sourceEventDates.map((ed: any, i: number) => ({
+                                project_id: cloned.id,
+                                event_date: ed.event_date,
+                                event_time: ed.event_time ?? null,
+                                label: ed.label ?? null,
+                                sort_order: i,
+                            }))
+                        )
+                    }
                     const { error: propErr } = await supabase.from('proposals').insert({
                         project_id: cloned.id,
                         dancer_id: dancerId,
                         sender_id: user.id,
                         fee,
                         role,
+                        scheduled_date,
                         details,
                         status: 'pending',
                     })
@@ -226,6 +246,7 @@ export default function InviteDancerPage() {
                     sender_id: user.id,
                     fee,
                     role,
+                    scheduled_date,
                     details,
                     status: 'pending',
                 }))
@@ -454,14 +475,25 @@ export default function InviteDancerPage() {
             {/* Bottom Sheet: Invite Details & Send Button — 내비게이션 바 위에 표시 */}
             {selectedDancerIds.size > 0 && (
                 <div className="fixed bottom-16 left-0 right-0 bg-neutral-900 border-t border-neutral-800 p-4 pb-5 space-y-3 z-50 shadow-[0_-4px_20px_rgba(0,0,0,0.5)]">
+                    <p className="text-[11px] text-white/40">비우면 미정으로 전달됩니다.</p>
+                    <div className="flex gap-2 items-center">
+                        <input
+                            type="date"
+                            value={scheduledDateInput}
+                            onChange={(e) => setScheduledDateInput(e.target.value)}
+                            placeholder="일정"
+                            className="flex-1 min-w-0 px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-sm text-white focus:outline-none focus:border-primary"
+                        />
+                        <span className="text-[11px] text-white/40 shrink-0">제안 일정</span>
+                    </div>
                     {/* 역할 빠른 선택 */}
                     <div className="flex gap-1.5 flex-wrap">
-                        {['메인 댄서', '백업 댄서', '공동 안무', '게스트', '디렉터'].map(r => (
+                        {['미정', '메인 댄서', '백업 댄서', '공동 안무', '게스트', '디렉터'].map(r => (
                             <button
                                 key={r}
                                 type="button"
-                                onClick={() => setRoleInput(r)}
-                                className={`text-[11px] px-2.5 py-1 rounded-full transition ${roleInput === r
+                                onClick={() => setRoleInput(r === '미정' ? '' : r)}
+                                className={`text-[11px] px-2.5 py-1 rounded-full transition ${(r === '미정' ? !roleInput : roleInput === r)
                                     ? 'bg-primary/20 text-primary border border-primary/30'
                                     : 'bg-neutral-800 text-white/40 border border-neutral-700 hover:text-white/60'
                                 }`}
@@ -475,14 +507,14 @@ export default function InviteDancerPage() {
                             type="text"
                             value={roleInput}
                             onChange={(e) => setRoleInput(e.target.value)}
-                            placeholder="역할 (예: 메인 댄서)"
+                            placeholder="역할 (비우면 미정)"
                             className="flex-1 px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-sm text-white placeholder-white/25 focus:outline-none focus:border-primary"
                         />
                         <input
                             type="number"
                             value={feeInput}
                             onChange={(e) => setFeeInput(e.target.value)}
-                            placeholder="금액 (원)"
+                            placeholder="금액 (원, 미정)"
                             className="w-28 px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-sm text-white placeholder-white/25 focus:outline-none focus:border-primary"
                         />
                     </div>

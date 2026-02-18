@@ -34,6 +34,7 @@ export default function ClientProposalTable({
             <tr className="border-b border-neutral-800 bg-neutral-900/50">
               <th className="text-left py-3 px-4 font-medium text-white/80">댄서</th>
               <th className="text-left py-3 px-4 font-medium text-white/80">역할</th>
+              <th className="text-left py-3 px-4 font-medium text-white/80">제안 일정</th>
               <th className="text-right py-3 px-4 font-medium text-white/80">금액</th>
               <th className="text-left py-3 px-4 font-medium text-white/80">상태</th>
               <th className="text-left py-3 px-4 font-medium text-white/80">보낸 일시</th>
@@ -43,7 +44,7 @@ export default function ClientProposalTable({
           <tbody>
             {proposals.length === 0 ? (
               <tr>
-                <td colSpan={onCancel ? 6 : 5} className="py-8 text-center text-white/50">
+                <td colSpan={onCancel ? 7 : 6} className="py-8 text-center text-white/50">
                   제안 내역이 없습니다.
                 </td>
               </tr>
@@ -83,9 +84,10 @@ export default function ClientProposalTable({
                         </span>
                       </button>
                     </td>
-                    <td className="py-3 px-4 text-white/80">{p.role ?? '—'}</td>
+                    <td className="py-3 px-4 text-white/80">{p.role ?? '미정'}</td>
+                    <td className="py-3 px-4 text-white/80">{p.scheduled_date ?? '미정'}</td>
                     <td className="py-3 px-4 text-right text-white/80">
-                      {p.fee != null ? `${(p.fee / 10000).toFixed(0)}만` : '—'}
+                      {p.fee != null ? `${(p.fee / 10000).toFixed(0)}만` : '미정'}
                     </td>
                     <td className="py-3 px-4">
                       <span

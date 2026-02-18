@@ -70,7 +70,7 @@ export default function ProjectDetailPage() {
                     clients (company_name, contact_person),
                     owner:users!owner_id (name),
                     pm_dancer:dancers!pm_dancer_id (id, stage_name),
-                    proposals (id, dancer_id, sender_id, fee, status, role, details, created_at, dancers (id, stage_name, profile_img, genres))
+                    proposals (id, dancer_id, sender_id, fee, status, role, details, scheduled_date, created_at, dancers (id, stage_name, profile_img, genres))
                 `)
                 .eq('id', id)
                 .single()
@@ -80,7 +80,14 @@ export default function ProjectDetailPage() {
                 router.replace('/my/projects')
                 return
             }
-            setProject(data as any)
+            const projectData = data as any
+            const { data: eventDates } = await supabase
+                .from('project_event_dates')
+                .select('id, project_id, event_date, event_time, label, sort_order')
+                .eq('project_id', id)
+                .order('sort_order', { ascending: true })
+            if (eventDates?.length) projectData.event_dates = eventDates
+            setProject(projectData)
             setNotes(data.notes || '')
             setBasicInfo({ description: data.description || '', due_date: data.due_date || '' })
         } catch {
@@ -397,9 +404,18 @@ export default function ProjectDetailPage() {
                                 <p className="text-xs text-white/20">설명 없음</p>
                             )}
                             <div className="flex flex-wrap gap-3 text-xs text-white/35">
-                                {project.start_date && (
+                                {project.event_dates && project.event_dates.length > 0 ? (
+                                    project.event_dates.map((ed: { event_date: string; event_time: string | null; label: string | null }) => (
+                                        <span key={ed.event_date + (ed.event_time || '') + (ed.label || '')} className="flex items-center gap-1">
+                                            <Calendar className="w-3 h-3" />
+                                            {ed.event_date}
+                                            {ed.event_time && <span className="text-white/25">{ed.event_time.slice(0, 5)}</span>}
+                                            {ed.label && <span className="text-white/25">({ed.label})</span>}
+                                        </span>
+                                    ))
+                                ) : project.start_date ? (
                                     <span className="flex items-center gap-1"><Calendar className="w-3 h-3" />{project.start_date}{project.end_date ? ` ~ ${project.end_date}` : ''}</span>
-                                )}
+                                ) : null}
                                 {project.due_date && (
                                     <span className="flex items-center gap-1 text-red-400/50"><Target className="w-3 h-3" />마감 {project.due_date}</span>
                                 )}
@@ -915,9 +931,10 @@ function DancerRow({
                             <p className="text-[10px] text-white/25 truncate">{dancer.genres.slice(0, 3).join(', ')}</p>
                         )}
                     </div>
-                    {proposal.role && <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/5 text-white/30 shrink-0">{proposal.role}</span>}
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/5 text-white/30 shrink-0">{proposal.role || '미정'}</span>
+                    {proposal.scheduled_date && <span className="text-[10px] text-white/25 shrink-0">{proposal.scheduled_date}</span>}
                     {showFee && (
-                        proposal.fee ? <span className="text-[11px] text-white/40 shrink-0">{proposal.fee.toLocaleString()}</span>
+                        proposal.fee != null ? <span className="text-[11px] text-white/40 shrink-0">{proposal.fee.toLocaleString()}원</span>
                             : <span className="text-[10px] text-yellow-400/40 shrink-0">미정</span>
                     )}
                     <StatusIcon className={`w-3.5 h-3.5 shrink-0 ${statusInfo.color}`} />

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { X, Loader2 } from 'lucide-react'
+import { X, Loader2, Plus, Trash2 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth-context'
 import { useMyClients } from '@/hooks/useMyClients'
@@ -29,6 +29,7 @@ export default function ModalNewProject({
   const { clients } = useMyClients()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  type EventRow = { date: string; time: string; label: string }
   const [form, setForm] = useState({
     title: '',
     category: 'choreo',
@@ -36,6 +37,7 @@ export default function ModalNewProject({
     startDate: '',
     endDate: '',
   })
+  const [eventDates, setEventDates] = useState<EventRow[]>([{ date: '', time: '', label: '' }])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -62,6 +64,20 @@ export default function ModalNewProject({
 
       if (projectErr) throw projectErr
       if (!project?.id) throw new Error('생성 실패')
+
+      const validEvents = eventDates.filter((r) => r.date.trim())
+      if (validEvents.length > 0) {
+        await supabase.from('project_event_dates').insert(
+          validEvents.map((r, i) => ({
+            project_id: project.id,
+            event_date: r.date,
+            event_time: r.time.trim() || null,
+            label: r.label.trim() || null,
+            sort_order: i,
+          }))
+        )
+      }
+
       onCreated(project.id)
       setForm({
         title: '',
@@ -70,6 +86,7 @@ export default function ModalNewProject({
         startDate: '',
         endDate: '',
       })
+      setEventDates([{ date: '', time: '', label: '' }])
       onClose()
     } catch (err: any) {
       setError(err.message ?? '생성에 실패했습니다.')
@@ -155,6 +172,65 @@ export default function ModalNewProject({
               </select>
             </div>
           )}
+          <div>
+            <label className="block text-sm font-medium text-white/80 mb-1.5">
+              행사 일정 (날짜 필수, 시각·라벨 선택)
+            </label>
+            <div className="space-y-2">
+              {eventDates.map((row, idx) => (
+                <div key={idx} className="flex flex-wrap items-center gap-2">
+                  <input
+                    type="date"
+                    value={row.date}
+                    onChange={(e) =>
+                      setEventDates((prev) =>
+                        prev.map((r, i) => (i === idx ? { ...r, date: e.target.value } : r))
+                      )
+                    }
+                    className="flex-1 min-w-[100px] px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:outline-none focus:border-primary"
+                  />
+                  <input
+                    type="time"
+                    value={row.time}
+                    onChange={(e) =>
+                      setEventDates((prev) =>
+                        prev.map((r, i) => (i === idx ? { ...r, time: e.target.value } : r))
+                      )
+                    }
+                    className="w-24 px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:outline-none focus:border-primary"
+                  />
+                  <input
+                    type="text"
+                    value={row.label}
+                    onChange={(e) =>
+                      setEventDates((prev) =>
+                        prev.map((r, i) => (i === idx ? { ...r, label: e.target.value } : r))
+                      )
+                    }
+                    placeholder="예: 워크샵"
+                    className="flex-1 min-w-[80px] max-w-[100px] px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-white/40 focus:outline-none focus:border-primary"
+                  />
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setEventDates((prev) => (prev.length > 1 ? prev.filter((_, i) => i !== idx) : prev))
+                    }
+                    className="p-2 rounded-lg text-white/50 hover:bg-white/10"
+                    aria-label="삭제"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={() => setEventDates((prev) => [...prev, { date: '', time: '', label: '' }])}
+                className="flex items-center gap-1 text-xs text-primary hover:underline"
+              >
+                <Plus className="w-3 h-3" /> 일정 추가
+              </button>
+            </div>
+          </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-sm font-medium text-white/80 mb-1.5">

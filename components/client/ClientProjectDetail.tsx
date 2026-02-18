@@ -60,11 +60,21 @@ export default function ClientProjectDetail({
           <p className="text-sm text-white/50 mt-0.5">
             {categoryLabel} · 제안 {proposals.length}건
           </p>
-          {project.start_date && (
-            <p className="text-xs text-white/40 mt-1">
-              {project.start_date}
-              {project.end_date && ` ~ ${project.end_date}`}
-            </p>
+          {(project.event_dates?.length
+            ? (
+                <p className="text-xs text-white/40 mt-1">
+                  {project.event_dates
+                    .sort((a, b) => a.sort_order - b.sort_order)
+                    .map((ed) => `${ed.event_date}${ed.event_time ? ` ${ed.event_time.slice(0, 5)}` : ''}${ed.label ? ` (${ed.label})` : ''}`)
+                    .join(' · ')}
+                </p>
+              )
+            : project.start_date && (
+                <p className="text-xs text-white/40 mt-1">
+                  {project.start_date}
+                  {project.end_date && ` ~ ${project.end_date}`}
+                </p>
+              )
           )}
         </div>
         <button
