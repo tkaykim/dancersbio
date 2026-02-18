@@ -216,8 +216,14 @@ function NewProposalPage() {
                 status: 'pending',
             }))
 
-            const { error: proposalErr } = await supabase.from('proposals').insert(proposals)
+            const { data: inserted, error: proposalErr } = await supabase.from('proposals').insert(proposals).select('id')
             if (proposalErr) throw proposalErr
+            if (inserted?.length) {
+              const { triggerPushEvent } = await import('@/lib/trigger-push-event')
+              for (const row of inserted) {
+                triggerPushEvent('proposal_created', { proposal_id: row.id })
+              }
+            }
 
             alert(`${selectedDancerIds.size}명의 댄서에게 제안을 보냈습니다!`)
             router.push('/my/proposals?tab=outbox')

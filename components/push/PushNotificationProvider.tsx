@@ -15,6 +15,7 @@ import {
 function usePushSetup() {
   const { user } = useAuth();
   const savedTokenRef = useRef<string | null>(null);
+  const userIdRef = useRef<string | null>(null);
 
   async function saveTokenToSupabase(token: string, userId: string) {
     const platform = Capacitor.getPlatform() === 'ios' ? 'ios' : Capacitor.getPlatform() === 'android' ? 'android' : 'web';
@@ -27,6 +28,10 @@ function usePushSetup() {
     }
   }
 
+  useEffect(() => {
+    userIdRef.current = user?.id ?? null;
+  }, [user?.id]);
+
   // 1) 네이티브 진입 시 토큰 수신 리스너 등록(토큰이 비동기로 올 수 있음) + 권한 확인 후 getFCMToken 시도
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) return;
@@ -34,6 +39,8 @@ function usePushSetup() {
     const removeListeners = addPushListeners({
       onToken: (token) => {
         savedTokenRef.current = token;
+        const uid = userIdRef.current;
+        if (uid) saveTokenToSupabase(token, uid);
       },
       onNotificationReceived: () => {},
       onNotificationActionPerformed: () => {},

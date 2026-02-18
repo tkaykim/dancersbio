@@ -17,6 +17,7 @@ import type { Project, ConfirmationStatus, ProgressStatus } from '@/lib/types'
 import TaskManager from '@/components/projects/TaskManager'
 import { ensurePmCareer } from '@/lib/ensure-pm-career'
 import { syncProjectStatusIfNoActiveProposals } from '@/lib/sync-project-status-on-proposal'
+import { triggerPushEvent } from '@/lib/trigger-push-event'
 
 const CONFIRMATION_OPTIONS: { value: ConfirmationStatus; label: string; color: string }[] = [
     { value: 'negotiating', label: '협상 중', color: 'text-yellow-400 bg-yellow-500/10' },
@@ -122,6 +123,7 @@ export default function ProjectDetailPage() {
         if (!error) {
             setProject({ ...project, ...updates })
             if (value === 'completed') await generateCareerEntries(project)
+            await triggerPushEvent('project_status_changed', { project_id: project.id })
         }
     }
 
@@ -132,6 +134,7 @@ export default function ProjectDetailPage() {
         if (!error) {
             setProject({ ...project, progress_status: value })
             if (value === 'completed') await generateCareerEntries(project)
+            await triggerPushEvent('project_status_changed', { project_id: project.id })
         }
     }
 

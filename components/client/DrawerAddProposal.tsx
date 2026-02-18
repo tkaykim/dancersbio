@@ -175,8 +175,14 @@ export default function DrawerAddProposal({
           details: d.details || null,
           status: 'pending',
         }))
-      const { error: insertErr } = await supabase.from('proposals').insert(rows)
+      const { data: inserted, error: insertErr } = await supabase.from('proposals').insert(rows).select('id')
       if (insertErr) throw insertErr
+      if (inserted?.length) {
+        const { triggerPushEvent } = await import('@/lib/trigger-push-event')
+        for (const row of inserted) {
+          triggerPushEvent('proposal_created', { proposal_id: row.id })
+        }
+      }
       onSuccess()
       onClose()
     } catch (err: any) {

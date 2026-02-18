@@ -117,7 +117,7 @@ Deno.serve(async (req: Request) => {
   }
 
   const jsonRaw = Deno.env.get("FIREBASE_SERVICE_ACCOUNT_JSON");
-  if (!jsonRaw) {
+  if (!jsonRaw || jsonRaw.trim() === "") {
     return new Response(
       JSON.stringify({ error: "FIREBASE_SERVICE_ACCOUNT_JSON secret not set" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -126,10 +126,34 @@ Deno.serve(async (req: Request) => {
 
   let sa: ServiceAccount;
   try {
-    sa = JSON.parse(jsonRaw) as ServiceAccount;
-  } catch {
+    let parsed: unknown;
+    const trimmed = jsonRaw.trim();
+    try {
+      parsed = JSON.parse(trimmed);
+    } catch {
+      try {
+        parsed = JSON.parse(atob(trimmed));
+      } catch {
+        return new Response(
+          JSON.stringify({
+            error: "Invalid FIREBASE_SERVICE_ACCOUNT_JSON: not valid JSON. Paste the full Firebase service account JSON (or base64 of it) in Supabase Dashboard → Project Settings → Edge Functions → Secrets.",
+          }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    }
+    sa = parsed as ServiceAccount;
+    if (!sa.project_id || !sa.private_key || !sa.client_email) {
+      return new Response(
+        JSON.stringify({
+          error: "Invalid FIREBASE_SERVICE_ACCOUNT_JSON: missing project_id, private_key, or client_email. Use the full JSON from Firebase Console → Project Settings → Service accounts → Generate new private key.",
+        }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+  } catch (e) {
     return new Response(
-      JSON.stringify({ error: "Invalid FIREBASE_SERVICE_ACCOUNT_JSON" }),
+      JSON.stringify({ error: "Invalid FIREBASE_SERVICE_ACCOUNT_JSON: " + String(e) }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

@@ -225,7 +225,7 @@ export default function InviteDancerPage() {
                             }))
                         )
                     }
-                    const { error: propErr } = await supabase.from('proposals').insert({
+                    const { data: insertedProposal, error: propErr } = await supabase.from('proposals').insert({
                         project_id: cloned.id,
                         dancer_id: dancerId,
                         sender_id: user.id,
@@ -234,8 +234,12 @@ export default function InviteDancerPage() {
                         scheduled_date,
                         details,
                         status: 'pending',
-                    })
+                    }).select('id').single()
                     if (propErr) throw propErr
+                    if (insertedProposal?.id) {
+                        const { triggerPushEvent } = await import('@/lib/trigger-push-event')
+                        triggerPushEvent('proposal_created', { proposal_id: insertedProposal.id })
+                    }
                 }
                 alert(`${selectedDancerIds.size}명의 안무가에게 각각 별도 프로젝트로 제안을 보냈습니다. 각 프로젝트의 PM은 제안을 받은 댄서로 자동 지정됩니다.`)
             } else {
@@ -250,8 +254,14 @@ export default function InviteDancerPage() {
                     details,
                     status: 'pending',
                 }))
-                const { error } = await supabase.from('proposals').insert(proposals)
+                const { data: inserted, error } = await supabase.from('proposals').insert(proposals).select('id')
                 if (error) throw error
+                if (inserted?.length) {
+                    const { triggerPushEvent } = await import('@/lib/trigger-push-event')
+                    for (const row of inserted) {
+                        triggerPushEvent('proposal_created', { proposal_id: row.id })
+                    }
+                }
                 alert(`${selectedDancerIds.size}명의 댄서에게 제안을 보냈습니다!`)
             }
             router.push(`/my/projects/${projectId}`)

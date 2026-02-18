@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/auth-context'
 import { supabase } from '@/lib/supabase'
 import { ensurePmCareer } from '@/lib/ensure-pm-career'
 import { syncProjectStatusIfNoActiveProposals } from '@/lib/sync-project-status-on-proposal'
+import { triggerPushEvent } from '@/lib/trigger-push-event'
 import ProposalChat from './ProposalChat'
 import ProposalMessageInput from './ProposalMessageInput'
 import type { Proposal, ProposalTab } from '@/lib/types'
@@ -100,6 +101,16 @@ export default function ProposalDetailModal({ proposal, activeTab, onClose, onUp
             return
         }
 
+        // 푸시 알림: 제안 수락/거절 시 발신자에게, 협상 메시지 시 상대편에게
+        if (type === 'accept') {
+            await triggerPushEvent('proposal_accepted', { proposal_id: proposal.id })
+        } else if (type === 'decline') {
+            await triggerPushEvent('proposal_declined', { proposal_id: proposal.id })
+        } else if (type === 'text' || type === 'offer') {
+            const from_side = activeTab === 'inbox' ? 'dancer' : 'sender'
+            await triggerPushEvent('negotiation_message', { proposal_id: proposal.id, from_side })
+        }
+
         // 제안 수락 시: 제안이 먼저 'accepted'로 반영된 뒤 프로젝트 상태 전환(RLS 정책 충족)
         if (type === 'accept') {
             try {
@@ -125,6 +136,8 @@ export default function ProposalDetailModal({ proposal, activeTab, onClose, onUp
                         if (projectError) {
                             console.error('프로젝트 상태 전환 실패:', projectError)
                             alert('제안은 수락되었으나 프로젝트 상태 반영에 실패했습니다. 프로젝트 페이지에서 확인해 주세요.')
+                        } else {
+                            await triggerPushEvent('project_status_changed', { project_id: proposal.project_id })
                         }
                     }
                     if (projectUpdates.pm_dancer_id) {

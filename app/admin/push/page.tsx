@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useAdmin } from '@/hooks/useAdmin'
 import { supabase } from '@/lib/supabase'
-import { Loader2, Bell, Send, Smartphone, AlertCircle } from 'lucide-react'
+import { Loader2, Bell, Send, Smartphone, AlertCircle, MessageSquare, FileCheck, XCircle, CheckCircle } from 'lucide-react'
 import AdminPageHeader from '@/components/admin/AdminPageHeader'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
@@ -34,6 +34,10 @@ export default function AdminPushPage() {
         targetUserId: '',
         targetToken: '',
     })
+    const [scenarioTarget, setScenarioTarget] = useState<'me' | 'user'>('me')
+    const [scenarioTargetUserId, setScenarioTargetUserId] = useState('')
+    const [scenarioSending, setScenarioSending] = useState<string | null>(null)
+    const [scenarioResult, setScenarioResult] = useState<{ scenario: string; ok: boolean; message: string } | null>(null)
 
     const fetchTokens = useCallback(async () => {
         setLoading(true)
@@ -127,6 +131,56 @@ export default function AdminPushPage() {
             setSendResult({ ok: false, message: e instanceof Error ? e.message : '네트워크 오류' })
         }
         setSending(false)
+    }
+
+    const SCENARIOS: { key: string; label: string }[] = [
+        { key: 'proposal_created', label: '새 제안 도착' },
+        { key: 'proposal_accepted', label: '제안 수락' },
+        { key: 'proposal_declined', label: '제안 거절' },
+        { key: 'negotiation_message', label: '협상 메시지' },
+        { key: 'project_status_changed', label: '프로젝트 상태 변경' },
+    ]
+
+    const sendScenarioTest = async (scenarioKey: string) => {
+        setScenarioResult(null)
+        setScenarioSending(scenarioKey)
+        const { data: { session } } = await supabase.auth.getSession()
+        const authToken = session?.access_token ?? SUPABASE_ANON_KEY
+        const body: { scenario: string; user_id?: string } = { scenario: scenarioKey }
+        if (scenarioTarget === 'user' && scenarioTargetUserId) body.user_id = scenarioTargetUserId
+
+        try {
+            const res = await fetch(`${SUPABASE_URL}/functions/v1/test-push-scenario`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${authToken}`,
+                    apikey: SUPABASE_ANON_KEY,
+                },
+                body: JSON.stringify(body),
+            })
+            const data = await res.json().catch(() => ({}))
+            if (res.ok && (data as { ok?: boolean }).ok) {
+                setScenarioResult({
+                    scenario: scenarioKey,
+                    ok: true,
+                    message: `발송 완료: ${(data as { sent?: number }).sent ?? 0}건`,
+                })
+            } else {
+                setScenarioResult({
+                    scenario: scenarioKey,
+                    ok: false,
+                    message: (data as { error?: string }).error ?? res.statusText ?? '실패',
+                })
+            }
+        } catch (e) {
+            setScenarioResult({
+                scenario: scenarioKey,
+                ok: false,
+                message: e instanceof Error ? e.message : '네트워크 오류',
+            })
+        }
+        setScenarioSending(null)
     }
 
     if (!isAdmin) return null
@@ -316,6 +370,94 @@ export default function AdminPushPage() {
                         </div>
                         </section>
                     </div>
+
+                    {/* 시나리오별 테스트 */}
+                    <section className="bg-neutral-900 border border-neutral-800 rounded-xl p-5">
+                        <h3 className="text-sm font-bold text-white/80 mb-3 flex items-center gap-2">
+                            <MessageSquare className="w-4 h-4" />
+                            시나리오별 알림 테스트
+                        </h3>
+                        <p className="text-xs text-white/50 mb-4">
+                            실제 발송되는 알림 문구로 선택한 대상에게 테스트 푸시를 보냅니다.
+                        </p>
+                        <div className="flex flex-wrap gap-2 mb-4">
+                            <label className="flex items-center gap-2 text-sm text-white/80">
+                                <input
+                                    type="radio"
+                                    name="scenarioTarget"
+                                    checked={scenarioTarget === 'me'}
+                                    onChange={() => setScenarioTarget('me')}
+                                    className="rounded border-neutral-600"
+                                />
+                                나에게
+                            </label>
+                            <label className="flex items-center gap-2 text-sm text-white/80">
+                                <input
+                                    type="radio"
+                                    name="scenarioTarget"
+                                    checked={scenarioTarget === 'user'}
+                                    onChange={() => setScenarioTarget('user')}
+                                    className="rounded border-neutral-600"
+                                />
+                                특정 회원
+                            </label>
+                            {scenarioTarget === 'user' && (
+                                <select
+                                    value={scenarioTargetUserId}
+                                    onChange={(e) => setScenarioTargetUserId(e.target.value)}
+                                    className="px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-white text-sm focus:outline-none focus:border-primary"
+                                >
+                                    <option value="">회원 선택</option>
+                                    {uniqueUsersForSelect.map((t) => (
+                                        <option key={t.user_id} value={t.user_id}>
+                                            {t.userEmail ?? t.userName ?? t.user_id.slice(0, 8)}
+                                        </option>
+                                    ))}
+                                </select>
+                            )}
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                            {SCENARIOS.map((s) => (
+                                <button
+                                    key={s.key}
+                                    type="button"
+                                    onClick={() => sendScenarioTest(s.key)}
+                                    disabled={
+                                        scenarioSending !== null ||
+                                        (scenarioTarget === 'user' && !scenarioTargetUserId)
+                                    }
+                                    className="px-4 py-2.5 bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 rounded-lg text-sm text-white/90 flex items-center gap-2 disabled:opacity-50 transition"
+                                >
+                                    {scenarioSending === s.key ? (
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                    ) : s.key === 'proposal_created' ? (
+                                        <Bell className="w-4 h-4" />
+                                    ) : s.key === 'proposal_accepted' ? (
+                                        <CheckCircle className="w-4 h-4 text-green-400" />
+                                    ) : s.key === 'proposal_declined' ? (
+                                        <XCircle className="w-4 h-4 text-red-400" />
+                                    ) : s.key === 'negotiation_message' ? (
+                                        <MessageSquare className="w-4 h-4" />
+                                    ) : (
+                                        <FileCheck className="w-4 h-4" />
+                                    )}
+                                    {s.label}
+                                </button>
+                            ))}
+                        </div>
+                        {scenarioResult && (
+                            <p
+                                className={
+                                    scenarioResult.ok
+                                        ? 'mt-3 text-sm text-primary'
+                                        : 'mt-3 text-sm text-red-400'
+                                }
+                            >
+                                {scenarioResult.ok ? '✓ ' : '✗ '}
+                                {scenarioResult.message}
+                            </p>
+                        )}
+                    </section>
                 </>
             )}
         </div>
