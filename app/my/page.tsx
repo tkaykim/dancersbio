@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '@/lib/auth-context'
 import { useRouter } from 'next/navigation'
-import { Loader2, User as UserIcon, Users, Inbox, Send, Wallet, Settings, LogOut, Briefcase } from 'lucide-react'
+import { Loader2, User as UserIcon, Users, Inbox, Send, Wallet, Settings, LogOut, Briefcase, Bell } from 'lucide-react'
 import { useMyProfiles } from '@/hooks/useMyProfiles'
 import { useProposals } from '@/hooks/useProposals'
 import { useProjects } from '@/hooks/useProjects'
@@ -92,6 +92,11 @@ export default function MyPage() {
             label: '앱 설정',
             href: '/my/settings',
             icon: Settings,
+        },
+        {
+            label: '알림 설정',
+            href: '/my/settings#notification',
+            icon: Bell,
         },
     ]
 

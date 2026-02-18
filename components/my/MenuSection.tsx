@@ -19,16 +19,15 @@ export default function MenuSection({ items }: MenuSectionProps) {
         <div className="bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden">
             {items.map((item, idx) => (
                 <Link
-                    key={item.href}
+                    key={`${item.href}-${item.label}`}
                     href={item.href}
-                    className={`flex items-center justify-between px-5 py-4 hover:bg-neutral-800/50 transition active:scale-[0.99] ${idx < items.length - 1 ? 'border-b border-neutral-800/50' : ''
-                        }`}
+                    className={`flex items-center justify-between w-full min-h-[52px] px-5 py-4 hover:bg-neutral-800/50 active:bg-neutral-800 transition cursor-pointer touch-manipulation ${idx < items.length - 1 ? 'border-b border-neutral-800/50' : ''}`}
                 >
-                    <div className="flex items-center gap-3">
-                        <item.icon className="w-5 h-5 text-white/60" />
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                        <item.icon className="w-5 h-5 text-white/60 flex-shrink-0" />
                         <span className="text-white font-medium text-sm">{item.label}</span>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-shrink-0">
                         {item.badge !== undefined && item.badge !== 0 && (
                             <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${item.badgeColor || 'bg-primary/20 text-primary'}`}>
                                 {item.badge}

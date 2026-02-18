@@ -9,12 +9,17 @@ import { supabase } from '@/lib/supabase'
 import { Capacitor } from '@capacitor/core'
 import { isPushSupported, requestPushPermission, getFCMToken } from '@/lib/push-notifications'
 
+const NOTIFY_NEW_PROPOSAL_KEY = 'dancersbio_notify_new_proposal'
+const NOTIFY_PROPOSAL_STATUS_KEY = 'dancersbio_notify_proposal_status'
+
 export default function SettingsPage() {
     const { user, loading: authLoading, signOut } = useAuth()
     const router = useRouter()
     const [myTokens, setMyTokens] = useState<{ platform: string; updated_at: string }[]>([])
     const [registering, setRegistering] = useState(false)
     const [registerStatus, setRegisterStatus] = useState<string | null>(null)
+    const [notifyNewProposal, setNotifyNewProposal] = useState(true)
+    const [notifyProposalStatus, setNotifyProposalStatus] = useState(true)
     const isNativeApp = typeof window !== 'undefined' && Capacitor.isNativePlatform()
 
     useEffect(() => {
@@ -22,6 +27,24 @@ export default function SettingsPage() {
             router.push('/auth/signin')
         }
     }, [user, authLoading, router])
+
+    useEffect(() => {
+        if (typeof window === 'undefined') return
+        try {
+            setNotifyNewProposal(localStorage.getItem(NOTIFY_NEW_PROPOSAL_KEY) !== 'false')
+            setNotifyProposalStatus(localStorage.getItem(NOTIFY_PROPOSAL_STATUS_KEY) !== 'false')
+        } catch (_) {}
+    }, [])
+
+    useEffect(() => {
+        if (typeof window === 'undefined') return
+        if (window.location.hash !== '#notification') return
+        const t = setTimeout(() => {
+            const el = document.getElementById('notification')
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        }, 150)
+        return () => clearTimeout(t)
+    }, [user])
 
     useEffect(() => {
         if (!user?.id) return
@@ -66,11 +89,22 @@ export default function SettingsPage() {
             setRegisterStatus('등록 완료되었습니다.')
             const { data } = await supabase.from('push_tokens').select('platform, updated_at').eq('user_id', user.id)
             setMyTokens(data ?? [])
-        } catch (e) {
+            } catch (e) {
             setRegisterStatus(e instanceof Error ? e.message : '오류가 발생했습니다.')
         } finally {
             setRegistering(false)
         }
+    }
+
+    const toggleNotifyNewProposal = () => {
+        const next = !notifyNewProposal
+        setNotifyNewProposal(next)
+        try { localStorage.setItem(NOTIFY_NEW_PROPOSAL_KEY, String(next)) } catch (_) {}
+    }
+    const toggleNotifyProposalStatus = () => {
+        const next = !notifyProposalStatus
+        setNotifyProposalStatus(next)
+        try { localStorage.setItem(NOTIFY_PROPOSAL_STATUS_KEY, String(next)) } catch (_) {}
     }
 
     const handleSignOut = async () => {
@@ -138,27 +172,27 @@ export default function SettingsPage() {
                 </section>
 
                 {/* Notification Section */}
-                <section className="space-y-3">
+                <section id="notification" className="space-y-3 scroll-mt-4">
                     <h2 className="text-sm font-bold text-white/40 uppercase tracking-wider px-1">알림</h2>
                     <div className="bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden">
-                        <div className="px-5 py-4 flex items-center justify-between border-b border-neutral-800/50">
+                        <button type="button" onClick={toggleNotifyNewProposal} className="w-full px-5 py-4 flex items-center justify-between border-b border-neutral-800/50 hover:bg-neutral-800/50 active:bg-neutral-800 transition text-left">
                             <div className="flex items-center gap-3">
                                 <Bell className="w-5 h-5 text-white/60" />
                                 <span className="text-white text-sm">새 제안 알림</span>
                             </div>
-                            <div className="w-10 h-6 bg-primary rounded-full flex items-center justify-end px-0.5 cursor-pointer">
+                            <div className={`w-10 h-6 rounded-full flex items-center px-0.5 cursor-pointer touch-manipulation transition-colors ${notifyNewProposal ? 'bg-primary justify-end' : 'bg-neutral-700 justify-start'}`}>
                                 <div className="w-5 h-5 bg-white rounded-full" />
                             </div>
-                        </div>
-                        <div className="px-5 py-4 flex items-center justify-between border-b border-neutral-800/50">
+                        </button>
+                        <button type="button" onClick={toggleNotifyProposalStatus} className="w-full px-5 py-4 flex items-center justify-between border-b border-neutral-800/50 hover:bg-neutral-800/50 active:bg-neutral-800 transition text-left">
                             <div className="flex items-center gap-3">
                                 <Bell className="w-5 h-5 text-white/60" />
                                 <span className="text-white text-sm">제안 상태 변경 알림</span>
                             </div>
-                            <div className="w-10 h-6 bg-primary rounded-full flex items-center justify-end px-0.5 cursor-pointer">
+                            <div className={`w-10 h-6 rounded-full flex items-center px-0.5 cursor-pointer touch-manipulation transition-colors ${notifyProposalStatus ? 'bg-primary justify-end' : 'bg-neutral-700 justify-start'}`}>
                                 <div className="w-5 h-5 bg-white rounded-full" />
                             </div>
-                        </div>
+                        </button>
                         {/* 푸시 알림 (이 기기 등록) */}
                         <div className="px-5 py-4 space-y-3">
                             <div className="flex items-center gap-3">
