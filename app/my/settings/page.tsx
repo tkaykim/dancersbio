@@ -1,13 +1,11 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useAuth } from '@/lib/auth-context'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft, User as UserIcon, Mail, Bell, Shield, FileText, Info, LogOut, Loader2, Smartphone, RefreshCw } from 'lucide-react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
-import { Capacitor } from '@capacitor/core'
-import { isPushSupported, requestPushPermission, getFCMToken } from '@/lib/push-notifications'
 
 const NOTIFY_NEW_PROPOSAL_KEY = 'dancersbio_notify_new_proposal'
 const NOTIFY_PROPOSAL_STATUS_KEY = 'dancersbio_notify_proposal_status'
@@ -20,7 +18,17 @@ export default function SettingsPage() {
     const [registerStatus, setRegisterStatus] = useState<string | null>(null)
     const [notifyNewProposal, setNotifyNewProposal] = useState(true)
     const [notifyProposalStatus, setNotifyProposalStatus] = useState(true)
-    const isNativeApp = typeof window !== 'undefined' && Capacitor.isNativePlatform()
+    const [isNativeApp, setIsNativeApp] = useState<boolean | null>(null)
+
+    useEffect(() => {
+        if (typeof window === 'undefined') return
+        try {
+            const Capacitor = require('@capacitor/core').Capacitor
+            setIsNativeApp(Capacitor.isNativePlatform())
+        } catch {
+            setIsNativeApp(false)
+        }
+    }, [])
 
     useEffect(() => {
         if (!authLoading && !user) {
@@ -46,22 +54,29 @@ export default function SettingsPage() {
         return () => clearTimeout(t)
     }, [user])
 
-    useEffect(() => {
+    const fetchMyTokens = useCallback(() => {
         if (!user?.id) return
-        supabase.from('push_tokens').select('platform, updated_at').eq('user_id', user.id).then(({ data }) => {
+        supabase.from('push_tokens').select('platform, updated_at').eq('user_id', user.id).then(({ data, error }) => {
             setMyTokens(data ?? [])
+            if (error) setRegisterStatus(`목록 조회 실패: ${error.message}`)
         })
     }, [user?.id])
+
+    useEffect(() => {
+        fetchMyTokens()
+    }, [fetchMyTokens])
 
     const registerThisDevice = async () => {
         if (!user?.id) return
         setRegistering(true)
         setRegisterStatus(null)
         try {
+            const Capacitor = require('@capacitor/core').Capacitor
             if (!Capacitor.isNativePlatform()) {
                 setRegisterStatus('앱에서만 등록할 수 있습니다. Android/iOS 앱을 열어주세요.')
                 return
             }
+            const { isPushSupported, requestPushPermission, getFCMToken } = await import('@/lib/push-notifications')
             const supported = await isPushSupported()
             if (!supported) {
                 setRegisterStatus('이 기기에서는 푸시를 지원하지 않습니다.')
@@ -87,9 +102,8 @@ export default function SettingsPage() {
                 return
             }
             setRegisterStatus('등록 완료되었습니다.')
-            const { data } = await supabase.from('push_tokens').select('platform, updated_at').eq('user_id', user.id)
-            setMyTokens(data ?? [])
-            } catch (e) {
+            fetchMyTokens()
+        } catch (e) {
             setRegisterStatus(e instanceof Error ? e.message : '오류가 발생했습니다.')
         } finally {
             setRegistering(false)
@@ -208,13 +222,17 @@ export default function SettingsPage() {
                                     ))}
                                 </ul>
                             )}
-                            {isNativeApp ? (
+                            {isNativeApp === null ? (
+                                <p className="text-white/40 text-xs pl-8 flex items-center gap-2">
+                                    <Loader2 className="w-3 h-3 animate-spin" /> 확인 중...
+                                </p>
+                            ) : isNativeApp ? (
                                 <>
                                     <button
                                         type="button"
                                         onClick={registerThisDevice}
                                         disabled={registering}
-                                        className="w-full py-2.5 bg-primary/20 text-primary border border-primary/50 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 disabled:opacity-50"
+                                        className="w-full py-2.5 bg-primary/20 text-primary border border-primary/50 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 disabled:opacity-50 touch-manipulation active:opacity-80"
                                     >
                                         {registering ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
                                         {registering ? '등록 중...' : '지금 이 기기 등록'}
