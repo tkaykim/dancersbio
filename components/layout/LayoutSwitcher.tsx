@@ -16,7 +16,7 @@ export default function LayoutSwitcher({ children }: { children: React.ReactNode
   }
 
   return (
-    <MobileContainer className="pb-16">
+    <MobileContainer className="pb-nav-safe">
       {children}
       <BottomNav />
     </MobileContainer>

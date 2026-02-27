@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
-import { Search, User, CheckCircle2, Plus } from 'lucide-react'
+import { ArrowLeft, Search, User, CheckCircle2, Plus } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 
@@ -69,12 +69,24 @@ export default function FindYourNamePage() {
     return (
         <div className="min-h-screen bg-background">
             {/* Header */}
-            <div className="sticky top-0 bg-background border-b border-neutral-800 z-10">
-                <div className="px-6 py-6">
-                    <h1 className="text-2xl font-bold text-white mb-2">활동명 찾기</h1>
-                    <p className="text-white/60 text-sm">
-                        활동명을 검색하여 프로필을 찾거나 새로 만드세요
-                    </p>
+            <div className="sticky top-0 bg-background border-b border-neutral-800 z-10 pt-header-safe">
+                <div className="px-6 pb-6">
+                    <div className="flex items-start gap-4 mb-2">
+                        <button
+                            type="button"
+                            onClick={() => router.back()}
+                            className="p-1 -ml-1 flex-shrink-0 touch-manipulation"
+                            aria-label="뒤로 가기"
+                        >
+                            <ArrowLeft className="w-6 h-6 text-white" />
+                        </button>
+                        <div className="flex-1 min-w-0">
+                            <h1 className="text-2xl font-bold text-white mb-2">활동명 찾기</h1>
+                            <p className="text-white/60 text-sm">
+                                활동명을 검색하여 프로필을 찾거나 새로 만드세요
+                            </p>
+                        </div>
+                    </div>
                 </div>
             </div>
 

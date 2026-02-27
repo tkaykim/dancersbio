@@ -142,11 +142,12 @@ export default function CreateProfilePage() {
     return (
         <div className="min-h-screen bg-background pb-32">
             {/* Header */}
-            <div className="sticky top-0 bg-background border-b border-neutral-800 z-10">
-                <div className="px-6 py-4 flex items-center gap-4">
+            <div className="sticky top-0 bg-background border-b border-neutral-800 z-10 pt-header-safe">
+                <div className="px-6 pb-4 flex items-center gap-4">
                     <button
                         onClick={step === 1 ? () => router.back() : prevStep}
-                        className="p-2 hover:bg-neutral-800 rounded-full transition-colors"
+                        className="p-2 hover:bg-neutral-800 rounded-full transition-colors -ml-1"
+                        aria-label="뒤로 가기"
                     >
                         <ArrowLeft className="w-5 h-5 text-white" />
                     </button>

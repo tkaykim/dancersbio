@@ -248,9 +248,9 @@ function NewProposalPage() {
     return (
         <div className={`min-h-screen bg-background ${selectedDancerIds.size > 0 ? 'pb-48' : 'pb-20'}`}>
             {/* Header */}
-            <div className="sticky top-0 bg-background border-b border-neutral-800 z-20">
-                <div className="px-5 py-3.5 flex items-center gap-3">
-                    <Link href="/my/proposals?tab=outbox">
+            <div className="sticky top-0 bg-background border-b border-neutral-800 z-20 pt-header-safe">
+                <div className="px-5 pb-3.5 flex items-center gap-3">
+                    <Link href="/my/proposals?tab=outbox" className="-ml-1" aria-label="뒤로 가기">
                         <ArrowLeft className="w-5 h-5 text-white/70" />
                     </Link>
                     <div>
