@@ -4,8 +4,9 @@ import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
 import { supabase } from '@/lib/supabase'
-import { ArrowLeft, ShieldCheck, Loader2, User as UserIcon, AlertTriangle, CheckCircle2 } from 'lucide-react'
+import { ShieldCheck, Loader2, User as UserIcon, AlertTriangle, CheckCircle2 } from 'lucide-react'
 import Link from 'next/link'
+import PageHeader from '@/components/layout/PageHeader'
 
 type RequestMode = 'claim' | 'manager'
 
@@ -155,16 +156,9 @@ function ClaimContent() {
     return (
         <div className="min-h-screen bg-background text-white">
             {/* Header */}
-            <div className="sticky top-0 bg-background border-b border-neutral-800 z-10">
-                <div className="px-6 py-4 flex items-center gap-4">
-                    <button onClick={() => router.back()} className="p-1">
-                        <ArrowLeft className="w-6 h-6 text-white" />
-                    </button>
-                    <h1 className="text-xl font-bold">
-                        {isClaim ? '프로필 소유권 요청' : '매니저 권한 요청'}
-                    </h1>
-                </div>
-            </div>
+            <PageHeader
+                title={isClaim ? '프로필 소유권 요청' : '매니저 권한 요청'}
+            />
 
             <div className="p-6 flex flex-col items-center">
                 {/* Step: Confirm */}

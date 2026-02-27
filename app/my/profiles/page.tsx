@@ -3,8 +3,9 @@
 import { Suspense, useEffect, useState } from 'react'
 import { useAuth } from '@/lib/auth-context'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { ArrowLeft, User as UserIcon, Edit, ExternalLink, Share2, Loader2, Plus, CheckCircle, AlertCircle, Mail, Clock, Crown, Shield } from 'lucide-react'
+import { User as UserIcon, Edit, ExternalLink, Share2, Loader2, Plus, CheckCircle, AlertCircle, Mail, Clock, Crown, Shield } from 'lucide-react'
 import Link from 'next/link'
+import PageHeader from '@/components/layout/PageHeader'
 import { useMyProfiles } from '@/hooks/useMyProfiles'
 import type { ProfileStats } from '@/hooks/useMyProfiles'
 import { getRelativeTime } from '@/lib/utils'
@@ -76,14 +77,7 @@ function ProfilesPage() {
     return (
         <div className="min-h-screen bg-background pb-20">
             {/* Header */}
-            <div className="sticky top-0 bg-background border-b border-neutral-800 z-10">
-                <div className="px-6 py-4 flex items-center gap-4">
-                    <Link href="/my">
-                        <ArrowLeft className="w-6 h-6 text-white" />
-                    </Link>
-                    <h1 className="text-xl font-bold text-white">프로필 관리</h1>
-                </div>
-            </div>
+            <PageHeader title="프로필 관리" backHref="/my" />
 
             <div className="p-6 space-y-6">
                 {/* 내 프로필 1개 제한 안내 (프로필 생성 페이지에서 리다이렉트된 경우) */}

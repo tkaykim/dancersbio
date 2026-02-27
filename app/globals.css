@@ -36,6 +36,28 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* Safe Area Insets for mobile (notch, home indicator) */
+.safe-area-inset-top {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+.safe-area-inset-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.pt-safe {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+/* Content padding for bottom nav (64px) + safe area */
+.pb-nav-safe {
+  padding-bottom: calc(4rem + env(safe-area-inset-bottom, 0px));
+}
+/* Header safe area (py-4 + top inset) */
+.pt-header-safe {
+  padding-top: calc(1rem + env(safe-area-inset-top, 0px));
+}
+
 /* Hide scrollbar for cleaner mobile look but allow scroll */
 .no-scrollbar::-webkit-scrollbar {
   display: none;

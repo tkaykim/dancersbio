@@ -5,7 +5,7 @@ import Link from "next/link";
 
 export default function HomeTopNav() {
     return (
-        <header className="sticky top-0 z-50 flex items-center justify-between px-5 py-4 bg-black/80 backdrop-blur-md">
+        <header className="sticky top-0 z-50 flex items-center justify-between px-5 py-4 pt-header-safe bg-black/80 backdrop-blur-md">
             <button className="text-white hover:text-primary transition-colors">
                 <Menu className="w-6 h-6" />
             </button>

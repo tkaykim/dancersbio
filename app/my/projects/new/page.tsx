@@ -105,9 +105,9 @@ export default function NewProjectPage() {
 
     return (
         <div className="min-h-screen bg-background">
-            <div className="sticky top-0 bg-background border-b border-neutral-800 z-10">
-                <div className="px-5 py-3.5 flex items-center gap-3">
-                    <Link href="/my/projects"><ArrowLeft className="w-5 h-5 text-white/70" /></Link>
+            <div className="sticky top-0 bg-background border-b border-neutral-800 z-10 pt-header-safe">
+                <div className="px-5 pb-3.5 flex items-center gap-3">
+                    <Link href="/my/projects" className="-ml-1" aria-label="뒤로 가기"><ArrowLeft className="w-5 h-5 text-white/70" /></Link>
                     <div>
                         <h1 className="text-lg font-bold text-white">새 프로젝트</h1>
                         <p className="text-white/35 text-[11px]">프로젝트를 만들고 댄서를 초대하세요</p>

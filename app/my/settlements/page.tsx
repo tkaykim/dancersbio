@@ -4,8 +4,9 @@ import { useEffect, useState } from 'react'
 import { useAuth } from '@/lib/auth-context'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Loader2, Wallet } from 'lucide-react'
+import { Loader2, Wallet } from 'lucide-react'
 import Link from 'next/link'
+import PageHeader from '@/components/layout/PageHeader'
 import { useMyProfiles } from '@/hooks/useMyProfiles'
 import BalanceSummaryCard from '@/components/settlements/BalanceSummaryCard'
 import ProjectSettlementAccordion, { type ProjectSettlementData, type SettlementItemDetail } from '@/components/settlements/ProjectSettlementAccordion'
@@ -267,14 +268,7 @@ export default function SettlementsPage() {
     return (
         <div className="min-h-screen bg-background pb-20">
             {/* Header */}
-            <div className="sticky top-0 bg-background border-b border-neutral-800 z-10">
-                <div className="px-6 py-4 flex items-center gap-4">
-                    <Link href="/my">
-                        <ArrowLeft className="w-6 h-6 text-white" />
-                    </Link>
-                    <h1 className="text-xl font-bold text-white">정산 관리</h1>
-                </div>
-            </div>
+            <PageHeader title="정산 관리" backHref="/my" />
 
             <div className="p-6 space-y-6">
                 {allProfiles.length > 0 && (
