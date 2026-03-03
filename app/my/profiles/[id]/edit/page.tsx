@@ -168,9 +168,9 @@ export default function ProfileEditPage({ params }: PageProps) {
     return (
         <div className="min-h-screen bg-background pb-20">
             {/* Header */}
-            <div className="sticky top-0 bg-background border-b border-neutral-800 z-10">
-                <div className="px-6 py-4 flex items-center justify-between">
-                    <Link href="/my/profiles">
+            <div className="sticky top-0 bg-background border-b border-neutral-800 z-10 pt-header-safe">
+                <div className="px-6 pb-4 flex items-center justify-between">
+                    <Link href="/my/profiles" className="-ml-1" aria-label="뒤로 가기">
                         <ArrowLeft className="w-6 h-6 text-white" />
                     </Link>
                     <h1 className="text-xl font-bold text-white">프로필 수정</h1>

@@ -3,8 +3,9 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useAuth } from '@/lib/auth-context'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, User as UserIcon, Mail, Bell, Shield, FileText, Info, LogOut, Loader2, Smartphone, RefreshCw } from 'lucide-react'
+import { User as UserIcon, Mail, Bell, Shield, FileText, Info, LogOut, Loader2, Smartphone, RefreshCw } from 'lucide-react'
 import Link from 'next/link'
+import PageHeader from '@/components/layout/PageHeader'
 import { supabase } from '@/lib/supabase'
 
 const NOTIFY_NEW_PROPOSAL_KEY = 'dancersbio_notify_new_proposal'
@@ -146,14 +147,7 @@ export default function SettingsPage() {
     return (
         <div className="min-h-screen bg-background pb-20">
             {/* Header */}
-            <div className="sticky top-0 bg-background border-b border-neutral-800 z-10">
-                <div className="px-6 py-4 flex items-center gap-4">
-                    <Link href="/my">
-                        <ArrowLeft className="w-6 h-6 text-white" />
-                    </Link>
-                    <h1 className="text-xl font-bold text-white">설정</h1>
-                </div>
-            </div>
+            <PageHeader title="설정" backHref="/my" />
 
             <div className="p-6 space-y-6">
                 {/* Account Section */}

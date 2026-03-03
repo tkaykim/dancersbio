@@ -100,13 +100,15 @@ export default async function ProfilePage({ params }: PageProps) {
         const rawRole = career.details?.role || career.details?.achievement || ''
         const description = rawRole.replace(/\s*\(PM\)\s*·?\s*/g, ' · ').replace(/\s*·\s*$/, '').trim() || rawRole
 
+        // video_url: youtube_url(DB) 또는 link 우선. 썸네일은 CareerTimeline에서 video_url로 YouTube 썸네일 로드
+        const videoUrl = career.details?.youtube_url || career.details?.link || '';
         groupedCareers[career.type].push({
             id: career.id.toString(),
             year,
             title: career.title,
             description,
             image: career.details?.thumbnail || '',
-            video_url: career.details?.link || ''
+            video_url: videoUrl
         });
     });
 

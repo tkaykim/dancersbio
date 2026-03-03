@@ -75,16 +75,17 @@ export default function ProfileHeader({ dancer }: ProfileHeaderProps) {
                 <div className="absolute inset-0 bg-black/20" />
 
                 {/* Top Actions */}
-                <div className="absolute top-4 left-4 flex gap-2 z-30 pt-4">
+                <div className="absolute top-0 left-4 flex gap-2 z-30 pt-header-safe">
                     <button
                         onClick={() => router.back()}
                         className="p-2.5 bg-black/20 backdrop-blur-md rounded-full text-white hover:bg-white/10 transition border border-white/10"
+                        aria-label="뒤로 가기"
                     >
                         <ChevronLeft className="w-5 h-5" />
                     </button>
                 </div>
 
-                <div className="absolute top-4 right-4 flex gap-2 z-30 pt-4">
+                <div className="absolute top-0 right-4 flex gap-2 z-30 pt-header-safe">
                     <button className="p-2.5 bg-black/20 backdrop-blur-md rounded-full text-white hover:bg-white/10 transition border border-white/10">
                         <Share2 className="w-5 h-5" />
                     </button>

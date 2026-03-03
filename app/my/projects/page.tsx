@@ -3,8 +3,9 @@
 import { Suspense, useEffect, useState } from 'react'
 import { useAuth } from '@/lib/auth-context'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { ArrowLeft, Loader2, Briefcase, Users, Calendar, ChevronRight, Plus, EyeOff, Archive } from 'lucide-react'
+import { Loader2, Briefcase, Users, Calendar, ChevronRight, Plus, EyeOff, Archive } from 'lucide-react'
 import Link from 'next/link'
+import PageHeader from '@/components/layout/PageHeader'
 import { useProjects } from '@/hooks/useProjects'
 import { supabase } from '@/lib/supabase'
 import { getRelativeTime, getProjectStatuses, isProjectPublic, isEmbargoActive } from '@/lib/utils'
@@ -71,12 +72,7 @@ function ProjectsPageInner() {
     if (viewArchived) {
         return (
             <div className="min-h-screen bg-background pb-20">
-                <div className="sticky top-0 bg-background border-b border-neutral-800 z-10">
-                    <div className="px-6 py-4 flex items-center gap-4">
-                        <Link href="/my/projects"><ArrowLeft className="w-6 h-6 text-white" /></Link>
-                        <h1 className="text-xl font-bold text-white">보관함</h1>
-                    </div>
-                </div>
+                <PageHeader title="보관함" backHref="/my/projects" />
                 <div className="p-4 space-y-4">
                     <p className="text-xs text-white/40 px-1">보관한 프로젝트는 여기에서만 보입니다. 프로젝트 상세에서 보관 해제할 수 있습니다.</p>
                     {archivedProjects.length === 0 ? (
@@ -105,12 +101,7 @@ function ProjectsPageInner() {
 
     return (
         <div className="min-h-screen bg-background pb-20">
-            <div className="sticky top-0 bg-background border-b border-neutral-800 z-10">
-                <div className="px-6 py-4 flex items-center gap-4">
-                    <Link href="/my"><ArrowLeft className="w-6 h-6 text-white" /></Link>
-                    <h1 className="text-xl font-bold text-white">프로젝트 관리</h1>
-                </div>
-            </div>
+            <PageHeader title="프로젝트 관리" backHref="/my" />
 
             <div className="p-4 space-y-6">
                 <Link

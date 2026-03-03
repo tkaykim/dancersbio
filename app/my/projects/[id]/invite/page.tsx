@@ -305,9 +305,9 @@ export default function InviteDancerPage() {
     return (
         <div className={`min-h-screen bg-background ${selectedDancerIds.size > 0 ? 'pb-64' : 'pb-20'}`}>
             {/* Header */}
-            <div className="sticky top-0 bg-background border-b border-neutral-800 z-20">
-                <div className="px-6 py-4 flex items-center gap-4">
-                    <Link href={`/my/projects/${projectId}`}><ArrowLeft className="w-6 h-6 text-white" /></Link>
+            <div className="sticky top-0 bg-background border-b border-neutral-800 z-20 pt-header-safe">
+                <div className="px-6 pb-4 flex items-center gap-4">
+                    <Link href={`/my/projects/${projectId}`} className="-ml-1" aria-label="뒤로 가기"><ArrowLeft className="w-6 h-6 text-white" /></Link>
                     <div className="flex-1 min-w-0">
                         <h1 className="text-lg font-bold text-white">댄서 초대</h1>
                         <p className="text-xs text-white/40 truncate">{projectTitle}</p>

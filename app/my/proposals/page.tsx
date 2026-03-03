@@ -101,7 +101,7 @@ function ProposalsPage() {
     return (
         <div className="min-h-screen bg-background pb-20">
             {/* Header */}
-            <div className="sticky top-0 bg-background border-b border-neutral-800 z-10">
+            <div className="sticky top-0 bg-background border-b border-neutral-800 z-10 pt-header-safe">
                 <div className="px-6 py-4 flex justify-between items-center">
                     <div className="flex items-center gap-4">
                         <Link href="/my">
