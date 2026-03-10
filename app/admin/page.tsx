@@ -14,6 +14,7 @@ import {
     ChevronRight,
     Loader2,
     Bell,
+    UserPlus,
 } from 'lucide-react'
 
 interface DashboardStats {
@@ -103,6 +104,13 @@ export default function AdminDashboardPage() {
     }
 
     const cards = [
+        {
+            title: '댄서 관리',
+            value: stats.dancersVerified + stats.dancersPending,
+            href: '/admin/dancers',
+            icon: UserPlus,
+            desc: '등록·수정·경력·SNS',
+        },
         {
             title: '가입 회원',
             value: stats.usersCount,

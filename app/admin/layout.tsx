@@ -15,12 +15,14 @@ import {
     Bell,
     Menu,
     X,
+    UserPlus,
 } from 'lucide-react'
 import { Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const NAV_ITEMS = [
     { label: '대시보드', href: '/admin', icon: LayoutDashboard },
+    { label: '댄서 관리', href: '/admin/dancers', icon: UserPlus },
     { label: '회원 목록', href: '/admin/users', icon: Users },
     { label: '푸시 관리', href: '/admin/push', icon: Bell },
     { label: '프로젝트', href: '/admin/projects', icon: Briefcase },
