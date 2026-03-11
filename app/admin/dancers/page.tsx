@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useAdmin } from '@/hooks/useAdmin'
 import { supabase } from '@/lib/supabase'
-import { UserPlus, ChevronRight, Loader2, Image as ImageIcon } from 'lucide-react'
+import { UserPlus, ChevronRight, Loader2, Image as ImageIcon, Trash2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface DancerRow {
@@ -21,6 +21,7 @@ export default function AdminDancersPage() {
   const { isAdmin } = useAdmin()
   const [dancers, setDancers] = useState<DancerRow[]>([])
   const [loading, setLoading] = useState(true)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
 
   useEffect(() => {
     if (!isAdmin) return
@@ -41,6 +42,21 @@ export default function AdminDancersPage() {
       console.error('Failed to load dancers:', err)
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function handleDelete(d: DancerRow) {
+    if (!confirm(`"${d.stage_name || d.korean_name || d.id}" 댄서를 삭제할까요? 연결된 경력·제안 등도 함께 삭제되거나 해제됩니다.`)) return
+    setDeletingId(d.id)
+    try {
+      const { error } = await supabase.from('dancers').delete().eq('id', d.id)
+      if (error) throw error
+      setDancers((prev) => prev.filter((x) => x.id !== d.id))
+    } catch (err: any) {
+      console.error('Delete failed:', err)
+      alert('삭제 실패: ' + (err?.message ?? String(err)))
+    } finally {
+      setDeletingId(null)
     }
   }
 
@@ -82,13 +98,13 @@ export default function AdminDancersPage() {
                 <th className="px-4 py-3 font-medium">한글명</th>
                 <th className="px-4 py-3 font-medium">Slug</th>
                 <th className="px-4 py-3 font-medium">승인</th>
-                <th className="w-10 px-4 py-3" aria-hidden />
+                <th className="px-4 py-3 font-medium text-right">작업</th>
               </tr>
             </thead>
             <tbody>
               {dancers.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-12 text-center text-white/40">
+                  <td colSpan={7} className="px-4 py-12 text-center text-white/40">
                     등록된 댄서가 없습니다. 새 댄서를 등록해 보세요.
                   </td>
                 </tr>
@@ -126,13 +142,29 @@ export default function AdminDancersPage() {
                         {d.is_verified ? '승인' : '대기'}
                       </span>
                     </td>
-                    <td className="px-4 py-3">
-                      <Link
-                        href={`/admin/dancers/${d.id}/edit`}
-                        className="inline-flex items-center gap-1 text-primary hover:underline"
-                      >
-                        수정 <ChevronRight className="h-4 w-4" />
-                      </Link>
+                    <td className="px-4 py-3 text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <Link
+                          href={`/admin/dancers/${d.id}/edit`}
+                          className="inline-flex items-center gap-1 text-primary hover:underline"
+                        >
+                          수정 <ChevronRight className="h-4 w-4" />
+                        </Link>
+                        <button
+                          type="button"
+                          onClick={() => handleDelete(d)}
+                          disabled={deletingId === d.id}
+                          className="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-sm text-red-400 hover:bg-red-500/10 hover:text-red-300 disabled:opacity-50"
+                          aria-label={`${d.stage_name || d.korean_name || '댄서'} 삭제`}
+                        >
+                          {deletingId === d.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Trash2 className="h-4 w-4" />
+                          )}
+                          삭제
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
