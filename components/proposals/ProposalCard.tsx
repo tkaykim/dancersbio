@@ -67,7 +67,7 @@ export default function ProposalCard({ proposal, activeTab, unreadCount, onSelec
                             <Link
                                 href={`/my/projects/${proposal.project_id}`}
                                 onClick={(e) => e.stopPropagation()}
-                                className="ml-auto flex items-center gap-0.5 text-green-400 hover:underline"
+                                className="ml-auto flex items-center gap-0.5 text-green-500 hover:underline"
                             >
                                 <ExternalLink className="w-3 h-3" />
                                 프로젝트

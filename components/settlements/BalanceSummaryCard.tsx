@@ -18,11 +18,11 @@ export default function BalanceSummaryCard({ totalIncome, totalExpense }: Balanc
                     <h2 className="text-sm font-bold text-white/60">순수익</h2>
                 </div>
                 <div className="flex items-end gap-2">
-                    <p className={`text-3xl font-bold ${isPositive ? 'text-green-400' : 'text-red-400'}`}>
+                    <p className={`text-3xl font-bold ${isPositive ? 'text-green-500' : 'text-red-400'}`}>
                         {isPositive ? '+' : ''}{netProfit.toLocaleString()}원
                     </p>
                     {isPositive
-                        ? <TrendingUp className="w-5 h-5 text-green-400 mb-1" />
+                        ? <TrendingUp className="w-5 h-5 text-green-500 mb-1" />
                         : <TrendingDown className="w-5 h-5 text-red-400 mb-1" />
                     }
                 </div>

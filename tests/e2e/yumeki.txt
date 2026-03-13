@@ -1,0 +1,196 @@
+[
+  // ────────────────────────────────────────────────────────
+  // PROFILE
+  // ────────────────────────────────────────────────────────
+  {
+    "name": "유메키",
+    "real_name": "竹中 夢生 (타케나카 유메키, Takenaka Yumeki)",
+    "birth": "1999-11-12",
+    "nationality": "일본",
+    "affiliation": ["잼리퍼블릭 (2024.1.1~)", "그리고 엔터테인먼트"],
+    "former_affiliation": ["1MILLION DANCE STUDIO"],
+    "genre": "코레오그래피"
+  },
+  // ────────────────────────────────────────────────────────
+  // WORKSHOP / 트레이닝·강사 활동
+  // ────────────────────────────────────────────────────────
+  {
+    "type": "workshop",
+    "title": "에이벡스 아카데미 도쿄 마스터 수강생 선발",
+    "date": null,
+    "details": "19명 정예 마스터 수강생에 선발. 댄서로서 정식 훈련 시작"
+  },
+  {
+    "type": "workshop",
+    "title": "킨자즈(Kinjaz) 중국 댄스 스튜디오 강사",
+    "date": "2019",
+    "details": "세계적인 댄스 크루 킨자즈의 중국 스튜디오에서 강사 활동. 유메키 첫 해외 워크숍 및 첫 댄스 강사 경력"
+  },
+  {
+    "type": "workshop",
+    "title": "1MILLION DANCE STUDIO 전속 강사 입단",
+    "date": "2020",
+    "details": "워크숍 강사로 내한 중 메이제이 리, 윤여욱 대표 눈에 띄어 전속 계약 체결"
+  },
+  {
+    "type": "workshop",
+    "title": "ONE OR EIGHT 퍼포먼스 디렉터",
+    "date": null,
+    "details": "에이벡스 그룹 신규 보이그룹 ONE OR EIGHT의 퍼포먼스 디렉터로 섭외"
+  },
+  // ────────────────────────────────────────────────────────
+  // CHOREO / 안무 참여 (뮤직비디오·무대 안무 제작)
+  // ────────────────────────────────────────────────────────
+  { "type": "choreo", "title": "ITZY – WANNABE", "date": null, "details": "안무 참여" },
+  { "type": "choreo", "title": "K/DA – MORE", "date": null, "details": "안무 참여" },
+  { "type": "choreo", "title": "스위트홈 X BewhY – 나란히", "date": null, "details": "안무 참여" },
+  { "type": "choreo", "title": "SHINee – Heart Attack / I Really Want You", "date": null, "details": "안무 참여" },
+  { "type": "choreo", "title": "퍼플키스 – Ponzona", "date": null, "details": "안무 참여" },
+  { "type": "choreo", "title": "원어스 – Black Mirror", "date": null, "details": "안무 참여" },
+  { "type": "choreo", "title": "퍼플키스 – ZOMBIE", "date": null, "details": "안무 참여" },
+  { "type": "choreo", "title": "백현 – Addicted", "date": null, "details": "안무 참여" },
+  { "type": "choreo", "title": "더보이즈 – MAVERICK", "date": null, "details": "안무 참여" },
+  { "type": "choreo", "title": "카이 – Peaches prologue film", "date": null, "details": "안무 참여" },
+  { "type": "choreo", "title": "온앤오프 – Goosebumps", "date": null, "details": "안무 참여" },
+  { "type": "choreo", "title": "야오천 – 醒·Lithops", "date": null, "details": "안무 참여" },
+  { "type": "choreo", "title": "원어스 – 덤벼 / ERASE ME", "date": null, "details": "안무 참여" },
+  { "type": "choreo", "title": "텐 – New Heroes", "date": null, "details": "안무 참여" },
+  { "type": "choreo", "title": "킬라(Killa) – Shalala", "date": null, "details": "안무 참여" },
+  {
+    "type": "choreo",
+    "title": "PRODUCE 101 JAPAN THE GIRLS – LEAP HIGH! / AtoZ / Popcorn",
+    "date": "2023",
+    "details": "안무 참여 (댄스 트레이너 연계)"
+  },
+  { "type": "choreo", "title": "NCT 127 – Fact Check (불가사의; 不可思議)", "date": null, "details": "안무 참여" },
+  { "type": "choreo", "title": "TWS – Oh Mymy : 7s", "date": null, "details": "안무 참여" },
+  { "type": "choreo", "title": "MAZZEL – Waterfall", "date": null, "details": "안무 참여" },
+  { "type": "choreo", "title": "ME:I – Click", "date": null, "details": "안무 참여" },
+  { "type": "choreo", "title": "NCT WISH – Song Bird", "date": null, "details": "안무 참여" },
+  { "type": "choreo", "title": "ENHYPEN – Brought The Heat Back", "date": null, "details": "안무 참여" },
+  { "type": "choreo", "title": "ME:I – Hi-Five", "date": null, "details": "안무 참여" },
+  { "type": "choreo", "title": "ARrC – dummy / S&S (sour and sweet)", "date": null, "details": "안무 참여" },
+  { "type": "choreo", "title": "Kep1er – TIPI-TAP", "date": null, "details": "안무 참여" },
+  { "type": "choreo", "title": "ODD YOUTH – THAT'S ME", "date": null, "details": "안무 참여" },
+  { "type": "choreo", "title": "TWS – 마지막 축제", "date": null, "details": "안무 참여" },
+  { "type": "choreo", "title": "ZEROBASEONE – NOW OR NEVER", "date": null, "details": "안무 참여" },
+  { "type": "choreo", "title": "NouerA – N.I.N (New is Now) / n (number of cases)", "date": null, "details": "안무 참여" },
+  { "type": "choreo", "title": "ME:I – MUSE", "date": null, "details": "안무 참여" },
+  { "type": "choreo", "title": "ODD YOUTH – I Like You", "date": null, "details": "안무 참여" },
+  { "type": "choreo", "title": "TWS – 마음 따라 뛰는 건 멋지지 않아?", "date": null, "details": "안무 참여" },
+  { "type": "choreo", "title": "ILLIT – Jellyous", "date": null, "details": "안무 참여" },
+  { "type": "choreo", "title": "투모로우바이투게더 – Love Language", "date": null, "details": "안무 참여" },
+  { "type": "choreo", "title": "LiKE LEGEND – YOU ARE SPECiAL", "date": null, "details": "안무 참여" },
+  { "type": "choreo", "title": "ILLIT – oops!", "date": null, "details": "안무 참여" },
+  // ────────────────────────────────────────────────────────
+  // CHOREO / 백업 참여 (댄서로서 뮤직비디오·무대 출연)
+  // ────────────────────────────────────────────────────────
+  {
+    "type": "choreo",
+    "title": "백현 – Candy",
+    "date": "2020-05-25",
+    "details": "백업 댄서. MV, 무대 출연"
+  },
+  {
+    "type": "choreo",
+    "title": "태민 – 이데아(IDEA)",
+    "date": "2020-11-09",
+    "details": "백업 댄서. 콘서트 한정"
+  },
+  {
+    "type": "choreo",
+    "title": "백현 – Get You Alone",
+    "date": "2021-01-20",
+    "details": "백업 댄서. MV 출연"
+  },
+  {
+    "type": "choreo",
+    "title": "SHINee – Don't Call Me",
+    "date": "2021-02-22",
+    "details": "백업 댄서. MV, 무대 출연"
+  },
+  {
+    "type": "choreo",
+    "title": "SHINee – Heart Attack",
+    "date": "2021-04-12",
+    "details": "백업 댄서. 무대 출연"
+  },
+  {
+    "type": "choreo",
+    "title": "EXO – DON'T FIGHT THE FEELING",
+    "date": "2021-06-07",
+    "details": "백업 댄서. MV 출연"
+  },
+  {
+    "type": "choreo",
+    "title": "KEY – BAD LOVE",
+    "date": "2021-09-27",
+    "details": "백업 댄서. MV, 무대 출연"
+  },
+  {
+    "type": "choreo",
+    "title": "NewJeans – Supernatural",
+    "date": "2024-07-26",
+    "details": "백업 댄서. SBS 가요대전 무대"
+  },
+  // ────────────────────────────────────────────────────────
+  // BROADCAST / 방송 출연
+  // ────────────────────────────────────────────────────────
+  {
+    "type": "broadcast",
+    "title": "1Million Dance Studio 인터뷰",
+    "date": "2020-07-04",
+    "details": "유튜브 채널 인터뷰 영상 공개"
+  },
+  {
+    "type": "broadcast",
+    "title": "스트릿 맨 파이터",
+    "date": "2022-08-23~2022-11-08",
+    "details": "엠넷. 원밀리언(1MILLION) 크루 멤버로 참가. 스트릿 댄스 서바이벌 시리즈 역사상 최초 외국인 참가자"
+  },
+  {
+    "type": "broadcast",
+    "title": "온앤오프 ONF 유 'NIGHT FLIGHT' With 유메키",
+    "date": "2023-03-20",
+    "details": "STATION Z 채널 공개. 온앤오프 유와 협업 영상"
+  },
+  {
+    "type": "broadcast",
+    "title": "PRODUCE 101 JAPAN THE GIRLS",
+    "date": "2023-10-05~2023-12-16",
+    "details": "Lemino(일본). 댄스 트레이너로 참여"
+  },
+  {
+    "type": "broadcast",
+    "title": "보이즈 II 플래닛 (BOYS II PLANET)",
+    "date": "2025-07-17~2025-09-25",
+    "details": "Mnet TV. 참가자로 출연. 최종 순위 발표식에서 11위 기록"
+  },
+  // ────────────────────────────────────────────────────────
+  // PERFORMANCE / 공연·참여 음반
+  // ────────────────────────────────────────────────────────
+  {
+    "type": "performance",
+    "title": "BOYS II PLANET – 올라 (HOLA SOLAR)",
+    "date": "2025-06-12",
+    "details": "참여 음반. 경연 수록곡"
+  },
+  {
+    "type": "performance",
+    "title": "777 (Triple 7) – Lucky MACHO (DEBUT CONCEPT BATTLE)",
+    "date": "2025-09-11",
+    "details": "참여 음반. 보이즈 II 플래닛 연계"
+  },
+  {
+    "type": "performance",
+    "title": "BOYS II PLANET – Brat Attitude / How To Fly (FINAL DEBUT BATTLE)",
+    "date": "2025-09-26",
+    "details": "참여 음반. 파이널 경연 수록곡"
+  },
+  {
+    "type": "performance",
+    "title": "YUMEKI and FRIENDS:) – 솔로 공연",
+    "date": null,
+    "details": "일본 피아 아레나 MM(요코하마) 개최. 게스트: 백구영, 킹키, 카니 등. 오사카·후쿠오카 라이브 뷰잉 병행. 안무가를 넘어 공연 아티스트로서의 첫 솔로 공연"
+  }
+]

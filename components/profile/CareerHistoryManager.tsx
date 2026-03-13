@@ -3,6 +3,7 @@ import { supabase } from '@/lib/supabase'
 import { Plus, X, Edit2, Loader2, Trash2, ChevronDown, ChevronUp, Save, ChevronsRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import Drawer from '@/components/ui/Drawer'
+import { extractYouTubeId, getYouTubeThumbnail } from '@/lib/youtube'
 
 interface CareerItem {
     id: number
@@ -147,18 +148,26 @@ export default function CareerHistoryManager({ dancerId }: CareerHistoryManagerP
             ? `${formData.year}-${(formData.month || '01').padStart(2, '0')}-01`
             : new Date().toISOString().split('T')[0]
 
+        const details: Record<string, unknown> = {
+            year: formData.year,
+            month: formData.month,
+            role: formData.role,
+            description: formData.description,
+            link: formData.link || undefined
+        }
+        if (formData.link) {
+            const videoId = extractYouTubeId(formData.link)
+            if (videoId) {
+                details.youtube_url = formData.link
+                details.thumbnail = getYouTubeThumbnail(videoId, 'hq')
+            }
+        }
         const careerData = {
             dancer_id: dancerId,
             type: formData.type,
             title: formData.title,
             date: dateStr,
-            details: {
-                year: formData.year,
-                month: formData.month,
-                role: formData.role,
-                description: formData.description,
-                link: formData.link
-            }
+            details
         }
 
         try {
@@ -381,14 +390,15 @@ export default function CareerHistoryManager({ dancerId }: CareerHistoryManagerP
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-white mb-2">관련 영상 링크 (선택사항)</label>
+                        <label className="block text-sm font-medium text-white mb-2">관련 영상 링크 (권장)</label>
                         <input
                             type="url"
                             value={formData.link}
                             onChange={e => setFormData({ ...formData, link: e.target.value })}
                             className="w-full px-4 py-3 bg-black/50 border border-neutral-800 rounded-xl text-white focus:border-primary focus:outline-none"
-                            placeholder="https://youtube.com/..."
+                            placeholder="우선순위: 안무 시안 → 퍼포먼스 → 연습실 → 뮤직비디오"
                         />
+                        <p className="text-xs text-white/50 mt-1">비어두면 경력이 해당 카테고리 맨 뒤로 밀립니다.</p>
                     </div>
 
                     <div>

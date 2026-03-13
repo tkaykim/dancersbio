@@ -36,6 +36,8 @@ export default function CareerTimeline({ careers }: CareerTimelineProps) {
         return (match && match[2].length === 11) ? match[2] : null;
     };
 
+    const isYouTubeThumbnail = (src: string) => src?.includes('img.youtube.com');
+
     const handleItemClick = (item: CareerItem) => {
         if (item.video_url) {
             setSelectedItem(item);
@@ -72,6 +74,7 @@ export default function CareerTimeline({ careers }: CareerTimelineProps) {
                                     alt={item.title}
                                     fill
                                     className="object-cover"
+                                    unoptimized={isYouTubeThumbnail(item.image)}
                                 />
                             ) : (item.video_url && getYouTubeId(item.video_url)) ? (
                                 <Image
@@ -148,6 +151,7 @@ export default function CareerTimeline({ careers }: CareerTimelineProps) {
                                                         alt={item.title}
                                                         fill
                                                         className="object-cover transition-opacity duration-300 group-hover:opacity-80"
+                                                        unoptimized={isYouTubeThumbnail(item.image)}
                                                     />
                                                 ) : (item.video_url && getYouTubeId(item.video_url)) ? (
                                                     <Image

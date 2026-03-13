@@ -530,7 +530,7 @@ export default function AdminPushPage() {
                                     ) : s.key === 'proposal_created' ? (
                                         <Bell className="w-4 h-4" />
                                     ) : s.key === 'proposal_accepted' ? (
-                                        <CheckCircle className="w-4 h-4 text-green-400" />
+                                        <CheckCircle className="w-4 h-4 text-green-500" />
                                     ) : s.key === 'proposal_declined' ? (
                                         <XCircle className="w-4 h-4 text-red-400" />
                                     ) : s.key === 'negotiation_message' ? (

@@ -13,7 +13,7 @@ import type { Project } from '@/lib/types'
 
 const CONFIRMATION_LABELS: Record<string, { label: string; color: string }> = {
     negotiating: { label: '협상 중', color: 'bg-yellow-500/10 text-yellow-400' },
-    confirmed: { label: '진행 확정', color: 'bg-green-500/10 text-green-400' },
+    confirmed: { label: '진행 확정', color: 'bg-green-500/10 text-green-500' },
     declined: { label: '거절됨', color: 'bg-red-500/10 text-red-400' },
     cancelled: { label: '취소됨', color: 'bg-red-500/10 text-red-400' },
     completed: { label: '완료', color: 'bg-white/5 text-white/40' },
@@ -22,7 +22,7 @@ const CONFIRMATION_LABELS: Record<string, { label: string; color: string }> = {
 const PROGRESS_LABELS: Record<string, { label: string; color: string }> = {
     idle: { label: '대기', color: 'bg-white/5 text-white/30' },
     recruiting: { label: '모집 중', color: 'bg-blue-500/10 text-blue-400' },
-    in_progress: { label: '진행 중', color: 'bg-green-500/10 text-green-400' },
+    in_progress: { label: '진행 중', color: 'bg-green-500/10 text-green-500' },
     completed: { label: '진행 완료', color: 'bg-white/5 text-white/40' },
     cancelled: { label: '취소됨', color: 'bg-red-500/10 text-red-400' },
 }
@@ -279,7 +279,7 @@ function ProjectCard({ project, userId, myDancerIds, isArchived }: { project: Pr
                     <div className="flex items-center gap-2 text-[10px] text-white/25 pt-1 mt-0.5 border-t border-neutral-800/30">
                         {pmRevenue > 0 && <span className="text-blue-400/50">매출 {pmRevenue.toLocaleString()}</span>}
                         {totalExpense > 0 && <><span>·</span><span className="text-red-400/50">지출 {totalExpense.toLocaleString()}</span></>}
-                        <span className={`ml-auto font-medium ${(pmRevenue - totalExpense) >= 0 ? 'text-green-400/50' : 'text-red-400/50'}`}>
+                        <span className={`ml-auto font-medium ${(pmRevenue - totalExpense) >= 0 ? 'text-green-500/50' : 'text-red-400/50'}`}>
                             순익 {(pmRevenue - totalExpense).toLocaleString()}
                         </span>
                     </div>

@@ -260,7 +260,7 @@ function ClaimContent() {
                 {step === 'success' && (
                     <div className="w-full max-w-md text-center py-16 animate-in fade-in zoom-in-95">
                         <div className="w-20 h-20 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                            <CheckCircle2 className="w-10 h-10 text-green-400" />
+                            <CheckCircle2 className="w-10 h-10 text-green-500" />
                         </div>
                         <h2 className="text-2xl font-bold mb-2">요청 완료!</h2>
                         <p className="text-white/60 mb-8 text-sm">

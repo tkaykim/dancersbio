@@ -5,7 +5,7 @@ import type { ProjectProposal } from '@/lib/types'
 
 const STATUS_MAP: Record<string, { label: string; className: string }> = {
   pending: { label: '대기', className: 'bg-amber-500/20 text-amber-400' },
-  accepted: { label: '수락', className: 'bg-green-500/20 text-green-400' },
+  accepted: { label: '수락', className: 'bg-green-500/20 text-green-500' },
   declined: { label: '거절', className: 'bg-red-500/20 text-red-400' },
   negotiating: { label: '협상중', className: 'bg-blue-500/20 text-blue-400' },
   cancelled: { label: '취소', className: 'bg-neutral-600/50 text-white/50' },

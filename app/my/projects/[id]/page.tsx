@@ -21,7 +21,7 @@ import { triggerPushEvent } from '@/lib/trigger-push-event'
 
 const CONFIRMATION_OPTIONS: { value: ConfirmationStatus; label: string; color: string }[] = [
     { value: 'negotiating', label: '협상 중', color: 'text-yellow-400 bg-yellow-500/10' },
-    { value: 'confirmed', label: '진행 확정', color: 'text-green-400 bg-green-500/10' },
+    { value: 'confirmed', label: '진행 확정', color: 'text-green-500 bg-green-500/10' },
     { value: 'declined', label: '거절됨', color: 'text-red-400 bg-red-500/10' },
     { value: 'cancelled', label: '취소됨', color: 'text-red-400 bg-red-500/10' },
     { value: 'completed', label: '완료', color: 'text-white/40 bg-white/5' },
@@ -30,7 +30,7 @@ const CONFIRMATION_OPTIONS: { value: ConfirmationStatus; label: string; color: s
 const PROGRESS_OPTIONS: { value: ProgressStatus; label: string; color: string }[] = [
     { value: 'idle', label: '대기', color: 'text-white/40 bg-white/5' },
     { value: 'recruiting', label: '모집 중', color: 'text-blue-400 bg-blue-500/10' },
-    { value: 'in_progress', label: '진행 중', color: 'text-green-400 bg-green-500/10' },
+    { value: 'in_progress', label: '진행 중', color: 'text-green-500 bg-green-500/10' },
     { value: 'completed', label: '진행 완료', color: 'text-white/40 bg-white/5' },
     { value: 'cancelled', label: '취소됨', color: 'text-red-400 bg-red-500/10' },
 ]
@@ -40,7 +40,7 @@ const CATEGORY_LABELS: Record<string, string> = {
 }
 
 const PROPOSAL_STATUS_ICON: Record<string, { icon: typeof CheckCircle; color: string }> = {
-    accepted: { icon: CheckCircle, color: 'text-green-400' },
+    accepted: { icon: CheckCircle, color: 'text-green-500' },
     pending: { icon: Clock, color: 'text-yellow-400' },
     negotiating: { icon: Clock, color: 'text-blue-400' },
     declined: { icon: XCircle, color: 'text-red-400' },
@@ -451,7 +451,7 @@ export default function ProjectDetailPage() {
                             {childProjects.map((child: any) => {
                                 const prop = child.proposals?.[0]
                                 const statusLabel = !prop ? '-' : prop.status === 'accepted' ? '수락' : prop.status === 'declined' ? '거절' : prop.status === 'cancelled' ? '취소됨' : '대기'
-                                const statusColor = prop?.status === 'accepted' ? 'text-green-400' : prop?.status === 'declined' || prop?.status === 'cancelled' ? 'text-red-400' : 'text-yellow-400'
+                                const statusColor = prop?.status === 'accepted' ? 'text-green-500' : prop?.status === 'declined' || prop?.status === 'cancelled' ? 'text-red-400' : 'text-yellow-400'
                                 return (
                                     <li key={child.id}>
                                         <Link href={`/my/projects/${child.id}`} className="flex items-center justify-between py-2 px-3 rounded-lg bg-neutral-800/50 hover:bg-neutral-800 border border-neutral-700/50">
@@ -510,7 +510,7 @@ export default function ProjectDetailPage() {
                         <div className="flex items-center justify-between text-sm">
                             <div className="flex items-center gap-3">
                                 {myProposal.role && <span className="text-white/70">{myProposal.role}</span>}
-                                <span className={`text-xs font-semibold ${myProposal.status === 'accepted' ? 'text-green-400' : myProposal.status === 'declined' ? 'text-red-400' : 'text-yellow-400'}`}>
+                                <span className={`text-xs font-semibold ${myProposal.status === 'accepted' ? 'text-green-500' : myProposal.status === 'declined' ? 'text-red-400' : 'text-yellow-400'}`}>
                                     {myProposal.status === 'accepted' ? '수락됨' : myProposal.status === 'declined' ? '거절됨' : '대기 중'}
                                 </span>
                             </div>
@@ -531,7 +531,7 @@ export default function ProjectDetailPage() {
                     <section className="bg-neutral-900/50 border border-neutral-800/50 rounded-xl p-3">
                         <p className="text-xs text-white/40">PM이 섭외한 인원만 집계됩니다. 세부 인원·금액은 PM만 확인할 수 있습니다.</p>
                         <div className="flex flex-wrap gap-3 mt-2 text-[11px] text-white/50">
-                            <span className="flex items-center gap-1"><CheckCircle className="w-3 h-3 text-green-400/60" /> 참여 확정 {acceptedProposals.length}명</span>
+                            <span className="flex items-center gap-1"><CheckCircle className="w-3 h-3 text-green-500/60" /> 참여 확정 {acceptedProposals.length}명</span>
                             {pendingProposals.length > 0 && <span className="flex items-center gap-1"><Clock className="w-3 h-3 text-yellow-400/60" /> 응답 대기 {pendingProposals.length}명</span>}
                             {declinedProposals.length > 0 && <span className="flex items-center gap-1"><XCircle className="w-3 h-3 text-red-400/60" /> 거절 {declinedProposals.length}명</span>}
                         </div>
@@ -540,7 +540,7 @@ export default function ProjectDetailPage() {
                     <>
                         <section className="space-y-2">
                             <h2 className="text-xs font-semibold text-white/40 flex items-center gap-1.5">
-                                <CheckCircle className="w-3.5 h-3.5 text-green-400" />
+                                <CheckCircle className="w-3.5 h-3.5 text-green-500" />
                                 참여 확정 ({acceptedProposals.length})
                             </h2>
                             {acceptedProposals.length === 0 ? (
@@ -661,7 +661,7 @@ export default function ProjectDetailPage() {
                                 {pmRevenue > 0 && <span className="text-blue-400/70">매출 {pmRevenue.toLocaleString()}</span>}
                                 {totalExpense > 0 && <span className="text-red-400/60">지출 {totalExpense.toLocaleString()}</span>}
                                 {(pmRevenue > 0 || totalExpense > 0) && (
-                                    <span className={`font-semibold ${netProfit >= 0 ? 'text-green-400/70' : 'text-red-400/70'}`}>
+                                    <span className={`font-semibold ${netProfit >= 0 ? 'text-green-500/70' : 'text-red-400/70'}`}>
                                         순익 {netProfit.toLocaleString()}
                                     </span>
                                 )}
@@ -690,7 +690,7 @@ export default function ProjectDetailPage() {
                                 공개 설정
                             </span>
                             <div className="flex items-center gap-2">
-                                <span className={`font-semibold ${effectivelyPublic ? 'text-green-400/70' : 'text-orange-400/70'}`}>
+                                <span className={`font-semibold ${effectivelyPublic ? 'text-green-500/70' : 'text-orange-400/70'}`}>
                                     {effectivelyPublic ? '공개' : embargoActive ? `엠바고 ~${project.embargo_date}` : '비공개'}
                                 </span>
                                 {showEmbargoSettings ? <ChevronUp className="w-3.5 h-3.5 text-white/20" /> : <ChevronDown className="w-3.5 h-3.5 text-white/20" />}
@@ -778,7 +778,7 @@ function FinanceDetails({
             {(totalIncome > 0 || totalExpense > 0) && (
                 <div className="flex justify-between pt-1 border-t border-neutral-800/30">
                     <span className="text-white/40 font-medium">순수익</span>
-                    <span className={`font-bold ${(totalIncome - totalExpense) >= 0 ? 'text-green-400/80' : 'text-red-400/80'}`}>
+                    <span className={`font-bold ${(totalIncome - totalExpense) >= 0 ? 'text-green-500/80' : 'text-red-400/80'}`}>
                         {(totalIncome - totalExpense).toLocaleString()}원
                     </span>
                 </div>
@@ -842,11 +842,11 @@ function EmbargoPanel({ project, onUpdate }: { project: Project; onUpdate: () =>
             {/* 토글 */}
             <div className="flex items-center justify-between">
                 <span className="text-xs text-white/40">
-                    현재: <span className={effectivelyPublic ? 'text-green-400' : 'text-orange-400'}>{effectivelyPublic ? '공개' : '비공개'}</span>
+                    현재: <span className={effectivelyPublic ? 'text-green-500' : 'text-orange-400'}>{effectivelyPublic ? '공개' : '비공개'}</span>
                 </span>
                 <button onClick={toggleVisibility} disabled={updating || embargoActive}
                     className={`text-[11px] px-3 py-1.5 rounded-lg font-medium transition ${
-                        effectivelyPublic ? 'bg-orange-500/10 text-orange-400' : embargoActive ? 'bg-neutral-800 text-white/15 cursor-not-allowed' : 'bg-green-500/10 text-green-400'
+                        effectivelyPublic ? 'bg-orange-500/10 text-orange-400' : embargoActive ? 'bg-neutral-800 text-white/15 cursor-not-allowed' : 'bg-green-500/10 text-green-500'
                     }`}>
                     {updating ? '...' : effectivelyPublic ? '비공개로' : embargoActive ? '엠바고 중' : '공개로'}
                 </button>
@@ -861,7 +861,7 @@ function EmbargoPanel({ project, onUpdate }: { project: Project; onUpdate: () =>
                 </div>
             )}
             {!embargoActive && project.embargo_date && (
-                <p className="text-[11px] text-green-400/50">엠바고 해제됨 ({formatEmbargoDate(project.embargo_date)} 만료)</p>
+                <p className="text-[11px] text-green-500/50">엠바고 해제됨 ({formatEmbargoDate(project.embargo_date)} 만료)</p>
             )}
 
             {/* 엠바고 날짜 변경 */}

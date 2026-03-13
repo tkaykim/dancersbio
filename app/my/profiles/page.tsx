@@ -199,7 +199,7 @@ function DancerProfileCard({ dancer, role, stats, onShare }: {
                     </span>
                 )}
                 {dancer.is_verified ? (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-green-400/10 text-green-400 text-[11px] font-medium">
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-green-500/10 text-green-500 text-[11px] font-medium">
                         <CheckCircle className="w-3 h-3" />
                         승인됨 · 공개
                     </span>
@@ -267,13 +267,13 @@ function DancerProfileCard({ dancer, role, stats, onShare }: {
             <div className="space-y-1.5">
                 <div className="flex items-center justify-between text-xs">
                     <span className="text-white/50">프로필 완성도</span>
-                    <span className={`font-semibold ${pct === 100 ? 'text-green-400' : pct >= 70 ? 'text-primary' : 'text-orange-400'}`}>
+                    <span className={`font-semibold ${pct === 100 ? 'text-green-500' : pct >= 70 ? 'text-primary' : 'text-orange-400'}`}>
                         {pct}%
                     </span>
                 </div>
                 <div className="h-1.5 bg-neutral-800 rounded-full overflow-hidden">
                     <div
-                        className={`h-full rounded-full transition-all duration-500 ${pct === 100 ? 'bg-green-400' : pct >= 70 ? 'bg-primary' : 'bg-orange-400'}`}
+                        className={`h-full rounded-full transition-all duration-500 ${pct === 100 ? 'bg-green-500' : pct >= 70 ? 'bg-primary' : 'bg-orange-400'}`}
                         style={{ width: `${pct}%` }}
                     />
                 </div>

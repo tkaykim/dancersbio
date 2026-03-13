@@ -49,7 +49,7 @@ function ProjectCard({
           </p>
           <div className="flex flex-wrap gap-2 mt-2">
             {accepted > 0 && (
-              <span className="text-xs px-2 py-0.5 rounded bg-green-500/20 text-green-400">
+              <span className="text-xs px-2 py-0.5 rounded bg-green-500/20 text-green-500">
                 수락 {accepted}
               </span>
             )}

@@ -11,7 +11,7 @@ import AdminPageHeader from '@/components/admin/AdminPageHeader'
 
 const STATUS_LABELS: Record<string, { label: string; color: string }> = {
     pending: { label: '대기', color: 'bg-yellow-500/10 text-yellow-400' },
-    accepted: { label: '수락', color: 'bg-green-500/10 text-green-400' },
+    accepted: { label: '수락', color: 'bg-green-500/10 text-green-500' },
     declined: { label: '거절', color: 'bg-red-500/10 text-red-400' },
     negotiating: { label: '협상 중', color: 'bg-blue-500/10 text-blue-400' },
     cancelled: { label: '취소', color: 'bg-white/5 text-white/40' },

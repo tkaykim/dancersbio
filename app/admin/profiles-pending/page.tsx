@@ -75,7 +75,7 @@ export default function AdminProfilesPendingPage() {
                 <div className="text-center py-16 text-white/40">로딩 중...</div>
             ) : pendingDancers.length === 0 ? (
                 <div className="text-center py-16">
-                    <CheckCircle className="w-12 h-12 text-green-400/30 mx-auto mb-3" />
+                    <CheckCircle className="w-12 h-12 text-green-500/30 mx-auto mb-3" />
                     <p className="text-white/40 text-sm">승인 대기 중인 프로필이 없습니다</p>
                 </div>
             ) : (
@@ -118,7 +118,7 @@ export default function AdminProfilesPendingPage() {
                             <button
                                 onClick={() => approveProfile(dancer.id)}
                                 disabled={processing === dancer.id}
-                                className="flex-1 py-2.5 bg-green-500/10 text-green-400 font-semibold text-sm rounded-lg hover:bg-green-500/20 transition disabled:opacity-50 flex items-center justify-center gap-1.5"
+                                className="flex-1 py-2.5 bg-green-500/10 text-green-500 font-semibold text-sm rounded-lg hover:bg-green-500/20 transition disabled:opacity-50 flex items-center justify-center gap-1.5"
                             >
                                 {processing === dancer.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
                                 승인

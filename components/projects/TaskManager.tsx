@@ -207,7 +207,7 @@ function TaskItem({ task, isOwner, onToggle, onDelete }: {
             <div className="flex items-start gap-2.5">
                 <button onClick={onToggle} className="mt-0.5 shrink-0">
                     {isCompleted ? (
-                        <CheckSquare className="w-4 h-4 text-green-400" />
+                        <CheckSquare className="w-4 h-4 text-green-500" />
                     ) : (
                         <Square className="w-4 h-4 text-white/30 hover:text-white/50" />
                     )}

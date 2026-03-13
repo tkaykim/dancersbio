@@ -86,7 +86,7 @@ export default function ProjectSettlementDetailModal({ data, onClose }: ProjectS
                             <div className="bg-neutral-900/50 rounded-lg p-3">
                                 <p className="text-xs text-white/40 mb-1">확정 정산액</p>
                                 <p className={`text-lg font-bold ${
-                                    confirmedNetProfit > 0 ? 'text-green-400' :
+                                    confirmedNetProfit > 0 ? 'text-green-500' :
                                     confirmedNetProfit < 0 ? 'text-red-400' :
                                     'text-white/40'
                                 }`}>
@@ -100,7 +100,7 @@ export default function ProjectSettlementDetailModal({ data, onClose }: ProjectS
                                 <p className="text-xs text-white/40 mb-1">예상 정산액</p>
                                 <p className={`text-lg font-bold ${
                                     data.hasUndecided ? 'text-yellow-400' :
-                                    expectedNetProfit > 0 ? 'text-green-400' :
+                                    expectedNetProfit > 0 ? 'text-green-500' :
                                     expectedNetProfit < 0 ? 'text-red-400' :
                                     'text-white/40'
                                 }`}>
@@ -115,7 +115,7 @@ export default function ProjectSettlementDetailModal({ data, onClose }: ProjectS
                         {/* Settlement Status */}
                         <div className="mt-3 pt-3 border-t border-neutral-800/50">
                             {allItemsCompleted && noUndecidedFees ? (
-                                <div className="flex items-center gap-2 text-green-400 text-xs">
+                                <div className="flex items-center gap-2 text-green-500 text-xs">
                                     <CheckCircle2 className="w-4 h-4" />
                                     <span className="font-medium">모든 항목이 확정되었습니다</span>
                                 </div>
@@ -144,7 +144,7 @@ export default function ProjectSettlementDetailModal({ data, onClose }: ProjectS
                                 <div className="text-right">
                                     <p className="text-sm font-bold text-blue-400">+{data.totalIncome.toLocaleString()}원</p>
                                     <div className="flex items-center gap-2 text-[10px] text-white/30 mt-0.5">
-                                        {completedIncome > 0 && <span className="text-green-400">확정 {completedIncome.toLocaleString()}</span>}
+                                        {completedIncome > 0 && <span className="text-green-500">확정 {completedIncome.toLocaleString()}</span>}
                                         {pendingIncome > 0 && <span className="text-yellow-400">대기 {pendingIncome.toLocaleString()}</span>}
                                     </div>
                                 </div>
@@ -172,7 +172,7 @@ export default function ProjectSettlementDetailModal({ data, onClose }: ProjectS
                                                 </p>
                                                 <span className={`text-[10px] px-2 py-0.5 rounded font-semibold ${
                                                     item.status === 'completed'
-                                                        ? 'bg-green-500/10 text-green-400'
+                                                        ? 'bg-green-500/10 text-green-500'
                                                         : 'bg-yellow-500/10 text-yellow-400'
                                                 }`}>
                                                     {item.status === 'completed' ? '확정' : '대기'}
@@ -196,7 +196,7 @@ export default function ProjectSettlementDetailModal({ data, onClose }: ProjectS
                                 <div className="text-right">
                                     <p className="text-sm font-bold text-red-400">-{data.totalExpense.toLocaleString()}원</p>
                                     <div className="flex items-center gap-2 text-[10px] text-white/30 mt-0.5">
-                                        {completedExpense > 0 && <span className="text-green-400">확정 {completedExpense.toLocaleString()}</span>}
+                                        {completedExpense > 0 && <span className="text-green-500">확정 {completedExpense.toLocaleString()}</span>}
                                         {pendingExpense > 0 && <span className="text-yellow-400">대기 {pendingExpense.toLocaleString()}</span>}
                                     </div>
                                 </div>
@@ -224,7 +224,7 @@ export default function ProjectSettlementDetailModal({ data, onClose }: ProjectS
                                                 </p>
                                                 <span className={`text-[10px] px-2 py-0.5 rounded font-semibold ${
                                                     item.status === 'completed'
-                                                        ? 'bg-green-500/10 text-green-400'
+                                                        ? 'bg-green-500/10 text-green-500'
                                                         : 'bg-yellow-500/10 text-yellow-400'
                                                 }`}>
                                                     {item.status === 'completed' ? '확정' : '대기'}
@@ -261,7 +261,7 @@ export default function ProjectSettlementDetailModal({ data, onClose }: ProjectS
                                     {data.totalIncome > 0 && data.totalExpense > 0 ? '순이익' : data.totalIncome > 0 ? '매출 합계' : '지출 합계'}
                                 </span>
                                 <span className={`text-lg font-bold ${
-                                    data.netProfit > 0 ? 'text-green-400' :
+                                    data.netProfit > 0 ? 'text-green-500' :
                                     data.netProfit < 0 ? 'text-red-400' :
                                     'text-white/40'
                                 }`}>
@@ -285,7 +285,7 @@ export default function ProjectSettlementDetailModal({ data, onClose }: ProjectS
                             <span className="text-red-400/50">지출</span> = 기준 프로필이 PM인 프로젝트에서 다른 참여자에게 지급하는 금액
                         </p>
                         <p className="text-[10px] text-white/25">
-                            <span className="text-green-400/50">순이익</span> = 매출 - 지출 (동일 계정 내부 거래도 기준 프로필 관점으로 반영)
+                            <span className="text-green-500/50">순이익</span> = 매출 - 지출 (동일 계정 내부 거래도 기준 프로필 관점으로 반영)
                         </p>
                     </div>
                 </div>

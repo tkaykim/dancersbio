@@ -46,7 +46,7 @@ const CATEGORY_LABELS: Record<string, string> = {
 const STATUS_CONFIG = {
     pending: { label: '정산 대기', color: 'text-yellow-400 bg-yellow-400/10' },
     partial: { label: '일부 확정', color: 'text-blue-400 bg-blue-400/10' },
-    completed: { label: '정산 완료', color: 'text-green-400 bg-green-400/10' },
+    completed: { label: '정산 완료', color: 'text-green-500 bg-green-500/10' },
 }
 
 export default function ProjectSettlementAccordion({ data, onViewDetail }: ProjectSettlementAccordionProps) {
@@ -92,7 +92,7 @@ export default function ProjectSettlementAccordion({ data, onViewDetail }: Proje
                         <p className="font-bold text-sm text-yellow-400/70">미정 포함</p>
                     ) : (
                         <p className={`font-bold text-sm ${
-                            data.netProfit > 0 ? 'text-green-400' :
+                            data.netProfit > 0 ? 'text-green-500' :
                             data.netProfit < 0 ? 'text-red-400' :
                             'text-white/40'
                         }`}>
@@ -158,7 +158,7 @@ export default function ProjectSettlementAccordion({ data, onViewDetail }: Proje
                                             </p>
                                             <span className={`text-[9px] px-1.5 py-0.5 rounded ${
                                                 item.status === 'completed'
-                                                    ? 'bg-green-500/10 text-green-400'
+                                                    ? 'bg-green-500/10 text-green-500'
                                                     : 'bg-yellow-500/10 text-yellow-400'
                                             }`}>
                                                 {item.status === 'completed' ? '확정' : '대기'}
@@ -192,7 +192,7 @@ export default function ProjectSettlementAccordion({ data, onViewDetail }: Proje
                                             </p>
                                             <span className={`text-[9px] px-1.5 py-0.5 rounded ${
                                                 item.status === 'completed'
-                                                    ? 'bg-green-500/10 text-green-400'
+                                                    ? 'bg-green-500/10 text-green-500'
                                                     : 'bg-yellow-500/10 text-yellow-400'
                                             }`}>
                                                 {item.status === 'completed' ? '확정' : '대기'}
@@ -221,7 +221,7 @@ export default function ProjectSettlementAccordion({ data, onViewDetail }: Proje
                                 <div className="flex items-center justify-between text-sm font-bold pt-1 border-t border-neutral-800/50">
                                     <span className="text-white">순이익</span>
                                     <span className={
-                                        data.netProfit > 0 ? 'text-green-400' :
+                                        data.netProfit > 0 ? 'text-green-500' :
                                         data.netProfit < 0 ? 'text-red-400' :
                                         'text-white/40'
                                     }>

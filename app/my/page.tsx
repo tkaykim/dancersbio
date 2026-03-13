@@ -78,7 +78,7 @@ export default function MyPage() {
             href: '/my/projects',
             icon: Briefcase,
             badge: activeProjectCount > 0 ? `${activeProjectCount}건` : undefined,
-            badgeColor: 'bg-green-500/20 text-green-400'
+            badgeColor: 'bg-green-500/20 text-green-500'
         },
         {
             label: '정산 관리',
@@ -117,9 +117,9 @@ export default function MyPage() {
                 {/* Quick Stats */}
                 <div className="grid grid-cols-4 gap-2.5">
                     <QuickStatCard label="활성 제안" value={activeProposals} />
-                    <QuickStatCard label="프로젝트" value={activeProjectCount} accent="text-green-400" />
-                    <QuickStatCard label="프로필" value={totalProfiles} accent="text-blue-400" />
-                    <QuickStatCard label="정산 대기" value="0원" accent="text-yellow-400" />
+                    <QuickStatCard label="프로젝트" value={activeProjectCount} accent="text-primary" />
+                    <QuickStatCard label="프로필" value={totalProfiles} accent="text-white" />
+                    <QuickStatCard label="정산 대기" value="0원" accent="text-white/60" />
                 </div>
 
                 {/* Main Menu */}
