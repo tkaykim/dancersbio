@@ -93,88 +93,71 @@ export default function ProfileHeader({ dancer }: ProfileHeaderProps) {
                 </div>
 
                 {/* Content - Bottom Aligned */}
-                <div className="absolute bottom-0 left-0 right-0 p-6 z-20 flex flex-col items-center text-center pb-4">
+                <div className="absolute bottom-0 left-0 right-0 px-6 pb-5 z-20 flex flex-col items-center text-center">
 
                     {/* Title */}
-                    <h1 className="text-4xl font-extrabold text-white flex items-center gap-2 mb-2 tracking-tight drop-shadow-md">
+                    <h1 className="text-3xl font-extrabold text-white flex items-center gap-2 mb-1 tracking-tight drop-shadow-md">
                         {dancer.name}
                         {dancer.isVerified && (
-                            <CheckCircle2 className="w-6 h-6 text-blue-400 fill-blue-900/40" />
+                            <CheckCircle2 className="w-5 h-5 text-blue-400 fill-blue-900/40" />
                         )}
                     </h1>
 
                     {dancer.agencyName && (
-                        <p className="flex items-center gap-1.5 text-sm text-white/60 mb-6">
-                            <Building2 className="w-3.5 h-3.5" />
+                        <p className="flex items-center gap-1.5 text-xs text-white/50 mb-3">
+                            <Building2 className="w-3 h-3" />
                             {dancer.agencyName}
                         </p>
                     )}
-                    {!dancer.agencyName && <div className="mb-6" />}
+                    {!dancer.agencyName && <div className="mb-3" />}
 
-                    {/* Social Links */}
-                    {hasSocialLinks && (
-                        <div className="flex items-center gap-3 mb-5">
-                            {socialLinks.instagram && (
-                                <a
-                                    href={getSocialUrl("instagram", socialLinks.instagram)}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="p-2.5 bg-white/10 backdrop-blur-md rounded-full text-white hover:bg-white/20 transition-all hover:scale-110 border border-white/10"
-                                    title={`Instagram: @${socialLinks.instagram}`}
-                                >
-                                    <InstagramIcon className="w-4 h-4" />
-                                </a>
-                            )}
-                            {socialLinks.twitter && (
-                                <a
-                                    href={getSocialUrl("twitter", socialLinks.twitter)}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="p-2.5 bg-white/10 backdrop-blur-md rounded-full text-white hover:bg-white/20 transition-all hover:scale-110 border border-white/10"
-                                    title={`X: @${socialLinks.twitter}`}
-                                >
-                                    <XTwitterIcon className="w-4 h-4" />
-                                </a>
-                            )}
-                            {socialLinks.youtube && (
-                                <a
-                                    href={getSocialUrl("youtube", socialLinks.youtube)}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="p-2.5 bg-white/10 backdrop-blur-md rounded-full text-white hover:bg-white/20 transition-all hover:scale-110 border border-white/10"
-                                    title={`YouTube: ${socialLinks.youtube}`}
-                                >
-                                    <YoutubeIcon className="w-4 h-4" />
-                                </a>
-                            )}
-                        </div>
-                    )}
-
-                    {/* Main Action Buttons */}
-                    <div className="flex gap-2.5 w-full justify-center max-w-[260px] mb-8">
-                        <Link href={`/my/proposals/new?dancer_id=${dancer.id}`} className="flex-1 bg-white text-black h-9 rounded-full font-bold text-[11px] uppercase tracking-wider hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
+                    {/* SNS + Action Buttons in one row */}
+                    <div className="flex items-center gap-2 mb-4">
+                        {hasSocialLinks && (
+                            <>
+                                {socialLinks.instagram && (
+                                    <a
+                                        href={getSocialUrl("instagram", socialLinks.instagram)}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="p-2 bg-white/10 backdrop-blur-md rounded-full text-white hover:bg-white/20 transition-all border border-white/10"
+                                        title={`Instagram: @${socialLinks.instagram}`}
+                                    >
+                                        <InstagramIcon className="w-3.5 h-3.5" />
+                                    </a>
+                                )}
+                                {socialLinks.twitter && (
+                                    <a
+                                        href={getSocialUrl("twitter", socialLinks.twitter)}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="p-2 bg-white/10 backdrop-blur-md rounded-full text-white hover:bg-white/20 transition-all border border-white/10"
+                                        title={`X: @${socialLinks.twitter}`}
+                                    >
+                                        <XTwitterIcon className="w-3.5 h-3.5" />
+                                    </a>
+                                )}
+                                {socialLinks.youtube && (
+                                    <a
+                                        href={getSocialUrl("youtube", socialLinks.youtube)}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="p-2 bg-white/10 backdrop-blur-md rounded-full text-white hover:bg-white/20 transition-all border border-white/10"
+                                        title={`YouTube: ${socialLinks.youtube}`}
+                                    >
+                                        <YoutubeIcon className="w-3.5 h-3.5" />
+                                    </a>
+                                )}
+                                <div className="w-px h-5 bg-white/15 mx-1" />
+                            </>
+                        )}
+                        <Link href={`/my/proposals/new?dancer_id=${dancer.id}`} className="bg-white text-black h-8 px-5 rounded-full font-bold text-[11px] uppercase tracking-wider hover:opacity-90 transition-opacity flex items-center justify-center">
                             제안하기
                         </Link>
-                        <button className="flex-1 bg-white/10 backdrop-blur-md text-white border border-white/10 h-9 rounded-full font-bold text-[11px] uppercase tracking-wider hover:bg-white/20 transition-colors flex items-center justify-center gap-2">
+                        <button className="bg-white/10 backdrop-blur-md text-white border border-white/10 h-8 px-5 rounded-full font-bold text-[11px] uppercase tracking-wider hover:bg-white/20 transition-colors flex items-center justify-center">
                             포트폴리오
                         </button>
                     </div>
-
-                    {/* Icon Row (Follow, Location, Fans) - Minimal */}
-                    {/* <div className="flex items-center gap-8 text-white/60">
-                        <div className="flex flex-col items-center gap-1 cursor-pointer hover:text-white transition-colors">
-                            <div className="border border-current rounded-full w-6 h-6 flex items-center justify-center text-lg leading-none pb-0.5">+</div>
-                            <span className="text-[10px] font-medium">Follow</span>
-                        </div>
-                        <div className="flex flex-col items-center gap-1 cursor-pointer hover:text-white transition-colors">
-                            <MapPin className="w-5 h-5" />
-                            <span className="text-[10px] font-medium">{dancer.location}</span>
-                        </div>
-                        <div className="flex flex-col items-center gap-1 cursor-pointer hover:text-white transition-colors">
-                            <span className="text-sm font-bold text-white">{dancer.stats.followers}</span>
-                            <span className="text-[10px] font-medium">Fans</span>
-                        </div>
-                    </div> */}
                 </div>
             </div>
 
