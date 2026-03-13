@@ -11,6 +11,7 @@ import ProfilePhotoUpload from '@/components/profile/ProfilePhotoUpload'
 import PortfolioMediaManager from '@/components/portfolio/PortfolioMediaManager'
 import CareerHistoryManager from '@/components/profile/CareerHistoryManager'
 import SocialLinksInput from '@/components/profile/SocialLinksInput'
+import AgencySelector from '@/components/profile/AgencySelector'
 import PriorityMultiSelect from '@/components/ui/PriorityMultiSelect'
 import type { SocialLinks } from '@/lib/supabase'
 
@@ -56,7 +57,8 @@ export default function ProfileEditPage({ params }: PageProps) {
         gender: '' as '' | 'male' | 'female' | 'other',
         social_links: {} as SocialLinks,
         specialties: [] as string[],
-        genres: [] as string[]
+        genres: [] as string[],
+        agency_id: null as string | null
     })
     const [portfolioMedia, setPortfolioMedia] = useState<MediaItem[]>([])
 
@@ -95,7 +97,8 @@ export default function ProfileEditPage({ params }: PageProps) {
                 gender: data.gender || '',
                 social_links: data.social_links || {},
                 specialties: data.specialties || [],
-                genres: data.genres || []
+                genres: data.genres || [],
+                agency_id: data.agency_id || null
             })
             if (data.portfolio && Array.isArray(data.portfolio)) {
                 setPortfolioMedia(data.portfolio)
@@ -140,7 +143,8 @@ export default function ProfileEditPage({ params }: PageProps) {
                     portfolio: portfolioMedia,
                     social_links: Object.keys(cleanedSocialLinks).length > 0 ? cleanedSocialLinks : null,
                     specialties: formData.specialties.length > 0 ? formData.specialties : null,
-                    genres: formData.genres.length > 0 ? formData.genres : null
+                    genres: formData.genres.length > 0 ? formData.genres : null,
+                    agency_id: formData.agency_id || null
                 })
                 .eq('id', id)
 
@@ -256,6 +260,16 @@ export default function ProfileEditPage({ params }: PageProps) {
                             ))}
                         </div>
                     </div>
+                </div>
+
+                {/* Agency */}
+                <div className="space-y-4">
+                    <h2 className="text-lg font-bold text-white">소속 정보</h2>
+                    <p className="text-white/40 text-sm">소속사가 있다면 검색하여 선택하세요. 없으면 새로 추가할 수 있습니다.</p>
+                    <AgencySelector
+                        value={formData.agency_id}
+                        onChange={(agencyId) => setFormData({ ...formData, agency_id: agencyId })}
+                    />
                 </div>
 
                 {/* Specialties */}

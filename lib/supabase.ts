@@ -26,6 +26,7 @@ export interface Dancer {
     social_links: SocialLinks | null
     gender: 'male' | 'female' | 'other' | null
     is_verified: boolean
+    agency_id: string | null
     created_at: string
 }
 

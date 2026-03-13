@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircle2, MapPin, Share2, ChevronLeft } from "lucide-react";
+import { CheckCircle2, MapPin, Share2, ChevronLeft, Building2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -18,6 +18,7 @@ interface ProfileHeaderProps {
         location: string;
         stats: { followers: string; views: string };
         socialLinks?: SocialLinks | null;
+        agencyName?: string | null;
     };
 }
 
@@ -95,15 +96,20 @@ export default function ProfileHeader({ dancer }: ProfileHeaderProps) {
                 <div className="absolute bottom-0 left-0 right-0 p-6 z-20 flex flex-col items-center text-center pb-4">
 
                     {/* Title */}
-                    <h1 className="text-4xl font-extrabold text-white flex items-center gap-2 mb-8 tracking-tight drop-shadow-md">
+                    <h1 className="text-4xl font-extrabold text-white flex items-center gap-2 mb-2 tracking-tight drop-shadow-md">
                         {dancer.name}
                         {dancer.isVerified && (
                             <CheckCircle2 className="w-6 h-6 text-blue-400 fill-blue-900/40" />
                         )}
                     </h1>
 
-                    {/* Subtitle / Role */}
-                    {/* <p className="text-sm font-medium text-white/70 mb-6 uppercase tracking-wider">{dancer.role}</p> */}
+                    {dancer.agencyName && (
+                        <p className="flex items-center gap-1.5 text-sm text-white/60 mb-6">
+                            <Building2 className="w-3.5 h-3.5" />
+                            {dancer.agencyName}
+                        </p>
+                    )}
+                    {!dancer.agencyName && <div className="mb-6" />}
 
                     {/* Social Links */}
                     {hasSocialLinks && (

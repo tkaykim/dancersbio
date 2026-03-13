@@ -5,6 +5,7 @@ import ViralFooterCard from "@/components/layout/ViralFooterCard";
 import { notFound } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { isEmbargoActive, isProjectPublic } from "@/lib/utils";
+import { extractYouTubeId, getYouTubeThumbnail } from "@/lib/youtube";
 
 interface PageProps {
     params: Promise<{ slug: string }>;
@@ -32,6 +33,18 @@ export default async function ProfilePage({ params }: PageProps) {
 
     if (dancerError || !dancer) {
         return notFound();
+    }
+
+    let agencyName: string | null = null;
+    if (dancer.agency_id) {
+        const { data: agency } = await supabase
+            .from('clients')
+            .select('company_name, contact_person')
+            .eq('id', dancer.agency_id)
+            .single();
+        if (agency) {
+            agencyName = agency.company_name || agency.contact_person;
+        }
     }
 
     // Fetch career data
@@ -100,15 +113,38 @@ export default async function ProfilePage({ params }: PageProps) {
         const rawRole = career.details?.role || career.details?.achievement || ''
         const description = rawRole.replace(/\s*\(PM\)\s*·?\s*/g, ' · ').replace(/\s*·\s*$/, '').trim() || rawRole
 
-        // video_url: youtube_url(DB) 또는 link 우선. 썸네일은 CareerTimeline에서 video_url로 YouTube 썸네일 로드
-        const videoUrl = career.details?.youtube_url || career.details?.link || '';
+        // video_url: 실제 영상 링크만. 채널 URL은 사용하지 않음 (썸네일 불가)
+        const rawUrl = career.details?.youtube_url || career.details?.link || '';
+        const isRealVideo = /youtube\.com\/watch\?v=|youtu\.be\//.test(rawUrl);
+        const videoUrl = isRealVideo ? rawUrl : '';
+        // 썸네일: DB에 있으면 사용, 없으면 YouTube URL에서 추출 (항상 영상이 있으면 썸네일 노출)
+        const videoId = videoUrl ? extractYouTubeId(videoUrl) : null;
+        const thumbnailUrl =
+            (career.details?.thumbnail && String(career.details.thumbnail).trim()) ||
+            (videoId ? getYouTubeThumbnail(videoId, 'hq') : '');
         groupedCareers[career.type].push({
             id: career.id.toString(),
             year,
             title: career.title,
             description,
-            image: career.details?.thumbnail || '',
+            image: thumbnailUrl,
             video_url: videoUrl
+        });
+    });
+
+    // 영상 URL이 있는 경력을 앞에, 없는 경력은 맨 뒤로 정렬 (같은 그룹 내에서는 연도 내림차순)
+    const hasRealVideo = (item: { video_url?: string }) =>
+      !!item.video_url && /youtube\.com\/watch\?v=|youtu\.be\//.test(item.video_url);
+    Object.keys(groupedCareers).forEach((type) => {
+        groupedCareers[type].sort((a, b) => {
+            const aHas = hasRealVideo(a);
+            const bHas = hasRealVideo(b);
+            if (aHas && !bHas) return -1;
+            if (!aHas && bHas) return 1;
+            // 같은 그룹(둘 다 URL 있음 또는 둘 다 없음)이면 연도 내림차순
+            const yearA = parseInt(a.year || '0', 10);
+            const yearB = parseInt(b.year || '0', 10);
+            return yearB - yearA;
         });
     });
 
@@ -123,6 +159,7 @@ export default async function ProfilePage({ params }: PageProps) {
         location: dancer.location || 'Seoul',
         stats: { followers: '0', views: '0' },
         socialLinks: dancer.social_links || null,
+        agencyName,
         careers: groupedCareers,
         media: Array.isArray(dancer.portfolio) ? dancer.portfolio.map((item: any) => ({
             id: item.id,

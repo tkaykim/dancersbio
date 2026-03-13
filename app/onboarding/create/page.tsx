@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import ProfilePhotoUpload from '@/components/profile/ProfilePhotoUpload'
 import SocialLinksInput from '@/components/profile/SocialLinksInput'
+import AgencySelector from '@/components/profile/AgencySelector'
 import PriorityMultiSelect from '@/components/ui/PriorityMultiSelect'
 import type { SocialLinks } from '@/lib/supabase'
 
@@ -51,7 +52,8 @@ export default function CreateProfilePage() {
         gender: '' as '' | 'male' | 'female' | 'other',
         specialties: [] as string[],
         genres: [] as string[],
-        social_links: {} as SocialLinks
+        social_links: {} as SocialLinks,
+        agency_id: null as string | null
     })
 
     useEffect(() => {
@@ -107,7 +109,8 @@ export default function CreateProfilePage() {
                     gender: formData.gender || null,
                     specialties: formData.specialties.length > 0 ? formData.specialties : null,
                     genres: formData.genres.length > 0 ? formData.genres : null,
-                    social_links: Object.keys(formData.social_links).some(k => (formData.social_links as any)[k]) ? formData.social_links : null
+                    social_links: Object.keys(formData.social_links).some(k => (formData.social_links as any)[k]) ? formData.social_links : null,
+                    agency_id: formData.agency_id || null
                 })
                 .select()
                 .single()
@@ -237,6 +240,16 @@ export default function CreateProfilePage() {
                                             </button>
                                         ))}
                                     </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-white/80 mb-2">
+                                        소속사 (선택)
+                                    </label>
+                                    <AgencySelector
+                                        value={formData.agency_id}
+                                        onChange={(agencyId) => setFormData({ ...formData, agency_id: agencyId })}
+                                    />
                                 </div>
                             </div>
                         </motion.div>
