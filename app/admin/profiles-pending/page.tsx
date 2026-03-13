@@ -17,6 +17,7 @@ interface PendingDancer {
     genres: string[] | null
     specialties: string[] | null
     created_at: string
+    slug: string | null
     owner?: { name: string | null; email: string | null }
 }
 
@@ -31,7 +32,7 @@ export default function AdminProfilesPendingPage() {
         try {
             const { data } = await supabase
                 .from('dancers')
-                .select('id, stage_name, korean_name, profile_img, owner_id, genres, specialties, created_at, owner:users!owner_id(name, email)')
+                .select('id, stage_name, korean_name, profile_img, owner_id, genres, specialties, created_at, slug, owner:users!owner_id(name, email)')
                 .eq('is_verified', false)
                 .order('created_at', { ascending: false })
             const normalized = (data ?? []).map((row: Record<string, unknown>) => {
@@ -100,7 +101,7 @@ export default function AdminProfilesPendingPage() {
                                 </p>
                                 <p className="text-[11px] text-white/25">{getRelativeTime(dancer.created_at)}</p>
                             </div>
-                            <Link href={`/profile/${dancer.id}`} className="p-2 bg-neutral-800 rounded-lg text-white/40 hover:text-white">
+                            <Link href={`/profile/${dancer.slug || dancer.id}`} className="p-2 bg-neutral-800 rounded-lg text-white/40 hover:text-white">
                                 <Eye className="w-4 h-4" />
                             </Link>
                         </div>

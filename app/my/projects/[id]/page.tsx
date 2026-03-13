@@ -71,7 +71,7 @@ export default function ProjectDetailPage() {
                     clients (company_name, contact_person),
                     owner:users!owner_id (name),
                     pm_dancer:dancers!pm_dancer_id (id, stage_name),
-                    proposals (id, dancer_id, sender_id, fee, status, role, details, scheduled_date, created_at, dancers (id, stage_name, profile_img, genres))
+                    proposals (id, dancer_id, sender_id, fee, status, role, details, scheduled_date, created_at, dancers (id, stage_name, profile_img, genres, slug))
                 `)
                 .eq('id', id)
                 .single()
@@ -919,7 +919,7 @@ function DancerRow({
 
     return (
         <div className="bg-neutral-900/40 border border-neutral-800/40 rounded-lg overflow-hidden">
-            <Link href={`/profile/${dancer.id}`} className="block">
+            <Link href={`/profile/${dancer.slug || dancer.id}`} className="block">
                 <div className="px-3 py-2.5 flex items-center gap-2.5 hover:bg-neutral-800/30 transition">
                     <div className="w-8 h-8 bg-neutral-800 rounded-full overflow-hidden flex-shrink-0 relative">
                         {dancer.profile_img ? (

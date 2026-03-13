@@ -151,7 +151,7 @@ export default function ProfileEditPage({ params }: PageProps) {
             if (dancerError) throw dancerError
 
             alert('프로필이 저장되었습니다!')
-            router.push(`/profile/${id}`)
+            router.push(`/profile/${dancer.slug || id}`)
         } catch (err: any) {
             alert('저장 실패: ' + err.message)
         } finally {
@@ -174,7 +174,7 @@ export default function ProfileEditPage({ params }: PageProps) {
             {/* Header */}
             <div className="sticky top-0 bg-background border-b border-neutral-800 z-10">
                 <div className="px-6 py-4 flex items-center justify-between">
-                    <Link href={`/profile/${dancer.id}`}>
+                    <Link href={`/profile/${dancer.slug || dancer.id}`}>
                         <ArrowLeft className="w-6 h-6 text-white" />
                     </Link>
                     <h1 className="text-xl font-bold text-white">프로필 수정</h1>

@@ -18,6 +18,7 @@ interface DancerSearchResult {
     location: string | null
     is_verified: boolean
     similarity_score: number
+    slug: string | null
 }
 
 export default function OnboardingPage() {
@@ -116,7 +117,7 @@ export default function OnboardingPage() {
                                     return (
                                         <Link
                                             key={dancer.id}
-                                            href={`/profile/${dancer.id}`}
+                                            href={`/profile/${dancer.slug || dancer.id}`}
                                             className="block bg-neutral-900/50 border border-neutral-800 rounded-xl p-4 hover:border-primary/50 transition-colors animate-in fade-in slide-in-from-bottom-2"
                                         >
                                             <div className="flex items-start gap-4">

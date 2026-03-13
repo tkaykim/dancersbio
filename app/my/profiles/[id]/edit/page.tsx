@@ -151,7 +151,7 @@ export default function ProfileEditPage({ params }: PageProps) {
             if (dancerError) throw dancerError
 
             alert('프로필이 저장되었습니다!')
-            router.push(`/profile/${id}`)
+            router.push(`/profile/${dancer.slug || id}`)
         } catch (err: any) {
             alert('저장 실패: ' + err.message)
         } finally {

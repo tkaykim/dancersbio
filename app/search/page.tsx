@@ -17,6 +17,7 @@ interface DancerSearchResult {
     location: string | null
     is_verified: boolean
     similarity_score: number
+    slug: string | null
 }
 
 export default function FindYourNamePage() {
@@ -140,7 +141,7 @@ export default function FindYourNamePage() {
                             return (
                                 <Link
                                     key={dancer.id}
-                                    href={`/profile/${dancer.id}`}
+                                    href={`/profile/${dancer.slug || dancer.id}`}
                                     className="block bg-neutral-900 border border-neutral-800 rounded-lg p-4 hover:border-primary/50 transition-colors"
                                 >
                                     <div className="flex items-start gap-4">
