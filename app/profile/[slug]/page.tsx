@@ -2,6 +2,7 @@ import ProfileHeader from "@/components/profile/ProfileHeader";
 import MediaGrid from "@/components/profile/MediaGrid";
 import CareerTimeline from "@/components/profile/CareerTimeline";
 import ViralFooterCard from "@/components/layout/ViralFooterCard";
+import ClaimRequestSection from "@/components/profile/ClaimRequestSection";
 import { notFound } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { isEmbargoActive, isProjectPublic } from "@/lib/utils";
@@ -175,6 +176,7 @@ export default async function ProfilePage({ params }: PageProps) {
             <CareerTimeline careers={dancerData.careers} />
             <MediaGrid items={dancerData.media} />
             <ViralFooterCard />
+            <ClaimRequestSection dancerId={dancer.id} />
             <div className="h-10" />
         </main>
     );
