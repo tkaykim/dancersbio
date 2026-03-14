@@ -154,9 +154,6 @@ export default function ProfileHeader({ dancer }: ProfileHeaderProps) {
                         <Link href={`/my/proposals/new?dancer_id=${dancer.id}`} className="bg-white text-black h-8 px-5 rounded-full font-bold text-[11px] uppercase tracking-wider hover:opacity-90 transition-opacity flex items-center justify-center">
                             제안하기
                         </Link>
-                        <button className="bg-white/10 backdrop-blur-md text-white border border-white/10 h-8 px-5 rounded-full font-bold text-[11px] uppercase tracking-wider hover:bg-white/20 transition-colors flex items-center justify-center">
-                            포트폴리오
-                        </button>
                     </div>
                 </div>
             </div>

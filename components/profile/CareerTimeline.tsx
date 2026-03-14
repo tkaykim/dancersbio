@@ -130,7 +130,10 @@ export default function CareerTimeline({ careers }: CareerTimelineProps) {
 
                         {/* Mobile: Swipeable Carousel with Dots */}
                         <div className="block md:hidden px-2">
-                            <CarouselWithDots items={mobileItems} />
+                            <CarouselWithDots
+                                items={mobileItems}
+                                slidesPerView={category.type === 'list' ? 3 : 1}
+                            />
                         </div>
 
                         {/* Desktop: Original Grid/List Layout */}
