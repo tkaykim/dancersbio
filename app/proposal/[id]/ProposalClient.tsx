@@ -3,11 +3,12 @@
 import { useState } from "react";
 import MobileContainer from "@/components/layout/MobileContainer";
 import { ArrowLeft, Check, DollarSign } from "lucide-react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useBackWithFallback } from "@/lib/useBackWithFallback";
 
 export default function ProposalPage() {
     const router = useRouter();
+    const handleBack = useBackWithFallback("/");
     const [formData, setFormData] = useState({
         company: "",
         name: "",
@@ -35,9 +36,9 @@ export default function ProposalPage() {
             <div className="flex flex-col h-full bg-background relative text-foreground">
                 {/* Minimal Header */}
                 <div className="flex items-center justify-between px-4 py-4 sticky top-0 bg-background/80 backdrop-blur-md z-40">
-                    <Link href={`/profile/j-ho`} className="p-2 hover:bg-muted/20 rounded-full transition-colors">
+                    <button type="button" onClick={handleBack} className="p-2 hover:bg-muted/20 rounded-full transition-colors" aria-label="뒤로 가기">
                         <ArrowLeft className="w-5 h-5 text-foreground" />
-                    </Link>
+                    </button>
                     <span className="font-bold text-base tracking-wide uppercase text-muted-foreground">New Proposal</span>
                     <div className="w-9" /> {/* Spacer for centering */}
                 </div>

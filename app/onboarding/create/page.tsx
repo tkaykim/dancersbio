@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
+import { useBackWithFallback } from '@/lib/useBackWithFallback'
 import { supabase } from '@/lib/supabase'
 import { ArrowLeft, ChevronRight, Loader2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -90,6 +91,7 @@ export default function CreateProfilePage() {
 
     const nextStep = () => setStep(s => Math.min(s + 1, 6))
     const prevStep = () => setStep(s => Math.max(s - 1, 1))
+    const handleBack = useBackWithFallback('/onboarding')
 
     const handleFinish = async () => {
         if (!user) return
@@ -148,7 +150,7 @@ export default function CreateProfilePage() {
             <div className="sticky top-0 bg-background border-b border-neutral-800 z-10 pt-header-safe">
                 <div className="px-6 pb-4 flex items-center gap-4">
                     <button
-                        onClick={step === 1 ? () => router.back() : prevStep}
+                        onClick={step === 1 ? handleBack : prevStep}
                         className="p-2 hover:bg-neutral-800 rounded-full transition-colors -ml-1"
                         aria-label="뒤로 가기"
                     >

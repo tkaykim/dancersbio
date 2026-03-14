@@ -5,6 +5,7 @@ import { useAuth } from '@/lib/auth-context'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { ArrowLeft, Inbox, Send, Plus, Filter, ChevronDown, Loader2 } from 'lucide-react'
 import Link from 'next/link'
+import { useBackWithFallback } from '@/lib/useBackWithFallback'
 import { useMyProfiles } from '@/hooks/useMyProfiles'
 import { useProposals } from '@/hooks/useProposals'
 import ProposalCard from '@/components/proposals/ProposalCard'
@@ -28,6 +29,7 @@ function ProposalsPage() {
     const { user, loading: authLoading } = useAuth()
     const router = useRouter()
     const searchParams = useSearchParams()
+    const handleBack = useBackWithFallback('/my')
 
     const initialTab = (searchParams.get('tab') as ProposalTab) || 'inbox'
     const [activeTab, setActiveTab] = useState<ProposalTab>(initialTab)
@@ -104,9 +106,9 @@ function ProposalsPage() {
             <div className="sticky top-0 bg-background border-b border-neutral-800 z-10 pt-header-safe">
                 <div className="px-6 py-4 flex justify-between items-center">
                     <div className="flex items-center gap-4">
-                        <Link href="/my">
+                        <button type="button" onClick={handleBack} className="p-1 -ml-1 touch-manipulation" aria-label="뒤로 가기">
                             <ArrowLeft className="w-6 h-6 text-white" />
-                        </Link>
+                        </button>
                         <h1 className="text-xl font-bold text-white">제안 관리</h1>
                     </div>
                     {activeTab === 'outbox' && (

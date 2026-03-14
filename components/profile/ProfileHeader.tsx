@@ -4,6 +4,7 @@ import { CheckCircle2, MapPin, Share2, ChevronLeft, Building2 } from "lucide-rea
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useBackWithFallback } from "@/lib/useBackWithFallback";
 import { InstagramIcon, XTwitterIcon, YoutubeIcon } from "./SocialLinksInput";
 import type { SocialLinks } from "@/lib/supabase";
 
@@ -47,6 +48,7 @@ function getSocialUrl(platform: string, value: string): string {
 
 export default function ProfileHeader({ dancer }: ProfileHeaderProps) {
     const router = useRouter();
+    const handleBack = useBackWithFallback("/");
     const socialLinks = dancer.socialLinks;
     const hasSocialLinks = socialLinks && (socialLinks.instagram || socialLinks.twitter || socialLinks.youtube);
 
@@ -78,7 +80,7 @@ export default function ProfileHeader({ dancer }: ProfileHeaderProps) {
                 {/* Top Actions */}
                 <div className="absolute top-0 left-4 flex gap-2 z-30 pt-header-safe">
                     <button
-                        onClick={() => router.back()}
+                        onClick={handleBack}
                         className="p-2.5 bg-black/20 backdrop-blur-md rounded-full text-white hover:bg-white/10 transition border border-white/10"
                         aria-label="뒤로 가기"
                     >

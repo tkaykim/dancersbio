@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft, Save, Loader2 } from 'lucide-react'
 import Link from 'next/link'
+import { useBackWithFallback } from '@/lib/useBackWithFallback'
 import { cn } from '@/lib/utils'
 import ProfilePhotoUpload from '@/components/profile/ProfilePhotoUpload'
 import PortfolioMediaManager from '@/components/portfolio/PortfolioMediaManager'
@@ -46,6 +47,7 @@ export default function ProfileEditPage({ params }: PageProps) {
     const { id } = use(params)
     const { user, loading: authLoading } = useAuth()
     const router = useRouter()
+    const handleBack = useBackWithFallback('/my/profiles')
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
     const [dancer, setDancer] = useState<any>(null)
@@ -174,9 +176,9 @@ export default function ProfileEditPage({ params }: PageProps) {
             {/* Header */}
             <div className="sticky top-0 bg-background border-b border-neutral-800 z-10 pt-header-safe">
                 <div className="px-6 pb-4 flex items-center justify-between">
-                    <Link href="/my/profiles" className="-ml-1" aria-label="뒤로 가기">
+                    <button type="button" onClick={handleBack} className="-ml-1 p-1 touch-manipulation" aria-label="뒤로 가기">
                         <ArrowLeft className="w-6 h-6 text-white" />
-                    </Link>
+                    </button>
                     <h1 className="text-xl font-bold text-white">프로필 수정</h1>
                     <button
                         onClick={handleSave}

@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase'
 import { ArrowLeft, Search, User, CheckCircle2, Plus } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { useBackWithFallback } from '@/lib/useBackWithFallback'
 
 interface DancerSearchResult {
     id: string
@@ -22,6 +23,7 @@ interface DancerSearchResult {
 
 export default function FindYourNamePage() {
     const router = useRouter()
+    const handleBack = useBackWithFallback('/')
     const [searchQuery, setSearchQuery] = useState('')
     const [results, setResults] = useState<DancerSearchResult[]>([])
     const [loading, setLoading] = useState(false)
@@ -75,7 +77,7 @@ export default function FindYourNamePage() {
                     <div className="flex items-start gap-4 mb-2">
                         <button
                             type="button"
-                            onClick={() => router.back()}
+                            onClick={handleBack}
                             className="p-1 -ml-1 flex-shrink-0 touch-manipulation"
                             aria-label="뒤로 가기"
                         >

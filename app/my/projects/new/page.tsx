@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft, Loader2, Crown, Plus, Trash2, Calendar } from 'lucide-react'
 import Link from 'next/link'
+import { useBackWithFallback } from '@/lib/useBackWithFallback'
 import { useMyProfiles } from '@/hooks/useMyProfiles'
 import { formatEmbargoDate, getKSTDateString } from '@/lib/utils'
 
@@ -21,6 +22,7 @@ export default function NewProjectPage() {
     const { user } = useAuth()
     const router = useRouter()
     const { allProfiles } = useMyProfiles()
+    const handleBack = useBackWithFallback('/my/projects')
     const [loading, setLoading] = useState(false)
     const [formData, setFormData] = useState({
         title: '', description: '', category: 'choreo',
@@ -107,7 +109,7 @@ export default function NewProjectPage() {
         <div className="min-h-screen bg-background">
             <div className="sticky top-0 bg-background border-b border-neutral-800 z-10 pt-header-safe">
                 <div className="px-5 pb-3.5 flex items-center gap-3">
-                    <Link href="/my/projects" className="-ml-1" aria-label="뒤로 가기"><ArrowLeft className="w-5 h-5 text-white/70" /></Link>
+                    <button type="button" onClick={handleBack} className="-ml-1 p-1 touch-manipulation" aria-label="뒤로 가기"><ArrowLeft className="w-5 h-5 text-white/70" /></button>
                     <div>
                         <h1 className="text-lg font-bold text-white">새 프로젝트</h1>
                         <p className="text-white/35 text-[11px]">프로젝트를 만들고 댄서를 초대하세요</p>

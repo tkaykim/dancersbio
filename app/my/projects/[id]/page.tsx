@@ -12,6 +12,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
+import { useBackWithFallback } from '@/lib/useBackWithFallback'
 import { getRelativeTime, getProjectStatuses, isEmbargoActive, formatEmbargoDate, getKSTDateString, isProjectPublic } from '@/lib/utils'
 import type { Project, ConfirmationStatus, ProgressStatus } from '@/lib/types'
 import TaskManager from '@/components/projects/TaskManager'
@@ -294,6 +295,7 @@ export default function ProjectDetailPage() {
         if (!project?.proposals) return null
         return project.proposals.find(p => myDancerIds.includes(p.dancer_id)) || null
     }, [project, myDancerIds])
+    const handleBack = useBackWithFallback('/my/projects')
 
     if (authLoading || loading) {
         return <div className="min-h-screen flex items-center justify-center bg-background"><Loader2 className="w-8 h-8 text-primary animate-spin" /></div>
@@ -335,7 +337,7 @@ export default function ProjectDetailPage() {
             {/* Header */}
             <div className="sticky top-0 bg-background border-b border-neutral-800 z-10 pt-header-safe">
                 <div className="px-5 pb-3.5 flex items-center gap-3">
-                    <Link href="/my/projects" className="-ml-1" aria-label="뒤로 가기"><ArrowLeft className="w-5 h-5 text-white/70" /></Link>
+                    <button type="button" onClick={handleBack} className="-ml-1 p-1 touch-manipulation" aria-label="뒤로 가기"><ArrowLeft className="w-5 h-5 text-white/70" /></button>
                     <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
                             <h1 className="text-base font-bold text-white truncate">{project.title}</h1>

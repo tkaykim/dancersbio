@@ -11,6 +11,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
+import { useBackWithFallback } from '@/lib/useBackWithFallback'
 
 const GENRE_OPTIONS = ['HipHop', 'Popping', 'Locking', 'Waacking', 'Voguing', 'Krump', 'House', 'Breaking', 'Contemporary', 'Jazz']
 const GENDER_OPTIONS = [
@@ -50,6 +51,7 @@ export default function InviteDancerPage() {
     const [messageInput, setMessageInput] = useState('')
 
     const [activeTab, setActiveTab] = useState<'frequent' | 'search'>('frequent')
+    const handleBack = useBackWithFallback(projectId ? `/my/projects/${projectId}` : '/my/projects')
 
     const [isBriefProject, setIsBriefProject] = useState(false)
     const [clientCannotInvite, setClientCannotInvite] = useState(false)
@@ -307,7 +309,7 @@ export default function InviteDancerPage() {
             {/* Header */}
             <div className="sticky top-0 bg-background border-b border-neutral-800 z-20 pt-header-safe">
                 <div className="px-6 pb-4 flex items-center gap-4">
-                    <Link href={`/my/projects/${projectId}`} className="-ml-1" aria-label="뒤로 가기"><ArrowLeft className="w-6 h-6 text-white" /></Link>
+                    <button type="button" onClick={handleBack} className="-ml-1 p-1 touch-manipulation" aria-label="뒤로 가기"><ArrowLeft className="w-6 h-6 text-white" /></button>
                     <div className="flex-1 min-w-0">
                         <h1 className="text-lg font-bold text-white">댄서 초대</h1>
                         <p className="text-xs text-white/40 truncate">{projectTitle}</p>

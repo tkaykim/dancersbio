@@ -9,6 +9,7 @@ import {
     User as UserIcon, FolderOpen, ChevronDown, ChevronUp,
 } from 'lucide-react'
 import Link from 'next/link'
+import { useBackWithFallback } from '@/lib/useBackWithFallback'
 import Image from 'next/image'
 import type { Dancer } from '@/lib/supabase'
 
@@ -38,6 +39,7 @@ function NewProposalPage() {
     const { user, loading: authLoading } = useAuth()
     const router = useRouter()
     const searchParams = useSearchParams()
+    const handleBack = useBackWithFallback('/my/proposals')
 
     const preselectedDancerId = searchParams.get('dancer_id')
     const preselectedProjectId = searchParams.get('project_id')
@@ -250,9 +252,9 @@ function NewProposalPage() {
             {/* Header */}
             <div className="sticky top-0 bg-background border-b border-neutral-800 z-20 pt-header-safe">
                 <div className="px-5 pb-3.5 flex items-center gap-3">
-                    <Link href="/my/proposals?tab=outbox" className="-ml-1" aria-label="뒤로 가기">
+                    <button type="button" onClick={handleBack} className="-ml-1 p-1 touch-manipulation" aria-label="뒤로 가기">
                         <ArrowLeft className="w-5 h-5 text-white/70" />
-                    </Link>
+                    </button>
                     <div>
                         <h1 className="text-lg font-bold text-white">댄서에게 제안 보내기</h1>
                         <p className="text-white/35 text-[11px]">프로젝트에 댄서를 초대하세요</p>
