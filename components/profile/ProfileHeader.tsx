@@ -153,9 +153,12 @@ export default function ProfileHeader({ dancer }: ProfileHeaderProps) {
                                 <div className="w-px h-5 bg-white/15 mx-1" />
                             </>
                         )}
-                        <Link href={`/my/proposals/new?dancer_id=${dancer.id}`} className="bg-white text-black h-8 px-5 rounded-full font-bold text-[11px] uppercase tracking-wider hover:opacity-90 transition-opacity flex items-center justify-center">
-                            제안하기
-                        </Link>
+                        {/* 제안하기 버튼 숨김 (기능 유지) */}
+                        {false && (
+                            <Link href={`/my/proposals/new?dancer_id=${dancer.id}`} className="bg-white text-black h-8 px-5 rounded-full font-bold text-[11px] uppercase tracking-wider hover:opacity-90 transition-opacity flex items-center justify-center">
+                                제안하기
+                            </Link>
+                        )}
                     </div>
                 </div>
             </div>
