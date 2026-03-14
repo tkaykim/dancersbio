@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { PlayCircle, X, Users } from "lucide-react";
+import CarouselWithDots from "@/components/ui/CarouselWithDots";
 
 export type HighlightItem = {
     id: string;
@@ -25,31 +26,89 @@ function getYouTubeId(url: string): string | null {
 
 const isYouTubeThumbnail = (src: string) => src?.includes("img.youtube.com");
 
+function HighlightCard({
+    item,
+    onClick,
+    className = "",
+}: {
+    item: HighlightItem;
+    onClick: () => void;
+    className?: string;
+}) {
+    return (
+        <div
+            onClick={item.video_url ? onClick : undefined}
+            className={`relative aspect-video w-full rounded overflow-hidden bg-muted group ${item.video_url ? "cursor-pointer" : ""} ${className}`}
+        >
+            {item.image ? (
+                <Image
+                    src={item.image}
+                    alt={item.title}
+                    fill
+                    className="object-cover transition-opacity duration-300 group-hover:opacity-80"
+                    unoptimized={isYouTubeThumbnail(item.image)}
+                />
+            ) : item.video_url && getYouTubeId(item.video_url) ? (
+                <Image
+                    unoptimized
+                    src={`https://img.youtube.com/vi/${getYouTubeId(item.video_url)}/hqdefault.jpg`}
+                    alt={item.title}
+                    fill
+                    className="object-cover transition-opacity duration-300 group-hover:opacity-80"
+                />
+            ) : (
+                <div className="w-full h-full bg-neutral-800 flex items-center justify-center">
+                    <PlayCircle className="w-8 h-8 text-white/30" />
+                </div>
+            )}
+            {item.video_url && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/40 transition-colors">
+                    <PlayCircle className="w-10 h-10 text-white/80" />
+                </div>
+            )}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex flex-col justify-end p-3">
+                <h4 className="font-medium text-sm text-white line-clamp-1">{item.title}</h4>
+                <p className="text-xs text-white/60 line-clamp-1">{item.description}</p>
+            </div>
+        </div>
+    );
+}
+
 export default function ProfileHighlights({ highlights }: ProfileHighlightsProps) {
     const [selectedItem, setSelectedItem] = useState<HighlightItem | null>(null);
 
     if (!highlights || highlights.length === 0) return null;
 
+    const mobileItems = highlights.map((item) => (
+        <HighlightCard key={item.id} item={item} onClick={() => setSelectedItem(item)} />
+    ));
+
     return (
-        <div className="mb-10 text-foreground">
-            <div className="px-6 mb-4">
+        <div className="space-y-4 mb-20 text-foreground">
+            <div className="px-6 flex justify-between items-baseline">
                 <h3 className="text-xl font-bold tracking-tight text-foreground">Highlights</h3>
             </div>
 
-            <div className="flex overflow-x-auto gap-4 px-6 pb-4 scrollbar-hide snap-x snap-mandatory">
+            {/* Mobile: same as Music Videos & Choreography - full-width carousel */}
+            <div className="block md:hidden px-2">
+                <CarouselWithDots items={mobileItems} />
+            </div>
+
+            {/* Desktop: same as Music Videos & Choreography - horizontal carousel, min-w-[200px] */}
+            <div className="hidden md:flex overflow-x-auto gap-4 px-6 pb-4 scrollbar-hide snap-x">
                 {highlights.map((item) => (
                     <div
                         key={item.id}
                         onClick={() => item.video_url && setSelectedItem(item)}
-                        className={`min-w-[200px] w-[200px] snap-start group relative flex-shrink-0 ${item.video_url ? "cursor-pointer" : ""}`}
+                        className={`min-w-[200px] w-[200px] snap-start group relative ${item.video_url ? "cursor-pointer" : ""}`}
                     >
-                        <div className="aspect-video w-full relative rounded-xl overflow-hidden bg-muted shadow-lg border border-white/5">
+                        <div className="aspect-video w-full relative rounded overflow-hidden bg-muted mb-3 shadow-none">
                             {item.image ? (
                                 <Image
                                     src={item.image}
                                     alt={item.title}
                                     fill
-                                    className="object-cover transition-opacity duration-300 group-hover:opacity-90"
+                                    className="object-cover transition-opacity duration-300 group-hover:opacity-80"
                                     unoptimized={isYouTubeThumbnail(item.image)}
                                 />
                             ) : item.video_url && getYouTubeId(item.video_url) ? (
@@ -58,7 +117,7 @@ export default function ProfileHighlights({ highlights }: ProfileHighlightsProps
                                     src={`https://img.youtube.com/vi/${getYouTubeId(item.video_url)}/hqdefault.jpg`}
                                     alt={item.title}
                                     fill
-                                    className="object-cover transition-opacity duration-300 group-hover:opacity-90"
+                                    className="object-cover transition-opacity duration-300 group-hover:opacity-80"
                                 />
                             ) : (
                                 <div className="w-full h-full bg-neutral-800 flex items-center justify-center">
@@ -66,22 +125,14 @@ export default function ProfileHighlights({ highlights }: ProfileHighlightsProps
                                 </div>
                             )}
                             {item.video_url && (
-                                <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/40 transition-colors">
-                                    <PlayCircle className="w-10 h-10 text-white/90 drop-shadow-md" />
+                                <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/30 transition-colors">
+                                    <PlayCircle className="w-10 h-10 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
                                 </div>
                             )}
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent opacity-80" />
-                            <div className="absolute bottom-0 left-0 right-0 p-3">
-                                {item.year && (
-                                    <span className="text-[10px] text-primary/80 font-mono px-1.5 py-0.5 bg-primary/20 rounded mb-1 inline-block">
-                                        {item.year}
-                                    </span>
-                                )}
-                                <h4 className="font-semibold text-sm text-white line-clamp-2 drop-shadow-md">{item.title}</h4>
-                                {item.description && (
-                                    <p className="text-xs text-white/80 line-clamp-1 mt-0.5">{item.description}</p>
-                                )}
-                            </div>
+                        </div>
+                        <div className="space-y-0.5 px-0.5">
+                            <h4 className="font-medium text-sm leading-tight text-foreground line-clamp-1">{item.title}</h4>
+                            <p className="text-xs text-muted-foreground line-clamp-1">{item.description}</p>
                         </div>
                     </div>
                 ))}

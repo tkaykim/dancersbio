@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
-import { Plus, X, Edit2, Loader2, Trash2, ChevronDown, ChevronUp, Save, ChevronsRight, Eye, EyeOff } from 'lucide-react'
+import { Plus, X, Edit2, Loader2, Trash2, ChevronDown, ChevronUp, Save, ChevronsRight, Eye, EyeOff, Star } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import Drawer from '@/components/ui/Drawer'
 import { extractYouTubeId, getYouTubeThumbnail } from '@/lib/youtube'
@@ -54,7 +54,8 @@ export default function CareerHistoryManager({ dancerId }: CareerHistoryManagerP
         month: '',
         role: '',
         description: '',
-        link: ''
+        link: '',
+        is_representative: false,
     })
 
     useEffect(() => {
@@ -102,7 +103,8 @@ export default function CareerHistoryManager({ dancerId }: CareerHistoryManagerP
             month: '',
             role: '',
             description: '',
-            link: ''
+            link: '',
+            is_representative: false,
         })
         setEditingId(null)
     }
@@ -116,7 +118,8 @@ export default function CareerHistoryManager({ dancerId }: CareerHistoryManagerP
                 month: item.details.month || '',
                 role: item.details.role || '',
                 description: item.details.description || '',
-                link: item.details.link || ''
+                link: item.details.link || '',
+                is_representative: item.is_representative ?? false,
             })
             setEditingId(item.id)
             // setActiveCategory(item.type) // Don't force switch main accordion, but maybe? 
@@ -208,6 +211,7 @@ export default function CareerHistoryManager({ dancerId }: CareerHistoryManagerP
             date: dateStr,
             details,
             is_public: false, // 신규 등록 시 기본 비공개
+            is_representative: formData.is_representative,
         }
 
         try {
@@ -468,6 +472,27 @@ export default function CareerHistoryManager({ dancerId }: CareerHistoryManagerP
                             className="w-full px-4 py-3 bg-black/50 border border-neutral-800 rounded-xl text-white focus:border-primary focus:outline-none resize-none h-24"
                             placeholder="추가 설명..."
                         />
+                    </div>
+
+                    <div className="flex items-center gap-3 py-3 px-4 rounded-xl bg-neutral-800/50 border border-neutral-700/50">
+                        <button
+                            type="button"
+                            role="checkbox"
+                            aria-checked={formData.is_representative}
+                            onClick={() => setFormData(prev => ({ ...prev, is_representative: !prev.is_representative }))}
+                            className={cn(
+                                "flex items-center justify-center w-8 h-8 rounded-lg border transition-colors shrink-0",
+                                formData.is_representative
+                                    ? "bg-primary/20 border-primary text-primary"
+                                    : "bg-black/30 border-neutral-600 text-white/40 hover:border-neutral-500 hover:text-white/60"
+                            )}
+                        >
+                            <Star className={cn("w-4 h-4", formData.is_representative && "fill-current")} />
+                        </button>
+                        <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-white">대표 경력으로 설정</p>
+                            <p className="text-xs text-white/50 mt-0.5">체크 시 프로필 상단 Highlights 섹션에 노출됩니다.</p>
+                        </div>
                     </div>
 
                     <div className="flex gap-3 pt-4 border-t border-neutral-800">
