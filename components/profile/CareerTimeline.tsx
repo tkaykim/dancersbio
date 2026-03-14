@@ -102,29 +102,10 @@ export default function CareerTimeline({ careers }: CareerTimelineProps) {
                             <CarouselWithDots items={mobileItems} />
                         </div>
 
-                        {/* Desktop: List (Awards 등과 동일) */}
+                        {/* Desktop: 그리드로 표시 (모바일처럼 한 화면에 여러 개, 스크롤 단축) */}
                         <div className="hidden md:block px-6">
-                            <div className="flex flex-col">
-                                {category.items.map((item) => (
-                                    <div
-                                        key={item.id}
-                                        onClick={() => handleItemClick(item)}
-                                        className={`group flex items-center gap-4 py-3 hover:bg-neutral-500/5 -mx-2 px-2 rounded-md transition-colors ${item.video_url ? 'cursor-pointer' : ''}`}
-                                    >
-                                        <div className="flex-1 min-w-0 flex flex-col justify-center">
-                                            <h4 className="font-medium text-sm text-foreground truncate">{item.title}</h4>
-                                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                                {item.description && <span className="truncate">{item.description}</span>}
-                                            </div>
-                                        </div>
-                                        <div className="flex items-center gap-4">
-                                            <span className="text-[10px] text-muted-foreground/60 font-medium hidden sm:inline-block">{item.year}</span>
-                                            <button className="text-muted-foreground hover:text-foreground p-1">
-                                                {item.video_url ? <PlayCircle className="w-4 h-4" /> : <MoreHorizontal className="w-4 h-4" />}
-                                            </button>
-                                        </div>
-                                    </div>
-                                ))}
+                            <div className={`grid gap-3 ${category.id === "choreo" ? "grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5" : "grid-cols-2 lg:grid-cols-3"}`}>
+                                {category.items.map((item) => listCard(item))}
                             </div>
                         </div>
                     </div>

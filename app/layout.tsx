@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 import { AuthProvider } from "@/lib/auth-context";
 import LayoutSwitcher from "@/components/layout/LayoutSwitcher";
@@ -41,6 +42,7 @@ export default function RootLayout({
           <ToastProvider>
             <PushNotificationProvider>
               <LayoutSwitcher>{children}</LayoutSwitcher>
+            <Analytics />
             </PushNotificationProvider>
           </ToastProvider>
         </AuthProvider>
