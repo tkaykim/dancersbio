@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
-import { Plus, X, Edit2, Loader2, Trash2, ChevronDown, ChevronUp, Save, ChevronsRight } from 'lucide-react'
+import { Plus, X, Edit2, Loader2, Trash2, ChevronDown, ChevronUp, Save, ChevronsRight, Eye, EyeOff } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import Drawer from '@/components/ui/Drawer'
 import { extractYouTubeId, getYouTubeThumbnail } from '@/lib/youtube'
@@ -9,6 +9,8 @@ interface CareerItem {
     id: number
     type: string
     title: string
+    is_public: boolean
+    is_representative: boolean
     details: {
         year?: string
         month?: string
@@ -41,6 +43,8 @@ export default function CareerHistoryManager({ dancerId }: CareerHistoryManagerP
     const [editingId, setEditingId] = useState<number | null>(null)
     const [activeCategory, setActiveCategory] = useState<string>('choreo')
     const [saving, setSaving] = useState(false)
+    const [confirmPublicId, setConfirmPublicId] = useState<number | null>(null)
+    const [togglingVisibility, setTogglingVisibility] = useState(false)
 
     // Form State
     const [formData, setFormData] = useState({
@@ -67,14 +71,18 @@ export default function CareerHistoryManager({ dancerId }: CareerHistoryManagerP
 
             if (error) throw error
 
-            // Sort by Date (Year DESC, Month DESC)
-            const sorted = (data || []).sort((a, b) => {
-                const yearA = parseInt(a.details.year || '0')
-                const yearB = parseInt(b.details.year || '0')
+            // Sort by Date (Year DESC, Month DESC); is_public, is_representative 기본값 (기존 데이터 호환)
+            const sorted = (data || []).map((row: any) => ({
+                ...row,
+                is_public: row.is_public === true,
+                is_representative: row.is_representative === true,
+            })).sort((a, b) => {
+                const yearA = parseInt(a.details?.year || '0')
+                const yearB = parseInt(b.details?.year || '0')
                 if (yearA !== yearB) return yearB - yearA
 
-                const monthA = parseInt(a.details.month || '0')
-                const monthB = parseInt(b.details.month || '0')
+                const monthA = parseInt(a.details?.month || '0')
+                const monthB = parseInt(b.details?.month || '0')
                 return monthB - monthA
             })
 
@@ -138,6 +146,37 @@ export default function CareerHistoryManager({ dancerId }: CareerHistoryManagerP
         }
     }
 
+    const handleSetPublic = async (id: number, value: boolean) => {
+        if (value) {
+            setConfirmPublicId(id)
+            return
+        }
+        if (!confirm('이 경력을 비공개로 전환하시겠습니까? 프로필에 더 이상 표시되지 않습니다.')) return
+        await updateVisibility(id, false)
+    }
+
+    const confirmSetPublic = async () => {
+        if (confirmPublicId == null) return
+        await updateVisibility(confirmPublicId, true)
+        setConfirmPublicId(null)
+    }
+
+    const updateVisibility = async (id: number, is_public: boolean) => {
+        setTogglingVisibility(true)
+        try {
+            const { error } = await supabase
+                .from('careers')
+                .update({ is_public })
+                .eq('id', id)
+            if (error) throw error
+            setCareers(careers.map(c => c.id === id ? { ...c, is_public } : c))
+        } catch (err) {
+            alert('공개 여부 변경에 실패했습니다.')
+        } finally {
+            setTogglingVisibility(false)
+        }
+    }
+
     const handleSubmit = async (e: React.FormEvent, closeAfterSave = true) => {
         e.preventDefault()
         if (!formData.title) return alert('제목을 입력해주세요')
@@ -167,7 +206,8 @@ export default function CareerHistoryManager({ dancerId }: CareerHistoryManagerP
             type: formData.type,
             title: formData.title,
             date: dateStr,
-            details
+            details,
+            is_public: false, // 신규 등록 시 기본 비공개
         }
 
         try {
@@ -253,7 +293,7 @@ export default function CareerHistoryManager({ dancerId }: CareerHistoryManagerP
                                     {catItems.map(item => (
                                         <div key={item.id} className="bg-black/40 border border-neutral-800/50 rounded-lg p-3 flex justify-between items-start group hover:border-neutral-700 transition-colors">
                                             <div className="flex-1 min-w-0">
-                                                <div className="flex items-center gap-2 mb-1">
+                                                <div className="flex items-center gap-2 mb-1 flex-wrap">
                                                     <span className="shrink-0 text-primary/70 font-mono text-[10px] font-bold px-1.5 py-0.5 bg-primary/5 rounded border border-primary/10">
                                                         {item.details.year}
                                                         {item.details.month ? `.${item.details.month}` : ''}
@@ -263,15 +303,34 @@ export default function CareerHistoryManager({ dancerId }: CareerHistoryManagerP
                                                             {item.details.role}
                                                         </span>
                                                     )}
+                                                    <span className={cn(
+                                                        "shrink-0 text-[10px] font-medium px-1.5 py-0.5 rounded border",
+                                                        item.is_public ? "text-green-500/90 bg-green-500/10 border-green-500/20" : "text-white/40 bg-white/5 border-white/10"
+                                                    )}>
+                                                        {item.is_public ? '공개' : '비공개'}
+                                                    </span>
                                                 </div>
                                                 <h3 className="text-white font-medium text-sm truncate pr-2">{item.title}</h3>
                                                 {item.details.description && (
                                                     <p className="text-white/40 text-xs line-clamp-1 mt-0.5">{item.details.description}</p>
                                                 )}
                                             </div>
-                                            <button onClick={() => openDrawer(item)} className="p-1.5 hover:bg-white/10 rounded-md text-white/40 hover:text-white transition-colors">
-                                                <Edit2 className="w-3.5 h-3.5" />
-                                            </button>
+                                            <div className="flex items-center gap-1 shrink-0">
+                                                <button
+                                                    onClick={() => item.is_public ? handleSetPublic(item.id, false) : handleSetPublic(item.id, true)}
+                                                    disabled={togglingVisibility}
+                                                    title={item.is_public ? '비공개로 전환' : '공개로 전환'}
+                                                    className={cn(
+                                                        "p-1.5 rounded-md transition-colors",
+                                                        item.is_public ? "text-green-500/70 hover:bg-green-500/10 hover:text-green-500" : "text-white/40 hover:bg-white/10 hover:text-white"
+                                                    )}
+                                                >
+                                                    {item.is_public ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
+                                                </button>
+                                                <button onClick={() => openDrawer(item)} className="p-1.5 hover:bg-white/10 rounded-md text-white/40 hover:text-white transition-colors">
+                                                    <Edit2 className="w-3.5 h-3.5" />
+                                                </button>
+                                            </div>
                                         </div>
                                     ))}
                                 </div>
@@ -450,6 +509,49 @@ export default function CareerHistoryManager({ dancerId }: CareerHistoryManagerP
                     </div>
                 </form>
             </Drawer>
+
+            {/* 공개 처리 전 확인 모달 */}
+            {confirmPublicId != null && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center p-6">
+                    <div
+                        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+                        onClick={() => setConfirmPublicId(null)}
+                    />
+                    <div className="relative w-full max-w-md bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden shadow-xl">
+                        <div className="flex items-center justify-between p-5 pb-3">
+                            <h3 className="text-lg font-bold text-white">경력을 공개할까요?</h3>
+                            <button
+                                onClick={() => setConfirmPublicId(null)}
+                                className="p-1.5 rounded-full text-white/40 hover:bg-white/10 hover:text-white transition-colors"
+                            >
+                                <X className="w-4 h-4" />
+                            </button>
+                        </div>
+                        <p className="px-5 text-sm text-white/70 leading-relaxed mb-1">
+                            공개 처리 시 프로필에 이 경력이 노출됩니다.
+                        </p>
+                        <p className="px-5 text-xs text-amber-400/90 bg-amber-500/10 border border-amber-500/20 rounded-lg py-3 mx-5 mb-5">
+                            엠바고, 출시일, 발매일 등을 고려하여 <strong>공개해도 되는지 꼭 확인</strong>한 뒤 진행해 주세요.
+                        </p>
+                        <div className="flex gap-3 px-5 pb-5">
+                            <button
+                                onClick={() => setConfirmPublicId(null)}
+                                className="flex-1 py-3 bg-neutral-800 text-white rounded-xl font-medium hover:bg-neutral-700 transition-colors"
+                            >
+                                취소
+                            </button>
+                            <button
+                                onClick={confirmSetPublic}
+                                disabled={togglingVisibility}
+                                className="flex-1 py-3 bg-primary text-black rounded-xl font-bold hover:bg-primary/90 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                            >
+                                {togglingVisibility ? <Loader2 className="w-5 h-5 animate-spin" /> : null}
+                                공개로 전환
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }

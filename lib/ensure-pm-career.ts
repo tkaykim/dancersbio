@@ -54,5 +54,6 @@ export async function ensurePmCareer(
             description: project.description || '',
             project_id: project.id,
         },
+        is_public: false,
     })
 }

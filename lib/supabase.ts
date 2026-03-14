@@ -37,5 +37,7 @@ export interface Career {
     title: string
     date: string
     details: any
+    is_public: boolean
+    is_representative: boolean
     created_at: string
 }

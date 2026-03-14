@@ -165,6 +165,7 @@ Supabase Auth와 1:1로 매핑되는 최상위 사용자 테이블입니다.
 ### 3.6. `careers` (포트폴리오)
 JSONB를 활용하여 다양한 활동 유형을 유연하게 저장합니다.
 프로젝트 완료 시 자동 생성된 경력은 `details.project_id`로 원본 프로젝트를 추적합니다.
+**공개 여부**: 사용자 또는 관리자가 `is_public`으로 설정. 기본값 비공개. 공개 시에만 프로필에 노출.
 
 | Column | Type | Nullable | Description |
 | :--- | :--- | :--- | :--- |
@@ -173,6 +174,8 @@ JSONB를 활용하여 다양한 활동 유형을 유연하게 저장합니다.
 | `type` | text | No | 'choreo', 'judge', 'workshop' 등 |
 | `title` | text | No | 활동 제목 |
 | `details` | jsonb | Yes | 유형별 상세 데이터 |
+| **`is_public`** | boolean | No | **공개 여부** (default: `false`). `true`일 때만 공개 프로필에 노출. 엠바고·출시일 등 확인 후 공개 처리 권장. |
+| **`is_representative`** | boolean | No | **대표 경력 여부** (default: `false`). `true`면 프로필 등에서 대표 경력으로 노출. 사용자/관리자가 설정. |
 
 ### 3.7. `teams` (팀/크루)
 댄서들이 소속될 수 있는 팀(크루) 정보를 저장합니다.

@@ -165,7 +165,8 @@ export default function ProjectDetailPage() {
                 const role = isPm ? `${pmRoleLabel} (PM) · ${baseRole}` : baseRole
                 return {
                     dancer_id: p.dancer_id, type: careerType, title: proj.title, date: careerDate,
-                    details: { year, month, role, description: proj.description || '', project_id: proj.id }
+                    details: { year, month, role, description: proj.description || '', project_id: proj.id },
+                    is_public: false,
                 }
             })
 
@@ -173,7 +174,8 @@ export default function ProjectDetailPage() {
         if (proj.pm_dancer_id && !existingDancerIds.has(proj.pm_dancer_id) && !entries.some(e => e.dancer_id === proj.pm_dancer_id)) {
             entries.push({
                 dancer_id: proj.pm_dancer_id, type: careerType, title: proj.title, date: careerDate,
-                details: { year, month, role: `${pmRoleLabel} (PM)`, description: proj.description || '', project_id: proj.id }
+                details: { year, month, role: `${pmRoleLabel} (PM)`, description: proj.description || '', project_id: proj.id },
+                is_public: false,
             })
         }
 

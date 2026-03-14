@@ -1,4 +1,5 @@
 import ProfileHeader from "@/components/profile/ProfileHeader";
+import ProfileHighlights from "@/components/profile/ProfileHighlights";
 import MediaGrid from "@/components/profile/MediaGrid";
 import CareerTimeline from "@/components/profile/CareerTimeline";
 import ViralFooterCard from "@/components/layout/ViralFooterCard";
@@ -96,8 +97,10 @@ export default async function ProfilePage({ params }: PageProps) {
 
     // Transform careers data to match component format
     // 주의: 금액 정보(fee, budget, contract_amount 등)는 절대 포함하지 않음
+    // 공개 여부(is_public)가 true인 경력만 프로필에 노출
     const groupedCareers: Record<string, any[]> = {};
     (careers || []).forEach((career) => {
+        if (career.is_public !== true) return
         // 비공개/엠바고 프로젝트의 경력은 스킵
         if (career.details?.project_id && privateProjectIds.has(career.details.project_id)) {
             return
@@ -149,6 +152,44 @@ export default async function ProfilePage({ params }: PageProps) {
         });
     });
 
+    // 대표 경력(Highlights): is_public && is_representative 이고, 비공개 프로젝트 제외
+    const highlightCareers = (careers || []).filter(
+        (c) =>
+            c.is_public === true &&
+            c.is_representative === true &&
+            !(c.details?.project_id && privateProjectIds.has(c.details.project_id))
+    );
+    const highlights = highlightCareers.map((career) => {
+        const yearFromDetails = career.details?.year;
+        const yearFromDate = career.date ? new Date(career.date).getFullYear().toString() : '';
+        const year = yearFromDetails || yearFromDate;
+        const rawRole = career.details?.role || career.details?.achievement || '';
+        const description = rawRole.replace(/\s*\(PM\)\s*·?\s*/g, ' · ').replace(/\s*·\s*$/, '').trim() || rawRole;
+        const rawUrl = career.details?.youtube_url || career.details?.link || '';
+        const isRealVideo = /youtube\.com\/watch\?v=|youtu\.be\//.test(rawUrl);
+        const videoUrl = isRealVideo ? rawUrl : '';
+        const videoId = videoUrl ? extractYouTubeId(videoUrl) : null;
+        const thumbnailUrl =
+            (career.details?.thumbnail && String(career.details.thumbnail).trim()) ||
+            (videoId ? getYouTubeThumbnail(videoId, 'hq') : '');
+        return {
+            id: career.id.toString(),
+            year,
+            title: career.title,
+            description,
+            image: thumbnailUrl || undefined,
+            video_url: videoUrl || undefined,
+        };
+    });
+    // 연도 내림차순, 영상 있는 항목 우선
+    highlights.sort((a, b) => {
+        const aHas = !!a.video_url;
+        const bHas = !!b.video_url;
+        if (aHas && !bHas) return -1;
+        if (!aHas && bHas) return 1;
+        return parseInt(b.year || '0', 10) - parseInt(a.year || '0', 10);
+    });
+
     // Transform dancer data to match component format
     const dancerData = {
         id: dancer.id,
@@ -173,6 +214,7 @@ export default async function ProfilePage({ params }: PageProps) {
     return (
         <main className="w-full min-h-screen pb-20 bg-background text-foreground">
             <ProfileHeader dancer={dancerData} />
+            <ProfileHighlights highlights={highlights} />
             <CareerTimeline careers={dancerData.careers} />
             <MediaGrid items={dancerData.media} />
             <ViralFooterCard />
