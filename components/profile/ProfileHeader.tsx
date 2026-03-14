@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useBackWithFallback } from "@/lib/useBackWithFallback";
+import { useToast } from "@/components/push/ToastContext";
 import { InstagramIcon, XTwitterIcon, YoutubeIcon } from "./SocialLinksInput";
 import type { SocialLinks } from "@/lib/supabase";
 
@@ -48,8 +49,19 @@ function getSocialUrl(platform: string, value: string): string {
 
 export default function ProfileHeader({ dancer }: ProfileHeaderProps) {
     const router = useRouter();
+    const { showToast } = useToast();
     const handleBack = useBackWithFallback("/");
     const socialLinks = dancer.socialLinks;
+
+    const handleShare = async () => {
+        const url = typeof window !== "undefined" ? `${window.location.origin}${window.location.pathname}` : "";
+        try {
+            await navigator.clipboard.writeText(url);
+            showToast("클립보드에 프로필 링크가 복사되었습니다");
+        } catch {
+            showToast("복사에 실패했습니다.");
+        }
+    };
     const hasSocialLinks = socialLinks && (socialLinks.instagram || socialLinks.twitter || socialLinks.youtube);
 
     // Tidal Style: Full Bleed Hero with Centered Content
@@ -89,7 +101,12 @@ export default function ProfileHeader({ dancer }: ProfileHeaderProps) {
                 </div>
 
                 <div className="absolute top-0 right-4 flex gap-2 z-30 pt-header-safe">
-                    <button className="p-2.5 bg-black/20 backdrop-blur-md rounded-full text-white hover:bg-white/10 transition border border-white/10">
+                    <button
+                        type="button"
+                        onClick={handleShare}
+                        className="p-2.5 bg-black/20 backdrop-blur-md rounded-full text-white hover:bg-white/10 transition border border-white/10"
+                        aria-label="프로필 링크 공유"
+                    >
                         <Share2 className="w-5 h-5" />
                     </button>
                 </div>
