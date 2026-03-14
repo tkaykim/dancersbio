@@ -60,9 +60,37 @@ export default function CareerTimeline({ careers }: CareerTimelineProps) {
             {categories.map((category) => {
                 if (category.items.length === 0) return null;
 
-                // Prepare Mobile Items (Common for both types, styled as cards for consistency or type-specific)
-                const mobileItems = category.items.map((item, index) => (
-                    category.type === 'carousel' ? (
+                // List 타입: 카드 컴포넌트만 반환 (세로 3개 묶음용)
+                const listCard = (item: CareerItem) => (
+                    <div
+                        key={item.id}
+                        onClick={() => handleItemClick(item)}
+                        className={`bg-neutral-800/50 p-4 rounded-xl border border-white/5 flex flex-col justify-center ${item.video_url ? 'cursor-pointer hover:bg-neutral-800/80 transition-colors' : ''}`}
+                    >
+                        <div className="flex justify-between items-center mb-1 gap-2">
+                            <h4 className="font-medium text-sm text-white line-clamp-1">{item.title}</h4>
+                            {item.year && <span className="text-[10px] text-primary/60 font-mono px-1.5 py-0.5 bg-primary/10 rounded shrink-0">{item.year}</span>}
+                        </div>
+                        <div className="flex items-center gap-2 text-xs text-white/40">
+                            {item.description && <span className="line-clamp-1">{item.description}</span>}
+                        </div>
+                    </div>
+                );
+
+                // Prepare Mobile Items: list는 3개씩 세로 묶음 슬라이드, carousel은 기존 1개씩
+                const mobileItems = category.type === 'list'
+                    ? (() => {
+                        const chunks: CareerItem[][] = [];
+                        for (let i = 0; i < category.items.length; i += 3) {
+                            chunks.push(category.items.slice(i, i + 3));
+                        }
+                        return chunks.map((chunk, chunkIndex) => (
+                            <div key={chunkIndex} className="flex flex-col gap-3">
+                                {chunk.map((item) => listCard(item))}
+                            </div>
+                        ));
+                    })()
+                    : category.items.map((item) => (
                         <div
                             key={item.id}
                             onClick={() => handleItemClick(item)}
@@ -89,36 +117,17 @@ export default function CareerTimeline({ careers }: CareerTimelineProps) {
                                     <PlayCircle className="w-8 h-8 text-white/30" />
                                 </div>
                             )}
-
-                            {/* Play Overlay if Video Exists */}
                             {item.video_url && (
                                 <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/40 transition-colors">
                                     <PlayCircle className="w-10 h-10 text-white/80" />
                                 </div>
                             )}
-
                             <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex flex-col justify-end p-3">
                                 <h4 className="font-medium text-sm text-white line-clamp-1">{item.title}</h4>
                                 <p className="text-xs text-white/60 line-clamp-1">{item.description}</p>
                             </div>
                         </div>
-                    ) : (
-                        // List items converted to cards (horizontal swipe)
-                        <div
-                            key={item.id}
-                            onClick={() => handleItemClick(item)}
-                            className={`bg-neutral-800/50 p-4 rounded-xl border border-white/5 h-full flex flex-col justify-center ${item.video_url ? 'cursor-pointer hover:bg-neutral-800/80 transition-colors' : ''}`}
-                        >
-                            <div className="flex justify-between items-center mb-1 gap-2">
-                                <h4 className="font-medium text-sm text-white line-clamp-1">{item.title}</h4>
-                                {item.year && <span className="text-[10px] text-primary/60 font-mono px-1.5 py-0.5 bg-primary/10 rounded shrink-0">{item.year}</span>}
-                            </div>
-                            <div className="flex items-center gap-2 text-xs text-white/40">
-                                {item.description && <span className="line-clamp-1">{item.description}</span>}
-                            </div>
-                        </div>
-                    )
-                ));
+                    ));
 
                 return (
                     <div key={category.id} className="space-y-4">
@@ -128,12 +137,9 @@ export default function CareerTimeline({ careers }: CareerTimelineProps) {
                             <button className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors">View all</button>
                         </div>
 
-                        {/* Mobile: Swipeable Carousel with Dots */}
+                        {/* Mobile: Swipeable Carousel with Dots (list = 한 페이지에 세로 3개, 가로 스와이프) */}
                         <div className="block md:hidden px-2">
-                            <CarouselWithDots
-                                items={mobileItems}
-                                slidesPerView={category.type === 'list' ? 3 : 1}
-                            />
+                            <CarouselWithDots items={mobileItems} />
                         </div>
 
                         {/* Desktop: Original Grid/List Layout */}
