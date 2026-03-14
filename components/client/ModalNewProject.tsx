@@ -7,11 +7,12 @@ import { useAuth } from '@/lib/auth-context'
 import { useMyClients } from '@/hooks/useMyClients'
 
 const CATEGORY_OPTIONS = [
-  { value: 'choreo', label: '안무 제작' },
+  { value: 'choreo', label: '안무제작/댄서참여' },
   { value: 'broadcast', label: '방송 출연' },
   { value: 'performance', label: '공연' },
   { value: 'workshop', label: '워크샵' },
   { value: 'judge', label: '심사' },
+  { value: 'other', label: '기타' },
 ]
 
 interface ModalNewProjectProps {

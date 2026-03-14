@@ -1,6 +1,10 @@
 import { CheckCircle2, XCircle } from 'lucide-react'
 import type { Proposal, NegotiationHistoryItem } from '@/lib/types'
 
+const CATEGORY_LABELS: Record<string, string> = {
+    choreo: '안무제작/댄서참여', broadcast: '방송', performance: '공연', workshop: '워크샵', judge: '심사', other: '기타',
+}
+
 interface ProposalChatProps {
     proposal: Proposal
     userId: string
@@ -12,7 +16,7 @@ export default function ProposalChat({ proposal, userId }: ProposalChatProps) {
             {/* Initial proposal details */}
             <div className="bg-neutral-800/20 border border-neutral-800 rounded-xl p-4 mb-6">
                 <div className="flex justify-between items-start mb-3">
-                    <span className="text-primary text-xs font-bold px-2 py-0.5 bg-primary/10 rounded">{proposal.projects.category}</span>
+                    <span className="text-primary text-xs font-bold px-2 py-0.5 bg-primary/10 rounded">{CATEGORY_LABELS[proposal.projects.category ?? ''] ?? proposal.projects.category}</span>
                     <span className="text-white/40 text-xs">{new Date(proposal.created_at).toLocaleDateString()}</span>
                 </div>
                 <h3 className="text-white font-bold text-sm mb-2">초기 제안 상세</h3>

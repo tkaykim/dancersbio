@@ -26,11 +26,12 @@ const PROGRESS_LABELS: Record<string, { label: string; color: string }> = {
 }
 
 const CATEGORY_LABELS: Record<string, string> = {
-    choreo: '안무',
+    choreo: '안무제작/댄서참여',
     broadcast: '방송',
     performance: '공연',
     workshop: '워크샵',
     judge: '심사',
+    other: '기타',
 }
 
 type StatusFilter = 'all' | 'active' | 'completed' | 'cancelled'

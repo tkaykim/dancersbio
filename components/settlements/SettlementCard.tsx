@@ -15,7 +15,7 @@ interface SettlementCardProps {
 }
 
 const CATEGORY_LABELS: Record<string, string> = {
-    choreo: '안무', broadcast: '방송', performance: '공연', workshop: '워크샵', judge: '심사',
+    choreo: '안무제작/댄서참여', broadcast: '방송', performance: '공연', workshop: '워크샵', judge: '심사', other: '기타',
 }
 
 export default function SettlementCard({

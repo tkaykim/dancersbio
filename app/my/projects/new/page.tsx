@@ -11,11 +11,12 @@ import { useMyProfiles } from '@/hooks/useMyProfiles'
 import { formatEmbargoDate, getKSTDateString } from '@/lib/utils'
 
 const CATEGORY_OPTIONS = [
-    { value: 'choreo', label: '안무 제작' },
+    { value: 'choreo', label: '안무제작/댄서참여' },
     { value: 'broadcast', label: '방송 출연' },
     { value: 'performance', label: '공연' },
     { value: 'workshop', label: '워크샵' },
     { value: 'judge', label: '심사' },
+    { value: 'other', label: '기타' },
 ]
 
 export default function NewProjectPage() {

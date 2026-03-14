@@ -6,6 +6,10 @@ import { getProposalDisplayStatus } from './ProposalFilterBar'
 import { getRelativeTime } from '@/lib/utils'
 import type { Proposal, ProposalTab } from '@/lib/types'
 
+const CATEGORY_LABELS: Record<string, string> = {
+    choreo: '안무제작/댄서참여', broadcast: '방송', performance: '공연', workshop: '워크샵', judge: '심사', other: '기타',
+}
+
 interface ProposalCardProps {
     proposal: Proposal
     activeTab: ProposalTab
@@ -48,7 +52,7 @@ export default function ProposalCard({ proposal, activeTab, unreadCount, onSelec
                         <ProposalStatusBadge status={displayStatus} />
                     </div>
                     <div className="flex items-center gap-2 text-xs text-white/60 mb-1.5">
-                        <span className="bg-white/10 px-1.5 py-0.5 rounded text-white/80">{proposal.projects.category}</span>
+                        <span className="bg-white/10 px-1.5 py-0.5 rounded text-white/80">{CATEGORY_LABELS[proposal.projects.category ?? ''] ?? proposal.projects.category}</span>
                         <span className="truncate">
                             {activeTab === 'inbox'
                                 ? `${proposal.sender?.name || 'Unknown'}${proposal.projects.clients?.company_name ? ` (${proposal.projects.clients.company_name})` : ''}`

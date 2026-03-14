@@ -8,9 +8,63 @@ import { notFound } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { isEmbargoActive, isProjectPublic } from "@/lib/utils";
 import { extractYouTubeId, getYouTubeThumbnail } from "@/lib/youtube";
+import type { Metadata } from "next";
 
 interface PageProps {
     params: Promise<{ slug: string }>;
+}
+
+function getBaseUrl(): string {
+    if (typeof process.env.NEXT_PUBLIC_SITE_URL === "string" && process.env.NEXT_PUBLIC_SITE_URL) {
+        return process.env.NEXT_PUBLIC_SITE_URL.replace(/\/$/, "");
+    }
+    if (typeof process.env.VERCEL_URL === "string" && process.env.VERCEL_URL) {
+        return `https://${process.env.VERCEL_URL}`;
+    }
+    return "https://dancersbio.vercel.app";
+}
+
+/** 링크 공유 시 썸네일(og:image)을 댄서 프로필 사진으로 노출 */
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+    const { slug } = await params;
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug);
+    const query = supabase.from("dancers").select("stage_name, profile_img").limit(1);
+    if (isUuid) query.eq("id", slug);
+    else query.eq("slug", slug);
+    const { data: dancer } = await query.single();
+    if (!dancer) return { title: "Dancers.bio" };
+
+    const title = `${dancer.stage_name} | Dancers.bio`;
+    const description = `${dancer.stage_name}의 프로필 - Dancers.bio`;
+    const baseUrl = getBaseUrl();
+    // 프로필 사진이 상대 경로면 절대 URL로 변환 (OG는 절대 URL 필요)
+    const imageUrl =
+        dancer.profile_img?.startsWith("http://") || dancer.profile_img?.startsWith("https://")
+            ? dancer.profile_img
+            : dancer.profile_img
+                ? `${baseUrl}${dancer.profile_img.startsWith("/") ? "" : "/"}${dancer.profile_img}`
+                : undefined;
+
+    return {
+        title,
+        description,
+        openGraph: {
+            title,
+            description,
+            url: `${baseUrl}/profile/${slug}`,
+            siteName: "Dancers.bio",
+            type: "profile",
+            ...(imageUrl && {
+                images: [{ url: imageUrl, width: 1200, height: 630, alt: dancer.stage_name }],
+            }),
+        },
+        twitter: {
+            card: "summary_large_image",
+            title,
+            description,
+            ...(imageUrl && { images: [imageUrl] }),
+        },
+    };
 }
 
 export const revalidate = 0; // Disable caching to ensure fresh profile data

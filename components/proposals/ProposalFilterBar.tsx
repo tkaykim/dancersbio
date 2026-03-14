@@ -33,11 +33,12 @@ const STATUS_OPTIONS = [
 ] as const
 
 const CATEGORY_OPTIONS = [
-    { value: 'choreo', label: '안무' },
+    { value: 'choreo', label: '안무제작/댄서참여' },
     { value: 'broadcast', label: '방송' },
     { value: 'performance', label: '공연' },
     { value: 'workshop', label: '워크샵' },
     { value: 'judge', label: '심사' },
+    { value: 'other', label: '기타' },
 ]
 
 interface ProposalFilterBarProps {

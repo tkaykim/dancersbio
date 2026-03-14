@@ -45,11 +45,12 @@ export default function ClientProjectDetail({
 
   const categoryLabel =
     {
-      choreo: '안무 제작',
+      choreo: '안무제작/댄서참여',
       broadcast: '방송 출연',
       performance: '공연',
       workshop: '워크샵',
       judge: '심사',
+      other: '기타',
     }[project.category ?? ''] ?? project.category ?? '—'
 
   return (
