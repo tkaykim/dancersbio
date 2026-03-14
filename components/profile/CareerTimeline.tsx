@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { Trophy, Tv, Users, Star, GraduationCap, Mic2, PlayCircle, MoreHorizontal, X } from "lucide-react";
-import Image from "next/image";
 import CarouselWithDots from "@/components/ui/CarouselWithDots";
 
 type CareerItem = {
@@ -17,10 +16,11 @@ type CareerItem = {
 type CareerCategory = {
     id: string;
     label: string;
-    // icon is kept for metadata but not shown in header for minimal look
     icon: React.ElementType;
     items: CareerItem[];
     type: 'carousel' | 'list';
+    /** 리스트 타입일 때 모바일에서 한 슬라이드당 세로로 보여줄 개수 (기본 3) */
+    listChunkSize?: number;
 };
 
 interface CareerTimelineProps {
@@ -36,8 +36,6 @@ export default function CareerTimeline({ careers }: CareerTimelineProps) {
         return (match && match[2].length === 11) ? match[2] : null;
     };
 
-    const isYouTubeThumbnail = (src: string) => src?.includes('img.youtube.com');
-
     const handleItemClick = (item: CareerItem) => {
         if (item.video_url) {
             setSelectedItem(item);
@@ -45,8 +43,8 @@ export default function CareerTimeline({ careers }: CareerTimelineProps) {
     };
 
     const categories: CareerCategory[] = [
-        { id: "choreo", label: "Music Videos & Choreography", icon: Star, items: careers.choreo || [], type: 'carousel' },
-        { id: "broadcast", label: "Broadcast", icon: Tv, items: careers.broadcast || [], type: 'carousel' },
+        { id: "choreo", label: "Music Videos & Choreography", icon: Star, items: careers.choreo || [], type: 'list', listChunkSize: 5 },
+        { id: "broadcast", label: "Broadcast", icon: Tv, items: careers.broadcast || [], type: 'list', listChunkSize: 3 },
         { id: "performance", label: "Live Performance", icon: Users, items: careers.performance || [], type: 'list' },
         { id: "award", label: "Awards", icon: Trophy, items: careers.award || [], type: 'list' },
         { id: "judge", label: "Judging", icon: Mic2, items: careers.judge || [], type: 'list' },
@@ -77,57 +75,19 @@ export default function CareerTimeline({ careers }: CareerTimelineProps) {
                     </div>
                 );
 
-                // Prepare Mobile Items: list는 3개씩 세로 묶음 슬라이드, carousel은 기존 1개씩
-                const mobileItems = category.type === 'list'
-                    ? (() => {
-                        const chunks: CareerItem[][] = [];
-                        for (let i = 0; i < category.items.length; i += 3) {
-                            chunks.push(category.items.slice(i, i + 3));
-                        }
-                        return chunks.map((chunk, chunkIndex) => (
-                            <div key={chunkIndex} className="flex flex-col gap-3">
-                                {chunk.map((item) => listCard(item))}
-                            </div>
-                        ));
-                    })()
-                    : category.items.map((item) => (
-                        <div
-                            key={item.id}
-                            onClick={() => handleItemClick(item)}
-                            className={`relative aspect-video w-full rounded overflow-hidden bg-muted mb-2 shadow-none group ${item.video_url ? 'cursor-pointer' : ''}`}
-                        >
-                            {item.image ? (
-                                <Image
-                                    src={item.image}
-                                    alt={item.title}
-                                    fill
-                                    className="object-cover"
-                                    unoptimized={isYouTubeThumbnail(item.image)}
-                                />
-                            ) : (item.video_url && getYouTubeId(item.video_url)) ? (
-                                <Image
-                                    unoptimized
-                                    src={`https://img.youtube.com/vi/${getYouTubeId(item.video_url)}/hqdefault.jpg`}
-                                    alt={item.title}
-                                    fill
-                                    className="object-cover"
-                                />
-                            ) : (
-                                <div className="w-full h-full bg-neutral-800 flex items-center justify-center">
-                                    <PlayCircle className="w-8 h-8 text-white/30" />
-                                </div>
-                            )}
-                            {item.video_url && (
-                                <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/40 transition-colors">
-                                    <PlayCircle className="w-10 h-10 text-white/80" />
-                                </div>
-                            )}
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex flex-col justify-end p-3">
-                                <h4 className="font-medium text-sm text-white line-clamp-1">{item.title}</h4>
-                                <p className="text-xs text-white/60 line-clamp-1">{item.description}</p>
-                            </div>
+                // Mobile: N개씩 세로 묶음 슬라이드 (choreo 5개, 그외 3개)
+                const listChunkSize = category.listChunkSize ?? 3;
+                const mobileItems = (() => {
+                    const chunks: CareerItem[][] = [];
+                    for (let i = 0; i < category.items.length; i += listChunkSize) {
+                        chunks.push(category.items.slice(i, i + listChunkSize));
+                    }
+                    return chunks.map((chunk, chunkIndex) => (
+                        <div key={chunkIndex} className="flex flex-col gap-3">
+                            {chunk.map((item) => listCard(item))}
                         </div>
                     ));
+                })();
 
                 return (
                     <div key={category.id} className="space-y-4">
@@ -137,88 +97,35 @@ export default function CareerTimeline({ careers }: CareerTimelineProps) {
                             <button className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors">View all</button>
                         </div>
 
-                        {/* Mobile: Swipeable Carousel with Dots (list = 한 페이지에 세로 3개, 가로 스와이프) */}
+                        {/* Mobile: Swipeable Carousel (choreo 5개/슬라이드, 그외 3개/슬라이드) */}
                         <div className="block md:hidden px-2">
                             <CarouselWithDots items={mobileItems} />
                         </div>
 
-                        {/* Desktop: Original Grid/List Layout */}
-                        <div className="hidden md:block">
-                            {category.type === 'carousel' ? (
-                                /* Tidal Style Horizontal Carousel */
-                                <div className="flex overflow-x-auto gap-4 px-6 pb-4 scrollbar-hide snap-x">
-                                    {category.items.map((item) => (
-                                        <div
-                                            key={item.id}
-                                            onClick={() => handleItemClick(item)}
-                                            className={`min-w-[200px] w-[200px] snap-start group relative ${item.video_url ? 'cursor-pointer' : ''}`}
-                                        >
-                                            <div className="aspect-video w-full relative rounded overflow-hidden bg-muted mb-3 shadow-none">
-                                                {item.image ? (
-                                                    <Image
-                                                        src={item.image}
-                                                        alt={item.title}
-                                                        fill
-                                                        className="object-cover transition-opacity duration-300 group-hover:opacity-80"
-                                                        unoptimized={isYouTubeThumbnail(item.image)}
-                                                    />
-                                                ) : (item.video_url && getYouTubeId(item.video_url)) ? (
-                                                    <Image
-                                                        unoptimized
-                                                        src={`https://img.youtube.com/vi/${getYouTubeId(item.video_url)}/hqdefault.jpg`}
-                                                        alt={item.title}
-                                                        fill
-                                                        className="object-cover transition-opacity duration-300 group-hover:opacity-80"
-                                                    />
-                                                ) : (
-                                                    <div className="w-full h-full bg-neutral-800 flex items-center justify-center">
-                                                        <PlayCircle className="w-8 h-8 text-white/30" />
-                                                    </div>
-                                                )}
-                                                {item.video_url && (
-                                                    <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/30 transition-colors">
-                                                        <PlayCircle className="w-10 h-10 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
-                                                    </div>
-                                                )}
-                                            </div>
-                                            <div className="space-y-0.5 px-0.5">
-                                                <h4 className="font-medium text-sm leading-tight text-foreground line-clamp-1">{item.title}</h4>
-                                                <p className="text-xs text-muted-foreground line-clamp-1">{item.description}</p>
+                        {/* Desktop: List (Awards 등과 동일) */}
+                        <div className="hidden md:block px-6">
+                            <div className="flex flex-col">
+                                {category.items.map((item) => (
+                                    <div
+                                        key={item.id}
+                                        onClick={() => handleItemClick(item)}
+                                        className={`group flex items-center gap-4 py-3 hover:bg-neutral-500/5 -mx-2 px-2 rounded-md transition-colors ${item.video_url ? 'cursor-pointer' : ''}`}
+                                    >
+                                        <div className="flex-1 min-w-0 flex flex-col justify-center">
+                                            <h4 className="font-medium text-sm text-foreground truncate">{item.title}</h4>
+                                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                                {item.description && <span className="truncate">{item.description}</span>}
                                             </div>
                                         </div>
-                                    ))}
-                                </div>
-                            ) : (
-                                /* Tidal Style List (Top Tracks style - Minimal) */
-                                <div className="px-6">
-                                    <div className="flex flex-col">
-                                        {category.items.map((item, index) => (
-                                            <div
-                                                key={item.id}
-                                                onClick={() => handleItemClick(item)}
-                                                className={`group flex items-center gap-4 py-3 hover:bg-neutral-500/5 -mx-2 px-2 rounded-md transition-colors ${item.video_url ? 'cursor-pointer' : ''}`}
-                                            >
-                                                {/* Numbering Removed */}
-
-                                                <div className="flex-1 min-w-0 flex flex-col justify-center">
-                                                    <h4 className="font-medium text-sm text-foreground truncate">{item.title}</h4>
-                                                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                                        {item.description && <span className="truncate">{item.description}</span>}
-                                                    </div>
-                                                </div>
-
-                                                <div className="flex items-center gap-4">
-                                                    {/* Year Badge - Minimal */}
-                                                    <span className="text-[10px] text-muted-foreground/60 font-medium hidden sm:inline-block">{item.year}</span>
-                                                    <button className="text-muted-foreground hover:text-foreground p-1">
-                                                        {item.video_url ? <PlayCircle className="w-4 h-4" /> : <MoreHorizontal className="w-4 h-4" />}
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        ))}
+                                        <div className="flex items-center gap-4">
+                                            <span className="text-[10px] text-muted-foreground/60 font-medium hidden sm:inline-block">{item.year}</span>
+                                            <button className="text-muted-foreground hover:text-foreground p-1">
+                                                {item.video_url ? <PlayCircle className="w-4 h-4" /> : <MoreHorizontal className="w-4 h-4" />}
+                                            </button>
+                                        </div>
                                     </div>
-                                </div>
-                            )}
+                                ))}
+                            </div>
                         </div>
                     </div>
                 );
