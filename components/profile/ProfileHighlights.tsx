@@ -66,7 +66,7 @@ function HighlightCard({
                     <PlayCircle className="w-10 h-10 text-white/80" />
                 </div>
             )}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex flex-col justify-end p-3">
+            <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent flex flex-col justify-end p-3">
                 <h4 className="font-medium text-sm text-white line-clamp-1">{item.title}</h4>
                 <p className="text-xs text-white/60 line-clamp-1">{item.description}</p>
             </div>
