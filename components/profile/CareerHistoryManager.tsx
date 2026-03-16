@@ -21,8 +21,12 @@ interface CareerItem {
     }
 }
 
+export type CareerLogPayload = { id?: number; title?: string; type?: string; dancer_id?: string; details?: Record<string, unknown> }
+
 interface CareerHistoryManagerProps {
     dancerId: string
+    /** 관리자 페이지에서 경력 변경 시 로그 기록용 (등록/수정/삭제) */
+    onLog?: (action: 'create' | 'update' | 'delete', payload: CareerLogPayload) => void
 }
 
 const CATEGORIES = [
@@ -36,7 +40,7 @@ const CATEGORIES = [
     { id: 'other', label: '기타', roles: [] }
 ]
 
-export default function CareerHistoryManager({ dancerId }: CareerHistoryManagerProps) {
+export default function CareerHistoryManager({ dancerId, onLog }: CareerHistoryManagerProps) {
     const [careers, setCareers] = useState<CareerItem[]>([])
     const [loading, setLoading] = useState(true)
     const [isDrawerOpen, setIsDrawerOpen] = useState(false)
@@ -135,7 +139,7 @@ export default function CareerHistoryManager({ dancerId }: CareerHistoryManagerP
 
     const handleDelete = async (id: number) => {
         if (!confirm('정말 삭제하시겠습니까?')) return
-
+        const item = careers.find(c => c.id === id)
         try {
             const { error } = await supabase
                 .from('careers')
@@ -143,6 +147,7 @@ export default function CareerHistoryManager({ dancerId }: CareerHistoryManagerP
                 .eq('id', id)
 
             if (error) throw error
+            onLog?.('delete', { id, title: item?.title, type: item?.type, dancer_id: dancerId })
             setCareers(careers.filter(c => c.id !== id))
         } catch (err) {
             alert('삭제 실패')
@@ -172,6 +177,7 @@ export default function CareerHistoryManager({ dancerId }: CareerHistoryManagerP
                 .update({ is_public })
                 .eq('id', id)
             if (error) throw error
+            onLog?.('update', { id, dancer_id: dancerId, details: { field: 'is_public', value: is_public } })
             setCareers(careers.map(c => c.id === id ? { ...c, is_public } : c))
         } catch (err) {
             alert('공개 여부 변경에 실패했습니다.')
@@ -221,11 +227,15 @@ export default function CareerHistoryManager({ dancerId }: CareerHistoryManagerP
                     .update(careerData)
                     .eq('id', editingId)
                 if (error) throw error
+                onLog?.('update', { id: editingId, title: formData.title, type: formData.type, dancer_id: dancerId })
             } else {
-                const { error } = await supabase
+                const { data: inserted, error } = await supabase
                     .from('careers')
                     .insert(careerData)
+                    .select('id')
+                    .single()
                 if (error) throw error
+                onLog?.('create', { id: inserted?.id, title: formData.title, type: formData.type, dancer_id: dancerId })
             }
 
             await fetchCareers() // Refresh list

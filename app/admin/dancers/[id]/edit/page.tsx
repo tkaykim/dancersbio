@@ -10,6 +10,8 @@ import { cn } from '@/lib/utils'
 import ProfilePhotoUpload from '@/components/profile/ProfilePhotoUpload'
 import PortfolioMediaManager from '@/components/portfolio/PortfolioMediaManager'
 import CareerHistoryManager from '@/components/profile/CareerHistoryManager'
+import type { CareerLogPayload } from '@/components/profile/CareerHistoryManager'
+import { logAdminAction } from '@/lib/admin-log'
 import SocialLinksInput from '@/components/profile/SocialLinksInput'
 import PriorityMultiSelect from '@/components/ui/PriorityMultiSelect'
 import AgencySelector from '@/components/profile/AgencySelector'
@@ -108,6 +110,13 @@ export default function AdminDancerEditPage({ params }: PageProps) {
   const handleProfilePhotoUpload = async (url: string) => {
     setFormData((prev) => ({ ...prev, profile_img: url }))
     await supabase.from('dancers').update({ profile_img: url }).eq('id', id)
+    logAdminAction({
+      action: 'update',
+      target_type: 'profile',
+      target_id: id,
+      target_label: formData.stage_name || null,
+      details: { field: 'profile_img' },
+    })
   }
 
   const handleSave = async () => {
@@ -138,6 +147,12 @@ export default function AdminDancerEditPage({ params }: PageProps) {
         .eq('id', id)
 
       if (dancerError) throw dancerError
+      logAdminAction({
+        action: 'update',
+        target_type: 'profile',
+        target_id: id,
+        target_label: formData.stage_name || null,
+      })
       alert('저장되었습니다.')
     } catch (err: any) {
       alert('저장 실패: ' + (err.message ?? String(err)))
@@ -358,7 +373,20 @@ export default function AdminDancerEditPage({ params }: PageProps) {
         <section className="rounded-xl border border-neutral-800 bg-neutral-900/50 p-6 space-y-4">
           <h2 className="text-lg font-bold text-white">경력 및 이력</h2>
           <p className="text-white/40 text-sm">안무·공연·방송·수상·워크샵 등 카테고리별로 등록하세요.</p>
-          <CareerHistoryManager dancerId={dancer.id} />
+          <CareerHistoryManager
+            dancerId={dancer.id}
+            onLog={(action, payload) => {
+              const targetId = payload.id != null ? String(payload.id) : ''
+              if (!targetId && action !== 'create') return
+              logAdminAction({
+                action,
+                target_type: 'career',
+                target_id: (targetId || payload.dancer_id) ?? '',
+                target_label: payload.title ?? undefined,
+                details: payload.dancer_id ? { dancer_id: payload.dancer_id, ...payload.details } : payload.details,
+              })
+            }}
+          />
         </section>
       </div>
     </div>

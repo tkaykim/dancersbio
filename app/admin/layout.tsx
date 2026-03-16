@@ -16,6 +16,7 @@ import {
     Menu,
     X,
     UserPlus,
+    FileText,
 } from 'lucide-react'
 import { Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -29,6 +30,7 @@ const NAV_ITEMS = [
     { label: '제안', href: '/admin/proposals', icon: Send },
     { label: '프로필 승인', href: '/admin/profiles-pending', icon: UserCheck },
     { label: '권한 요청', href: '/admin/requests', icon: ClipboardList },
+    { label: '등록로그', href: '/admin/logs', icon: FileText },
 ]
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

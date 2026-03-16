@@ -51,6 +51,13 @@ export default function AdminDancersPage() {
     try {
       const { error } = await supabase.from('dancers').delete().eq('id', d.id)
       if (error) throw error
+      const { logAdminAction } = await import('@/lib/admin-log')
+      logAdminAction({
+        action: 'delete',
+        target_type: 'profile',
+        target_id: d.id,
+        target_label: d.stage_name || d.korean_name || null,
+      })
       setDancers((prev) => prev.filter((x) => x.id !== d.id))
     } catch (err: any) {
       console.error('Delete failed:', err)

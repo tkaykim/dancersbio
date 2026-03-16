@@ -101,6 +101,14 @@ export default function AdminDancerNewPage() {
       if (error) throw error
       if (!inserted?.id) throw new Error('생성 실패')
 
+      const { logAdminAction } = await import('@/lib/admin-log')
+      logAdminAction({
+        action: 'create',
+        target_type: 'profile',
+        target_id: inserted.id,
+        target_label: formData.stage_name.trim() || null,
+      })
+
       alert('댄서가 등록되었습니다. 경력·포트폴리오는 수정 페이지에서 추가할 수 있습니다.')
       router.push(`/admin/dancers/${inserted.id}/edit`)
     } catch (err: any) {
