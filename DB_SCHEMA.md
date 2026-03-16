@@ -49,15 +49,20 @@ Supabase Auth와 1:1로 매핑되는 최상위 사용자 테이블입니다.
 | `social_links` | jsonb | Yes | SNS 링크 `{ instagram?, twitter?, youtube? }` |
 | `portfolio` | jsonb | Yes | 포트폴리오 미디어 (사진/영상) 배열 |
 
-### 3.3. `clients` (비즈니스 프로필)
-"비즈니스 명의"가 필요한 경우에만 등록합니다. (세금계산서 발행 등)
+### 3.3. `clients` (비즈니스 프로필 — 소속사/클라이언트 통합)
+**소속사(에이전시)와 클라이언트(원청)를 하나의 테이블로 통합 운영합니다.**
+*   `type = 'agency'`인 경우 댄서의 소속사 역할 (`dancers.agency_id` 참조)
+*   동시에 다른 댄서에게 프로젝트를 제안하는 원청 역할도 수행 가능
+*   다른 회사로부터 프로젝트를 제안받는 수주자 역할도 가능
+*   예: "그리고 엔터테인먼트"는 소속 댄서를 관리하면서, 외부 댄서에게 일을 제안하고, 가수 소속사로부터 프로젝트를 받을 수 있음
 *   **댄서가 개인 자격으로 제안할 때는 이 테이블이 없어도 됨.**
-*   **확장 컬럼**: 로고, 사업자번호, 이메일, 연락처, 주소, 소개(클라이언트 포털 회사 정보 등록용).
+
+**계정 모델**: 1차 구축에서는 1회사=1계정(`owner_id`)으로 운영. 회사 직원이 여러 명이면 대표 계정을 공유.
 
 | Column | Type | Nullable | Description |
 | :--- | :--- | :--- | :--- |
 | `id` | uuid | No | PK |
-| `owner_id` | uuid | No | `users.id` (소유자) |
+| `owner_id` | uuid | No | `users.id` (소유자/대표 계정) |
 | `company_name` | text | Yes | 상호명 |
 | `contact_person`| text | No | 담당자명 |
 | `type` | text | No | `'company'` \| `'individual'` \| `'agency'` (default: `'company'`) |
@@ -69,8 +74,11 @@ Supabase Auth와 1:1로 매핑되는 최상위 사용자 테이블입니다.
 | `description` | text | Yes | 회사 소개 |
 | `created_at` | timestamptz | Yes | 등록일 |
 
-### 3.3.1. `client_members` (회사 소속 담당자 — 확장용)
-한 회사에 여러 담당자가 소속될 수 있도록 하는 junction 테이블. 당장은 1회사=1담당자(owner)로 운영.
+**RLS**: 소유자 본인만 CRUD, admin 전체 접근, `type = 'agency'`는 인증 사용자 누구나 SELECT 가능 (에이전시 선택 UI용).
+
+### 3.3.1. `client_members` (회사 소속 담당자 — 추후 확장용, 현재 미사용)
+한 회사에 여러 담당자가 소속될 수 있도록 하는 junction 테이블.
+**현재 코드에서 사용하지 않음.** 추후 멀티유저 클라이언트 기능 구현 시 활성화 예정.
 
 | Column | Type | Nullable | Description |
 | :--- | :--- | :--- | :--- |

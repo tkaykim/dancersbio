@@ -9,6 +9,7 @@ import Link from 'next/link'
 import { useBackWithFallback } from '@/lib/useBackWithFallback'
 import { useMyProfiles } from '@/hooks/useMyProfiles'
 import { formatEmbargoDate, getKSTDateString } from '@/lib/utils'
+import { findOrCreateClient } from '@/lib/create-client'
 
 const CATEGORY_OPTIONS = [
     { value: 'choreo', label: '안무제작/댄서참여' },
@@ -49,17 +50,11 @@ export default function NewProjectPage() {
         try {
             let clientProfileId: string | null = null
             if (formData.companyName.trim()) {
-                const { data: existingClient } = await supabase.from('clients').select('id')
-                    .eq('owner_id', user.id).eq('company_name', formData.companyName.trim()).single()
-                if (existingClient) {
-                    clientProfileId = existingClient.id
-                } else {
-                    const { data: newClient, error: clientError } = await supabase.from('clients')
-                        .insert({ owner_id: user.id, company_name: formData.companyName.trim(), contact_person: formData.contactPerson.trim() || user.email || '' })
-                        .select('id').single()
-                    if (clientError) throw clientError
-                    clientProfileId = newClient.id
-                }
+                clientProfileId = await findOrCreateClient(
+                    user.id,
+                    formData.companyName,
+                    formData.contactPerson.trim() || user.email || '',
+                )
             }
 
             const { data: project, error } = await supabase.from('projects').insert({

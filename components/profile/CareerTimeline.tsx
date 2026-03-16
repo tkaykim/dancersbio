@@ -58,8 +58,7 @@ export default function CareerTimeline({ careers }: CareerTimelineProps) {
             {categories.map((category) => {
                 if (category.items.length === 0) return null;
 
-                // List 타입: 카드 컴포넌트만 반환 (세로 3개 묶음용)
-                const listCard = (item: CareerItem) => (
+                const mobileCard = (item: CareerItem) => (
                     <div
                         key={item.id}
                         onClick={() => handleItemClick(item)}
@@ -75,7 +74,6 @@ export default function CareerTimeline({ careers }: CareerTimelineProps) {
                     </div>
                 );
 
-                // Mobile: N개씩 세로 묶음 슬라이드 (choreo 5개, 그외 3개)
                 const listChunkSize = category.listChunkSize ?? 3;
                 const mobileItems = (() => {
                     const chunks: CareerItem[][] = [];
@@ -84,28 +82,47 @@ export default function CareerTimeline({ careers }: CareerTimelineProps) {
                     }
                     return chunks.map((chunk, chunkIndex) => (
                         <div key={chunkIndex} className="flex flex-col gap-3">
-                            {chunk.map((item) => listCard(item))}
+                            {chunk.map((item) => mobileCard(item))}
                         </div>
                     ));
                 })();
 
                 return (
                     <div key={category.id} className="space-y-4">
-                        {/* Minimal Section Header - No Icons */}
                         <div className="px-6 flex justify-between items-baseline">
                             <h3 className="text-xl font-bold tracking-tight text-foreground">{category.label}</h3>
-                            <button className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors">View all</button>
                         </div>
 
-                        {/* Mobile: Swipeable Carousel (choreo 5개/슬라이드, 그외 3개/슬라이드) */}
+                        {/* Mobile: Swipeable Carousel */}
                         <div className="block md:hidden px-2">
                             <CarouselWithDots items={mobileItems} />
                         </div>
 
-                        {/* Desktop: 그리드로 표시 (모바일처럼 한 화면에 여러 개, 스크롤 단축) */}
+                        {/* Desktop: 리스트 레이아웃 - 텍스트 잘림 없음 */}
                         <div className="hidden md:block px-6">
-                            <div className={`grid gap-3 ${category.id === "choreo" ? "grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5" : "grid-cols-2 lg:grid-cols-3"}`}>
-                                {category.items.map((item) => listCard(item))}
+                            <div className="rounded-xl border border-white/5 overflow-hidden divide-y divide-white/5">
+                                {category.items.map((item) => (
+                                    <div
+                                        key={item.id}
+                                        onClick={() => handleItemClick(item)}
+                                        className={`flex items-center gap-4 px-5 py-3.5 bg-neutral-800/30 ${item.video_url ? 'cursor-pointer hover:bg-neutral-800/60 transition-colors' : ''}`}
+                                    >
+                                        {item.year && (
+                                            <span className="text-xs text-primary/70 font-mono px-2 py-0.5 bg-primary/10 rounded shrink-0 min-w-[48px] text-center">
+                                                {item.year}
+                                            </span>
+                                        )}
+                                        <div className="flex-1 min-w-0">
+                                            <h4 className="font-medium text-sm text-white">{item.title}</h4>
+                                            {item.description && (
+                                                <p className="text-xs text-white/40 mt-0.5">{item.description}</p>
+                                            )}
+                                        </div>
+                                        {item.video_url && (
+                                            <PlayCircle className="w-5 h-5 text-white/30 shrink-0" />
+                                        )}
+                                    </div>
+                                ))}
                             </div>
                         </div>
                     </div>

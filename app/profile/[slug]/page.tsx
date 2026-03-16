@@ -266,14 +266,16 @@ export default async function ProfilePage({ params }: PageProps) {
     };
 
     return (
-        <main className="w-full min-h-screen pb-20 bg-background text-foreground">
-            <ProfileHeader dancer={dancerData} />
-            <ProfileHighlights highlights={highlights} />
-            <CareerTimeline careers={dancerData.careers} />
-            <MediaGrid items={dancerData.media} />
-            <ViralFooterCard />
-            <ClaimRequestSection dancerId={dancer.id} />
-            <div className="h-10" />
-        </main>
+        <div className="min-h-screen bg-background text-foreground">
+            <main className="w-full max-w-[960px] mx-auto pb-20">
+                <ProfileHeader dancer={dancerData} />
+                <ProfileHighlights highlights={highlights} />
+                <CareerTimeline careers={dancerData.careers} />
+                <MediaGrid items={dancerData.media} />
+                <ViralFooterCard />
+                <ClaimRequestSection dancerId={dancer.id} />
+                <div className="h-10" />
+            </main>
+        </div>
     );
 }

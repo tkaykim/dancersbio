@@ -53,7 +53,7 @@ export default function MediaGrid({ items }: MediaGridProps) {
             <h3 className="text-lg font-bold mb-4">Portfolio</h3>
 
             {/* 갤러리 그리드: 여러 개가 한눈에 보이도록 */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-3">
                 {displayItems.map((item) => {
                     const thumb = item.thumbnail || item.url || "";
                     const mediaUrl = item.url || thumb;

@@ -68,7 +68,7 @@ export default function ProfileHeader({ dancer }: ProfileHeaderProps) {
     return (
         <div className="relative w-full mb-8">
             {/* Hero Section */}
-            <div className="h-[420px] w-full relative group">
+            <div className="h-[420px] md:h-[520px] w-full relative group">
                 {dancer.image ? (
                     <Image
                         src={dancer.image}
@@ -115,15 +115,15 @@ export default function ProfileHeader({ dancer }: ProfileHeaderProps) {
                 <div className="absolute bottom-0 left-0 right-0 px-6 pb-5 z-20 flex flex-col items-center text-center">
 
                     {/* Title */}
-                    <h1 className="text-3xl font-extrabold text-white flex items-center gap-2 mb-1 tracking-tight drop-shadow-md">
+                    <h1 className="text-3xl md:text-5xl font-extrabold text-white flex items-center gap-2 mb-1 tracking-tight drop-shadow-md">
                         {dancer.name}
                         {dancer.isVerified && (
-                            <CheckCircle2 className="w-5 h-5 text-blue-400 fill-blue-900/40" />
+                            <CheckCircle2 className="w-5 h-5 md:w-7 md:h-7 text-blue-400 fill-blue-900/40" />
                         )}
                     </h1>
 
                     {dancer.agencyName && (
-                        <p className="flex items-center gap-1.5 text-xs text-white/50 mb-3">
+                        <p className="flex items-center gap-1.5 text-xs md:text-sm text-white/50 mb-3">
                             <Building2 className="w-3 h-3" />
                             {dancer.agencyName}
                         </p>
@@ -139,10 +139,10 @@ export default function ProfileHeader({ dancer }: ProfileHeaderProps) {
                                         href={getSocialUrl("instagram", socialLinks.instagram)}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="p-2 bg-white/10 backdrop-blur-md rounded-full text-white hover:bg-white/20 transition-all border border-white/10"
+                                        className="p-2 md:p-2.5 bg-white/10 backdrop-blur-md rounded-full text-white hover:bg-white/20 transition-all border border-white/10"
                                         title={`Instagram: @${socialLinks.instagram}`}
                                     >
-                                        <InstagramIcon className="w-3.5 h-3.5" />
+                                        <InstagramIcon className="w-3.5 h-3.5 md:w-4 md:h-4" />
                                     </a>
                                 )}
                                 {socialLinks.twitter && (
@@ -150,10 +150,10 @@ export default function ProfileHeader({ dancer }: ProfileHeaderProps) {
                                         href={getSocialUrl("twitter", socialLinks.twitter)}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="p-2 bg-white/10 backdrop-blur-md rounded-full text-white hover:bg-white/20 transition-all border border-white/10"
+                                        className="p-2 md:p-2.5 bg-white/10 backdrop-blur-md rounded-full text-white hover:bg-white/20 transition-all border border-white/10"
                                         title={`X: @${socialLinks.twitter}`}
                                     >
-                                        <XTwitterIcon className="w-3.5 h-3.5" />
+                                        <XTwitterIcon className="w-3.5 h-3.5 md:w-4 md:h-4" />
                                     </a>
                                 )}
                                 {socialLinks.youtube && (
@@ -161,10 +161,10 @@ export default function ProfileHeader({ dancer }: ProfileHeaderProps) {
                                         href={getSocialUrl("youtube", socialLinks.youtube)}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="p-2 bg-white/10 backdrop-blur-md rounded-full text-white hover:bg-white/20 transition-all border border-white/10"
+                                        className="p-2 md:p-2.5 bg-white/10 backdrop-blur-md rounded-full text-white hover:bg-white/20 transition-all border border-white/10"
                                         title={`YouTube: ${socialLinks.youtube}`}
                                     >
-                                        <YoutubeIcon className="w-3.5 h-3.5" />
+                                        <YoutubeIcon className="w-3.5 h-3.5 md:w-4 md:h-4" />
                                     </a>
                                 )}
                                 <div className="w-px h-5 bg-white/15 mx-1" />

@@ -10,6 +10,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { useBackWithFallback } from '@/lib/useBackWithFallback'
+import { findOrCreateClient } from '@/lib/create-client'
 import Image from 'next/image'
 import type { Dancer } from '@/lib/supabase'
 
@@ -174,20 +175,13 @@ function NewProposalPage() {
             if (projectMode === 'existing' && selectedProjectId) {
                 projectId = selectedProjectId
             } else {
-                // Create client profile if company name given
                 let clientProfileId: string | null = null
                 if (projectData.companyName.trim()) {
-                    const { data: existing } = await supabase.from('clients').select('id')
-                        .eq('owner_id', user.id).eq('company_name', projectData.companyName.trim()).single()
-                    if (existing) {
-                        clientProfileId = existing.id
-                    } else {
-                        const { data: newClient, error: clientErr } = await supabase.from('clients')
-                            .insert({ owner_id: user.id, company_name: projectData.companyName.trim(), contact_person: '' })
-                            .select('id').single()
-                        if (clientErr) throw clientErr
-                        clientProfileId = newClient.id
-                    }
+                    clientProfileId = await findOrCreateClient(
+                        user.id,
+                        projectData.companyName,
+                        '',
+                    )
                 }
 
                 const { data: project, error: projectErr } = await supabase.from('projects').insert({

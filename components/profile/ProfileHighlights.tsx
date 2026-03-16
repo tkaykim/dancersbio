@@ -89,53 +89,8 @@ export default function ProfileHighlights({ highlights }: ProfileHighlightsProps
                 <h3 className="text-xl font-bold tracking-tight text-foreground">Highlights</h3>
             </div>
 
-            {/* Mobile: same as Music Videos & Choreography - full-width carousel */}
-            <div className="block md:hidden px-2">
+            <div className="px-2">
                 <CarouselWithDots items={mobileItems} />
-            </div>
-
-            {/* Desktop: same as Music Videos & Choreography - horizontal carousel, min-w-[200px] */}
-            <div className="hidden md:flex overflow-x-auto gap-4 px-6 pb-4 scrollbar-hide snap-x">
-                {highlights.map((item) => (
-                    <div
-                        key={item.id}
-                        onClick={() => item.video_url && setSelectedItem(item)}
-                        className={`min-w-[200px] w-[200px] snap-start group relative ${item.video_url ? "cursor-pointer" : ""}`}
-                    >
-                        <div className="aspect-video w-full relative rounded overflow-hidden bg-muted mb-3 shadow-none">
-                            {item.image ? (
-                                <Image
-                                    src={item.image}
-                                    alt={item.title}
-                                    fill
-                                    className="object-cover transition-opacity duration-300 group-hover:opacity-80"
-                                    unoptimized={isYouTubeThumbnail(item.image)}
-                                />
-                            ) : item.video_url && getYouTubeId(item.video_url) ? (
-                                <Image
-                                    unoptimized
-                                    src={`https://img.youtube.com/vi/${getYouTubeId(item.video_url)}/hqdefault.jpg`}
-                                    alt={item.title}
-                                    fill
-                                    className="object-cover transition-opacity duration-300 group-hover:opacity-80"
-                                />
-                            ) : (
-                                <div className="w-full h-full bg-neutral-800 flex items-center justify-center">
-                                    <PlayCircle className="w-8 h-8 text-white/30" />
-                                </div>
-                            )}
-                            {item.video_url && (
-                                <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/30 transition-colors">
-                                    <PlayCircle className="w-10 h-10 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
-                                </div>
-                            )}
-                        </div>
-                        <div className="space-y-0.5 px-0.5">
-                            <h4 className="font-medium text-sm leading-tight text-foreground line-clamp-1">{item.title}</h4>
-                            <p className="text-xs text-muted-foreground line-clamp-1">{item.description}</p>
-                        </div>
-                    </div>
-                ))}
             </div>
 
             {/* Video Modal */}

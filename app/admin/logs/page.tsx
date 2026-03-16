@@ -46,7 +46,7 @@ export default function AdminLogsPage() {
         .from('admin_logs')
         .select('id, action, target_type, target_id, target_label, details, admin_user_id, created_at')
         .order('created_at', { ascending: false })
-        .limit(500)
+        .limit(2000)
 
       if (error) throw error
       const rows = (data ?? []) as Omit<AdminLogRow, 'admin_name' | 'admin_email'>[]
