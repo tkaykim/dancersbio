@@ -11,6 +11,7 @@ interface CareerItem {
     title: string
     is_public: boolean
     is_representative: boolean
+    sort_order: number
     details: {
         year?: string
         month?: string
@@ -60,6 +61,7 @@ export default function CareerHistoryManager({ dancerId, onLog }: CareerHistoryM
         description: '',
         link: '',
         is_representative: false,
+        sort_order: 0,
     })
 
     useEffect(() => {
@@ -76,12 +78,14 @@ export default function CareerHistoryManager({ dancerId, onLog }: CareerHistoryM
 
             if (error) throw error
 
-            // Sort by Date (Year DESC, Month DESC); is_public, is_representative 기본값 (기존 데이터 호환)
             const sorted = (data || []).map((row: any) => ({
                 ...row,
                 is_public: row.is_public === true,
                 is_representative: row.is_representative === true,
+                sort_order: row.sort_order ?? 0,
             })).sort((a, b) => {
+                if (a.sort_order !== b.sort_order) return b.sort_order - a.sort_order
+
                 const yearA = parseInt(a.details?.year || '0')
                 const yearB = parseInt(b.details?.year || '0')
                 if (yearA !== yearB) return yearB - yearA
@@ -103,12 +107,13 @@ export default function CareerHistoryManager({ dancerId, onLog }: CareerHistoryM
         setFormData({
             type: keepCategory ? formData.type : activeCategory,
             title: '',
-            year: formData.year || new Date().getFullYear().toString(), // Keep year for convenience
+            year: formData.year || new Date().getFullYear().toString(),
             month: '',
             role: '',
             description: '',
             link: '',
             is_representative: false,
+            sort_order: 0,
         })
         setEditingId(null)
     }
@@ -124,6 +129,7 @@ export default function CareerHistoryManager({ dancerId, onLog }: CareerHistoryM
                 description: item.details.description || '',
                 link: item.details.link || '',
                 is_representative: item.is_representative ?? false,
+                sort_order: item.sort_order ?? 0,
             })
             setEditingId(item.id)
             // setActiveCategory(item.type) // Don't force switch main accordion, but maybe? 
@@ -216,8 +222,9 @@ export default function CareerHistoryManager({ dancerId, onLog }: CareerHistoryM
             title: formData.title,
             date: dateStr,
             details,
-            is_public: false, // 신규 등록 시 기본 비공개
+            is_public: false,
             is_representative: formData.is_representative,
+            sort_order: formData.sort_order,
         }
 
         try {
@@ -323,6 +330,11 @@ export default function CareerHistoryManager({ dancerId, onLog }: CareerHistoryM
                                                     )}>
                                                         {item.is_public ? '공개' : '비공개'}
                                                     </span>
+                                                    {item.sort_order > 0 && (
+                                                        <span className="shrink-0 text-[10px] font-medium px-1.5 py-0.5 rounded border text-amber-400/90 bg-amber-500/10 border-amber-500/20">
+                                                            우선 {item.sort_order}
+                                                        </span>
+                                                    )}
                                                 </div>
                                                 <h3 className="text-white font-medium text-sm truncate pr-2">{item.title}</h3>
                                                 {item.details.description && (
@@ -503,6 +515,19 @@ export default function CareerHistoryManager({ dancerId, onLog }: CareerHistoryM
                             <p className="text-sm font-medium text-white">대표 경력으로 설정</p>
                             <p className="text-xs text-white/50 mt-0.5">체크 시 프로필 상단 Highlights 섹션에 노출됩니다.</p>
                         </div>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-white mb-2">정렬 우선순위</label>
+                        <input
+                            type="number"
+                            min="0"
+                            value={formData.sort_order}
+                            onChange={e => setFormData({ ...formData, sort_order: parseInt(e.target.value) || 0 })}
+                            className="w-full px-4 py-3 bg-black/50 border border-neutral-800 rounded-xl text-white focus:border-primary focus:outline-none"
+                            placeholder="0"
+                        />
+                        <p className="text-xs text-white/50 mt-1">숫자가 높을수록 카테고리 내에서 먼저 노출됩니다. (기본값: 0)</p>
                     </div>
 
                     <div className="flex gap-3 pt-4 border-t border-neutral-800">

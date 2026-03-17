@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useAdmin } from '@/hooks/useAdmin'
 import { supabase } from '@/lib/supabase'
-import { UserPlus, ChevronRight, Loader2, Image as ImageIcon, Trash2 } from 'lucide-react'
+import { UserPlus, ChevronRight, Loader2, Image as ImageIcon, Trash2, Link2, Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface DancerRow {
@@ -22,6 +22,19 @@ export default function AdminDancersPage() {
   const [dancers, setDancers] = useState<DancerRow[]>([])
   const [loading, setLoading] = useState(true)
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [copiedId, setCopiedId] = useState<string | null>(null)
+
+  async function handleCopyLink(d: DancerRow) {
+    const slug = d.slug || d.id
+    const url = `${window.location.origin}/${slug}`
+    try {
+      await navigator.clipboard.writeText(url)
+      setCopiedId(d.id)
+      setTimeout(() => setCopiedId(null), 2000)
+    } catch {
+      alert('복사 실패')
+    }
+  }
 
   useEffect(() => {
     if (!isAdmin) return
@@ -151,6 +164,19 @@ export default function AdminDancersPage() {
                     </td>
                     <td className="px-4 py-3 text-right">
                       <div className="flex items-center justify-end gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleCopyLink(d)}
+                          className="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-sm text-white/60 hover:bg-white/10 hover:text-white transition"
+                          aria-label={`${d.stage_name || d.korean_name || '댄서'} 링크 복사`}
+                        >
+                          {copiedId === d.id ? (
+                            <Check className="h-4 w-4 text-green-400" />
+                          ) : (
+                            <Link2 className="h-4 w-4" />
+                          )}
+                          {copiedId === d.id ? '복사됨' : '링크'}
+                        </button>
                         <Link
                           href={`/admin/dancers/${d.id}/edit`}
                           className="inline-flex items-center gap-1 text-primary hover:underline"

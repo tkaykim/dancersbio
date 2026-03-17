@@ -186,20 +186,23 @@ export default async function ProfilePage({ params }: PageProps) {
             title: career.title,
             description,
             image: thumbnailUrl,
-            video_url: videoUrl
+            video_url: videoUrl,
+            sort_order: career.sort_order ?? 0,
         });
     });
 
-    // 영상 URL이 있는 경력을 앞에, 없는 경력은 맨 뒤로 정렬 (같은 그룹 내에서는 연도 내림차순)
+    // sort_order(높을수록 우선) → 영상 URL 유무 → 연도 내림차순
     const hasRealVideo = (item: { video_url?: string }) =>
       !!item.video_url && /youtube\.com\/watch\?v=|youtu\.be\//.test(item.video_url);
     Object.keys(groupedCareers).forEach((type) => {
         groupedCareers[type].sort((a, b) => {
+            const orderA = a.sort_order ?? 0;
+            const orderB = b.sort_order ?? 0;
+            if (orderA !== orderB) return orderB - orderA;
             const aHas = hasRealVideo(a);
             const bHas = hasRealVideo(b);
             if (aHas && !bHas) return -1;
             if (!aHas && bHas) return 1;
-            // 같은 그룹(둘 다 URL 있음 또는 둘 다 없음)이면 연도 내림차순
             const yearA = parseInt(a.year || '0', 10);
             const yearB = parseInt(b.year || '0', 10);
             return yearB - yearA;
@@ -233,10 +236,14 @@ export default async function ProfilePage({ params }: PageProps) {
             description,
             image: thumbnailUrl || undefined,
             video_url: videoUrl || undefined,
+            sort_order: career.sort_order ?? 0,
         };
     });
-    // 연도 내림차순, 영상 있는 항목 우선
+    // sort_order(높을수록 우선) → 영상 URL 유무 → 연도 내림차순
     highlights.sort((a, b) => {
+        const orderA = a.sort_order ?? 0;
+        const orderB = b.sort_order ?? 0;
+        if (orderA !== orderB) return orderB - orderA;
         const aHas = !!a.video_url;
         const bHas = !!b.video_url;
         if (aHas && !bHas) return -1;

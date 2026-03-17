@@ -39,5 +39,6 @@ export interface Career {
     details: any
     is_public: boolean
     is_representative: boolean
+    sort_order: number
     created_at: string
 }
