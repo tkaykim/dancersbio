@@ -12,7 +12,6 @@ import ProfilePhotoUpload from '@/components/profile/ProfilePhotoUpload'
 import PortfolioMediaManager from '@/components/portfolio/PortfolioMediaManager'
 import CareerHistoryManager from '@/components/profile/CareerHistoryManager'
 import SocialLinksInput from '@/components/profile/SocialLinksInput'
-import AgencySelector from '@/components/profile/AgencySelector'
 import MultiAgencySelector from '@/components/profile/MultiAgencySelector'
 import PriorityMultiSelect from '@/components/ui/PriorityMultiSelect'
 import type { SocialLinks } from '@/lib/supabase'
@@ -61,7 +60,6 @@ export default function ProfileEditPage({ params }: PageProps) {
         social_links: {} as SocialLinks,
         specialties: [] as string[],
         genres: [] as string[],
-        agency_id: null as string | null
     })
     const [portfolioMedia, setPortfolioMedia] = useState<MediaItem[]>([])
     const [selectedAgencies, setSelectedAgencies] = useState<{ agency_id: string; name: string; is_primary: boolean }[]>([])
@@ -103,7 +101,6 @@ export default function ProfileEditPage({ params }: PageProps) {
                 social_links: data.social_links || {},
                 specialties: data.specialties || [],
                 genres: data.genres || [],
-                agency_id: data.agency_id || null
             })
             if (data.portfolio && Array.isArray(data.portfolio)) {
                 setPortfolioMedia(data.portfolio)
@@ -172,7 +169,6 @@ export default function ProfileEditPage({ params }: PageProps) {
                     social_links: Object.keys(cleanedSocialLinks).length > 0 ? cleanedSocialLinks : null,
                     specialties: formData.specialties.length > 0 ? formData.specialties : null,
                     genres: formData.genres.length > 0 ? formData.genres : null,
-                    agency_id: formData.agency_id || null
                 })
                 .eq('id', id)
 

@@ -34,7 +34,6 @@ interface ProfileHeaderProps {
         location: string;
         stats: { followers: string; views: string };
         socialLinks?: SocialLinks | null;
-        agencyName?: string | null;
         teams?: TeamInfo[];
         agencies?: AgencyInfo[];
     };
@@ -152,11 +151,6 @@ export default function ProfileHeader({ dancer }: ProfileHeaderProps) {
                                 </Link>
                             ))}
                         </div>
-                    ) : dancer.agencyName ? (
-                        <p className="flex items-center gap-1.5 text-xs md:text-sm text-white/50 mb-2">
-                            <Building2 className="w-3 h-3" />
-                            {dancer.agencyName}
-                        </p>
                     ) : null}
 
                     {/* Teams */}
@@ -174,7 +168,7 @@ export default function ProfileHeader({ dancer }: ProfileHeaderProps) {
                         </div>
                     ) : null}
 
-                    {!dancer.agencyName && (!dancer.agencies || dancer.agencies.length === 0) && (!dancer.teams || dancer.teams.length === 0) && <div className="mb-3" />}
+                    {(!dancer.agencies || dancer.agencies.length === 0) && (!dancer.teams || dancer.teams.length === 0) && <div className="mb-3" />}
 
                     {/* SNS + Action Buttons in one row */}
                     <div className="flex items-center gap-2 mb-4">

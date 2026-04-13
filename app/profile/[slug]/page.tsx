@@ -101,19 +101,6 @@ export default async function ProfilePage({ params }: PageProps) {
         is_primary: da.is_primary,
     }));
 
-    // Fallback to legacy agency_id if no dancer_agencies found
-    let agencyName: string | null = null;
-    if (agencies.length === 0 && dancer.agency_id) {
-        const { data: agency } = await supabase
-            .from('clients')
-            .select('company_name, contact_person')
-            .eq('id', dancer.agency_id)
-            .single();
-        if (agency) {
-            agencyName = agency.company_name || agency.contact_person;
-        }
-    }
-
     // Fetch teams
     const dancerTeams = await getTeamsForDancer(dancer.id);
     const teams = dancerTeams.map((tm: any) => ({
@@ -283,7 +270,6 @@ export default async function ProfilePage({ params }: PageProps) {
         location: dancer.location || 'Seoul',
         stats: { followers: '0', views: '0' },
         socialLinks: dancer.social_links || null,
-        agencyName,
         agencies,
         teams,
         careers: groupedCareers,

@@ -9,7 +9,7 @@ import { slugFromStageName } from '@/lib/slug'
 import { ArrowLeft, Save, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import SocialLinksInput from '@/components/profile/SocialLinksInput'
-import AgencySelector from '@/components/profile/AgencySelector'
+import MultiAgencySelector from '@/components/profile/MultiAgencySelector'
 import type { SocialLinks } from '@/lib/supabase'
 
 const SPECIALTIES = [
@@ -43,8 +43,8 @@ export default function AdminDancerNewPage() {
     genres: [] as string[],
     slug: '',
     is_verified: false,
-    agency_id: null as string | null,
   })
+  const [selectedAgencies, setSelectedAgencies] = useState<{ agency_id: string; name: string; is_primary: boolean }[]>([])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -93,13 +93,22 @@ export default function AdminDancerNewPage() {
           social_links:
             Object.keys(cleanedSocialLinks).length > 0 ? cleanedSocialLinks : null,
           portfolio: [],
-          agency_id: formData.agency_id || null,
         })
         .select('id')
         .single()
 
       if (error) throw error
       if (!inserted?.id) throw new Error('생성 실패')
+
+      if (selectedAgencies.length > 0) {
+        await supabase.from('dancer_agencies').insert(
+          selectedAgencies.map(a => ({
+            dancer_id: inserted.id,
+            agency_id: a.agency_id,
+            is_primary: a.is_primary,
+          }))
+        )
+      }
 
       const { logAdminAction } = await import('@/lib/admin-log')
       logAdminAction({
@@ -259,11 +268,10 @@ export default function AdminDancerNewPage() {
           </div>
           <div>
             <label className="block text-sm font-medium text-white/80 mb-2">소속사 (선택)</label>
-            <AgencySelector
-              value={formData.agency_id}
-              onChange={(agencyId) =>
-                setFormData({ ...formData, agency_id: agencyId })
-              }
+            <MultiAgencySelector
+              dancerId=""
+              value={selectedAgencies}
+              onChange={setSelectedAgencies}
             />
           </div>
         </div>

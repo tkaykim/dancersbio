@@ -10,7 +10,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import ProfilePhotoUpload from '@/components/profile/ProfilePhotoUpload'
 import SocialLinksInput from '@/components/profile/SocialLinksInput'
-import AgencySelector from '@/components/profile/AgencySelector'
+import MultiAgencySelector from '@/components/profile/MultiAgencySelector'
 import PriorityMultiSelect from '@/components/ui/PriorityMultiSelect'
 import type { SocialLinks } from '@/lib/supabase'
 
@@ -54,8 +54,8 @@ export default function CreateProfilePage() {
         specialties: [] as string[],
         genres: [] as string[],
         social_links: {} as SocialLinks,
-        agency_id: null as string | null
     })
+    const [selectedAgencies, setSelectedAgencies] = useState<{ agency_id: string; name: string; is_primary: boolean }[]>([])
 
     useEffect(() => {
         if (!authLoading && !user) {
@@ -112,12 +112,21 @@ export default function CreateProfilePage() {
                     specialties: formData.specialties.length > 0 ? formData.specialties : null,
                     genres: formData.genres.length > 0 ? formData.genres : null,
                     social_links: Object.keys(formData.social_links).some(k => (formData.social_links as any)[k]) ? formData.social_links : null,
-                    agency_id: formData.agency_id || null
                 })
                 .select()
                 .single()
 
             if (error) throw error
+
+            if (data && selectedAgencies.length > 0) {
+                await supabase.from('dancer_agencies').insert(
+                    selectedAgencies.map(a => ({
+                        dancer_id: data.id,
+                        agency_id: a.agency_id,
+                        is_primary: a.is_primary,
+                    }))
+                )
+            }
 
             alert('프로필이 생성되었습니다! 관리자 승인 후 공개됩니다.')
             router.push('/my/profiles')
@@ -248,9 +257,10 @@ export default function CreateProfilePage() {
                                     <label className="block text-sm font-medium text-white/80 mb-2">
                                         소속사 (선택)
                                     </label>
-                                    <AgencySelector
-                                        value={formData.agency_id}
-                                        onChange={(agencyId) => setFormData({ ...formData, agency_id: agencyId })}
+                                    <MultiAgencySelector
+                                        dancerId=""
+                                        value={selectedAgencies}
+                                        onChange={setSelectedAgencies}
                                     />
                                 </div>
                             </div>

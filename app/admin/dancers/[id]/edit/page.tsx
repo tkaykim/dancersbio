@@ -14,7 +14,7 @@ import type { CareerLogPayload } from '@/components/profile/CareerHistoryManager
 import { logAdminAction } from '@/lib/admin-log'
 import SocialLinksInput from '@/components/profile/SocialLinksInput'
 import PriorityMultiSelect from '@/components/ui/PriorityMultiSelect'
-import AgencySelector from '@/components/profile/AgencySelector'
+import MultiAgencySelector from '@/components/profile/MultiAgencySelector'
 import type { SocialLinks } from '@/lib/supabase'
 
 const SPECIALTIES = [
@@ -63,9 +63,9 @@ export default function AdminDancerEditPage({ params }: PageProps) {
     genres: [] as string[],
     slug: '',
     is_verified: false,
-    agency_id: null as string | null,
   })
   const [portfolioMedia, setPortfolioMedia] = useState<MediaItem[]>([])
+  const [selectedAgencies, setSelectedAgencies] = useState<{ agency_id: string; name: string; is_primary: boolean }[]>([])
 
   useEffect(() => {
     if (!isAdmin) return
@@ -99,11 +99,24 @@ export default function AdminDancerEditPage({ params }: PageProps) {
       genres: data.genres || [],
       slug: data.slug || '',
       is_verified: !!data.is_verified,
-      agency_id: data.agency_id || null,
     })
     if (data.portfolio && Array.isArray(data.portfolio)) {
       setPortfolioMedia(data.portfolio)
     }
+
+    // Fetch multi-agency data
+    const { data: agencyData } = await supabase
+      .from('dancer_agencies')
+      .select('agency_id, is_primary, clients:agency_id (id, company_name, contact_person)')
+      .eq('dancer_id', id)
+    if (agencyData) {
+      setSelectedAgencies(agencyData.map((a: any) => ({
+        agency_id: a.agency_id,
+        name: a.clients?.company_name || a.clients?.contact_person || '',
+        is_primary: a.is_primary,
+      })))
+    }
+
     setLoading(false)
   }
 
@@ -142,11 +155,23 @@ export default function AdminDancerEditPage({ params }: PageProps) {
           genres: formData.genres.length > 0 ? formData.genres : null,
           slug: formData.slug.trim() || null,
           is_verified: formData.is_verified,
-          agency_id: formData.agency_id || null,
         })
         .eq('id', id)
 
       if (dancerError) throw dancerError
+
+      // Sync dancer_agencies
+      await supabase.from('dancer_agencies').delete().eq('dancer_id', id)
+      if (selectedAgencies.length > 0) {
+        await supabase.from('dancer_agencies').insert(
+          selectedAgencies.map(a => ({
+            dancer_id: id,
+            agency_id: a.agency_id,
+            is_primary: a.is_primary,
+          }))
+        )
+      }
+
       logAdminAction({
         action: 'update',
         target_type: 'profile',
@@ -324,10 +349,11 @@ export default function AdminDancerEditPage({ params }: PageProps) {
 
         <section className="rounded-xl border border-neutral-800 bg-neutral-900/50 p-6 space-y-4">
           <h2 className="text-lg font-bold text-white">소속 정보</h2>
-          <p className="text-white/40 text-sm">소속사(클라이언트)를 검색하여 연결하세요. 없으면 새로 추가할 수 있습니다.</p>
-          <AgencySelector
-            value={formData.agency_id}
-            onChange={(agencyId) => setFormData({ ...formData, agency_id: agencyId })}
+          <p className="text-white/40 text-sm">소속사를 검색하여 연결하세요. 여러 소속사를 등록할 수 있습니다.</p>
+          <MultiAgencySelector
+            dancerId={id}
+            value={selectedAgencies}
+            onChange={setSelectedAgencies}
           />
         </section>
 
