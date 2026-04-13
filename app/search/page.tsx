@@ -7,7 +7,6 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { useBackWithFallback } from '@/lib/useBackWithFallback'
-import { cn } from '@/lib/utils'
 
 interface DancerSearchResult {
     id: string
@@ -32,8 +31,6 @@ interface TeamSearchResult {
     member_count: number
 }
 
-type SearchTab = 'dancers' | 'teams'
-
 export default function FindYourNamePage() {
     const router = useRouter()
     const handleBack = useBackWithFallback('/')
@@ -42,7 +39,6 @@ export default function FindYourNamePage() {
     const [teamResults, setTeamResults] = useState<TeamSearchResult[]>([])
     const [loading, setLoading] = useState(false)
     const [searched, setSearched] = useState(false)
-    const [activeTab, setActiveTab] = useState<SearchTab>('dancers')
 
     useEffect(() => {
         if (searchQuery.length >= 2) {
@@ -145,77 +141,13 @@ export default function FindYourNamePage() {
                 )}
             </div>
 
-            {/* Tabs */}
-            {searched && (
-                <div className="px-6 flex gap-2 mb-2">
-                    <button
-                        type="button"
-                        onClick={() => setActiveTab('dancers')}
-                        className={cn(
-                            'px-4 py-2 rounded-full text-sm font-medium transition-colors',
-                            activeTab === 'dancers' ? 'bg-primary text-black' : 'bg-neutral-800 text-white/60 hover:text-white'
-                        )}
-                    >
-                        댄서 {results.length > 0 && `(${results.length})`}
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => setActiveTab('teams')}
-                        className={cn(
-                            'px-4 py-2 rounded-full text-sm font-medium transition-colors',
-                            activeTab === 'teams' ? 'bg-primary text-black' : 'bg-neutral-800 text-white/60 hover:text-white'
-                        )}
-                    >
-                        팀 {teamResults.length > 0 && `(${teamResults.length})`}
-                    </button>
-                </div>
-            )}
-
             {/* Results */}
             <div className="px-6 pb-6">
                 {loading ? (
                     <div className="text-center py-12">
                         <div className="text-white/60">검색 중...</div>
                     </div>
-                ) : searched && activeTab === 'teams' ? (
-                    teamResults.length === 0 ? (
-                        <div className="text-center py-12">
-                            <Users className="w-16 h-16 text-white/20 mx-auto mb-4" />
-                            <h3 className="text-white font-semibold mb-2">
-                                &quot;{searchQuery}&quot; 팀 검색 결과가 없습니다
-                            </h3>
-                        </div>
-                    ) : (
-                        <div className="space-y-3">
-                            {teamResults.map((team) => (
-                                <Link
-                                    key={team.id}
-                                    href={`/team/${team.slug || team.id}`}
-                                    className="block bg-neutral-900 border border-neutral-800 rounded-lg p-4 hover:border-primary/50 transition-colors"
-                                >
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-14 h-14 bg-neutral-800 rounded-lg flex-shrink-0 overflow-hidden relative">
-                                            {team.profile_img ? (
-                                                <Image src={team.profile_img} alt={team.name} fill className="object-cover" />
-                                            ) : (
-                                                <div className="w-full h-full flex items-center justify-center">
-                                                    <Users className="w-6 h-6 text-white/30" />
-                                                </div>
-                                            )}
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <div className="flex items-center gap-2">
-                                                <h3 className="text-white font-semibold truncate">{team.name}</h3>
-                                                {team.is_verified && <CheckCircle2 className="w-4 h-4 text-blue-400 fill-blue-900/40 flex-shrink-0" />}
-                                            </div>
-                                            <p className="text-xs text-white/40 mt-0.5">{team.member_count}명</p>
-                                        </div>
-                                    </div>
-                                </Link>
-                            ))}
-                        </div>
-                    )
-                ) : searched && results.length === 0 ? (
+                ) : searched && results.length === 0 && teamResults.length === 0 ? (
                     <div className="text-center py-12">
                         <User className="w-16 h-16 text-white/20 mx-auto mb-4" />
                         <h3 className="text-white font-semibold mb-2">
@@ -232,79 +164,121 @@ export default function FindYourNamePage() {
                             프로필 만들기
                         </button>
                     </div>
-                ) : (
-                    <div className="space-y-3">
-                        {results.map((dancer) => {
-                            const similarity = getSimilarityLabel(dancer.similarity_score)
-                            return (
-                                <Link
-                                    key={dancer.id}
-                                    href={`/profile/${dancer.slug || dancer.id}`}
-                                    className="block bg-neutral-900 border border-neutral-800 rounded-lg p-4 hover:border-primary/50 transition-colors"
-                                >
-                                    <div className="flex items-start gap-4">
-                                        {/* Profile Image */}
-                                        <div className="w-16 h-16 bg-neutral-800 rounded-lg flex-shrink-0 flex items-center justify-center overflow-hidden">
-                                            {dancer.profile_img ? (
-                                                <img
-                                                    src={dancer.profile_img}
-                                                    alt={dancer.stage_name}
-                                                    className="w-full h-full object-cover"
-                                                />
-                                            ) : (
-                                                <User className="w-8 h-8 text-white/40" />
-                                            )}
-                                        </div>
-
-                                        {/* Info */}
-                                        <div className="flex-1 min-w-0">
-                                            <div className="flex items-center gap-2 mb-1">
-                                                <h3 className="text-white font-semibold truncate">
-                                                    {dancer.stage_name}
-                                                    {dancer.korean_name && (
-                                                        <span className="text-white/60 ml-2 text-sm">
-                                                            {dancer.korean_name}
-                                                        </span>
-                                                    )}
-                                                </h3>
-                                                {dancer.is_verified && (
-                                                    <CheckCircle2 className="w-4 h-4 text-primary flex-shrink-0" />
-                                                )}
-                                            </div>
-
-                                            {/* Similarity Score */}
-                                            <div className="flex items-center gap-2 mb-2">
-                                                <span className={`text-xs font-medium ${similarity.color}`}>
-                                                    {similarity.label}
-                                                </span>
-                                                <span className="text-white/40 text-xs">
-                                                    {Math.round(dancer.similarity_score * 100)}% 일치
-                                                </span>
-                                            </div>
-
-                                            {/* Genres */}
-                                            {dancer.genres && dancer.genres.length > 0 && (
-                                                <div className="flex flex-wrap gap-1">
-                                                    {dancer.genres.slice(0, 3).map((genre) => (
-                                                        <span
-                                                            key={genre}
-                                                            className="px-2 py-0.5 bg-neutral-800 text-white/60 text-xs rounded"
-                                                        >
-                                                            {genre}
-                                                        </span>
-                                                    ))}
-                                                </div>
-                                            )}
-                                        </div>
+                ) : searched ? (
+                    <div className="space-y-6">
+                        {/* Team results */}
+                        {teamResults.length > 0 && (
+                            <div>
+                                {results.length > 0 && (
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <Users className="w-4 h-4 text-white/40" />
+                                        <span className="text-xs font-medium text-white/40 uppercase tracking-wider">팀</span>
                                     </div>
-                                </Link>
-                            )
-                        })}
+                                )}
+                                <div className="space-y-2">
+                                    {teamResults.map((team) => (
+                                        <Link
+                                            key={team.id}
+                                            href={`/team/${team.slug || team.id}`}
+                                            className="block bg-neutral-900 border border-neutral-800 rounded-lg p-4 hover:border-primary/50 transition-colors"
+                                        >
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-14 h-14 bg-neutral-800 rounded-lg flex-shrink-0 overflow-hidden relative">
+                                                    {team.profile_img ? (
+                                                        <Image src={team.profile_img} alt={team.name} fill className="object-cover" />
+                                                    ) : (
+                                                        <div className="w-full h-full flex items-center justify-center">
+                                                            <Users className="w-6 h-6 text-white/30" />
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-center gap-2">
+                                                        <h3 className="text-white font-semibold truncate">{team.name}</h3>
+                                                        {team.is_verified && <CheckCircle2 className="w-4 h-4 text-blue-400 fill-blue-900/40 flex-shrink-0" />}
+                                                        <span className="px-1.5 py-0.5 bg-white/5 text-white/40 text-[10px] rounded font-medium flex-shrink-0">팀</span>
+                                                    </div>
+                                                    <p className="text-xs text-white/40 mt-0.5">{team.member_count}명</p>
+                                                </div>
+                                            </div>
+                                        </Link>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Dancer results */}
+                        {results.length > 0 && (
+                            <div>
+                                {teamResults.length > 0 && (
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <User className="w-4 h-4 text-white/40" />
+                                        <span className="text-xs font-medium text-white/40 uppercase tracking-wider">댄서</span>
+                                    </div>
+                                )}
+                                <div className="space-y-2">
+                                    {results.map((dancer) => {
+                                        const similarity = getSimilarityLabel(dancer.similarity_score)
+                                        return (
+                                            <Link
+                                                key={dancer.id}
+                                                href={`/profile/${dancer.slug || dancer.id}`}
+                                                className="block bg-neutral-900 border border-neutral-800 rounded-lg p-4 hover:border-primary/50 transition-colors"
+                                            >
+                                                <div className="flex items-start gap-4">
+                                                    <div className="w-14 h-14 bg-neutral-800 rounded-lg flex-shrink-0 flex items-center justify-center overflow-hidden">
+                                                        {dancer.profile_img ? (
+                                                            <img
+                                                                src={dancer.profile_img}
+                                                                alt={dancer.stage_name}
+                                                                className="w-full h-full object-cover"
+                                                            />
+                                                        ) : (
+                                                            <User className="w-7 h-7 text-white/30" />
+                                                        )}
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="flex items-center gap-2 mb-1">
+                                                            <h3 className="text-white font-semibold truncate">
+                                                                {dancer.stage_name}
+                                                                {dancer.korean_name && (
+                                                                    <span className="text-white/60 ml-2 text-sm">{dancer.korean_name}</span>
+                                                                )}
+                                                            </h3>
+                                                            {dancer.is_verified && (
+                                                                <CheckCircle2 className="w-4 h-4 text-primary flex-shrink-0" />
+                                                            )}
+                                                        </div>
+                                                        <div className="flex items-center gap-2 mb-2">
+                                                            <span className={`text-xs font-medium ${similarity.color}`}>
+                                                                {similarity.label}
+                                                            </span>
+                                                            <span className="text-white/40 text-xs">
+                                                                {Math.round(dancer.similarity_score * 100)}% 일치
+                                                            </span>
+                                                        </div>
+                                                        {dancer.genres && dancer.genres.length > 0 && (
+                                                            <div className="flex flex-wrap gap-1">
+                                                                {dancer.genres.slice(0, 3).map((genre) => (
+                                                                    <span key={genre} className="px-2 py-0.5 bg-neutral-800 text-white/60 text-xs rounded">
+                                                                        {genre}
+                                                                    </span>
+                                                                ))}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </Link>
+                                        )
+                                    })}
+                                </div>
+                            </div>
+                        )}
                     </div>
-                )}
+                ) : null}
 
                 {/* Create New Profile CTA */}
-                {searched && results.length > 0 && (
+                {searched && (results.length > 0 || teamResults.length > 0) && (
                     <div className="mt-6 p-4 bg-neutral-900/50 border border-neutral-800 rounded-lg">
                         <p className="text-white/60 text-sm mb-3">
                             찾으시는 프로필이 없나요?
