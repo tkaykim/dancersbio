@@ -13,6 +13,7 @@ import PortfolioMediaManager from '@/components/portfolio/PortfolioMediaManager'
 import CareerHistoryManager from '@/components/profile/CareerHistoryManager'
 import SocialLinksInput from '@/components/profile/SocialLinksInput'
 import AgencySelector from '@/components/profile/AgencySelector'
+import MultiAgencySelector from '@/components/profile/MultiAgencySelector'
 import PriorityMultiSelect from '@/components/ui/PriorityMultiSelect'
 import type { SocialLinks } from '@/lib/supabase'
 
@@ -63,6 +64,8 @@ export default function ProfileEditPage({ params }: PageProps) {
         agency_id: null as string | null
     })
     const [portfolioMedia, setPortfolioMedia] = useState<MediaItem[]>([])
+    const [selectedAgencies, setSelectedAgencies] = useState<{ agency_id: string; name: string; is_primary: boolean }[]>([])
+    const [dancerTeams, setDancerTeams] = useState<{ id: string; name: string; slug: string | null }[]>([])
 
     useEffect(() => {
         if (!authLoading && !user) {
@@ -104,6 +107,29 @@ export default function ProfileEditPage({ params }: PageProps) {
             })
             if (data.portfolio && Array.isArray(data.portfolio)) {
                 setPortfolioMedia(data.portfolio)
+            }
+
+            // Fetch multi-agency data
+            const { data: agencyData } = await supabase
+                .from('dancer_agencies')
+                .select('agency_id, is_primary, clients:agency_id (id, company_name, contact_person)')
+                .eq('dancer_id', id)
+            if (agencyData) {
+                setSelectedAgencies(agencyData.map((a: any) => ({
+                    agency_id: a.agency_id,
+                    name: a.clients?.company_name || a.clients?.contact_person || '',
+                    is_primary: a.is_primary,
+                })))
+            }
+
+            // Fetch team memberships
+            const { data: teamData } = await supabase
+                .from('team_members')
+                .select('teams:team_id (id, name, slug)')
+                .eq('dancer_id', id)
+                .eq('is_active', true)
+            if (teamData) {
+                setDancerTeams(teamData.map((t: any) => t.teams).filter(Boolean))
             }
         } else {
             alert('프로필을 찾을 수 없습니다.')
@@ -151,6 +177,18 @@ export default function ProfileEditPage({ params }: PageProps) {
                 .eq('id', id)
 
             if (dancerError) throw dancerError
+
+            // Sync dancer_agencies
+            await supabase.from('dancer_agencies').delete().eq('dancer_id', id)
+            if (selectedAgencies.length > 0) {
+                await supabase.from('dancer_agencies').insert(
+                    selectedAgencies.map(a => ({
+                        dancer_id: id,
+                        agency_id: a.agency_id,
+                        is_primary: a.is_primary,
+                    }))
+                )
+            }
 
             alert('프로필이 저장되었습니다!')
             router.push(`/profile/${dancer.slug || id}`)
@@ -264,15 +302,31 @@ export default function ProfileEditPage({ params }: PageProps) {
                     </div>
                 </div>
 
-                {/* Agency */}
+                {/* Agency (Multi) */}
                 <div className="space-y-4">
-                    <h2 className="text-lg font-bold text-white">소속 정보</h2>
-                    <p className="text-white/40 text-sm">소속사가 있다면 검색하여 선택하세요. 없으면 새로 추가할 수 있습니다.</p>
-                    <AgencySelector
-                        value={formData.agency_id}
-                        onChange={(agencyId) => setFormData({ ...formData, agency_id: agencyId })}
+                    <h2 className="text-lg font-bold text-white">소속사</h2>
+                    <p className="text-white/40 text-sm">소속사가 있다면 검색하여 추가하세요. 여러 소속사를 등록할 수 있습니다.</p>
+                    <MultiAgencySelector
+                        dancerId={id}
+                        value={selectedAgencies}
+                        onChange={setSelectedAgencies}
                     />
                 </div>
+
+                {/* Teams (read-only display) */}
+                {dancerTeams.length > 0 && (
+                    <div className="space-y-4">
+                        <h2 className="text-lg font-bold text-white">소속 팀</h2>
+                        <p className="text-white/40 text-sm">팀 가입/탈퇴는 팀 관리 페이지에서 진행합니다.</p>
+                        <div className="space-y-2">
+                            {dancerTeams.map(t => (
+                                <div key={t.id} className="flex items-center gap-3 px-4 py-3 bg-neutral-900 border border-neutral-800 rounded-lg">
+                                    <span className="text-sm text-white">{t.name}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
 
                 {/* Specialties */}
                 <div className="space-y-4">

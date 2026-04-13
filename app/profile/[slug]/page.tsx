@@ -8,6 +8,8 @@ import { notFound } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { isEmbargoActive, isProjectPublic } from "@/lib/utils";
 import { extractYouTubeId, getYouTubeThumbnail } from "@/lib/youtube";
+import { getTeamsForDancer } from "@/lib/teams";
+import { getAgenciesForDancer } from "@/lib/agencies";
 import type { Metadata } from "next";
 
 interface PageProps {
@@ -91,8 +93,17 @@ export default async function ProfilePage({ params }: PageProps) {
         return notFound();
     }
 
+    // Fetch agencies (N:M via dancer_agencies)
+    const dancerAgencies = await getAgenciesForDancer(dancer.id);
+    const agencies = dancerAgencies.map(da => ({
+        id: da.agency_id,
+        name: da.clients.company_name || da.clients.contact_person,
+        is_primary: da.is_primary,
+    }));
+
+    // Fallback to legacy agency_id if no dancer_agencies found
     let agencyName: string | null = null;
-    if (dancer.agency_id) {
+    if (agencies.length === 0 && dancer.agency_id) {
         const { data: agency } = await supabase
             .from('clients')
             .select('company_name, contact_person')
@@ -102,6 +113,16 @@ export default async function ProfilePage({ params }: PageProps) {
             agencyName = agency.company_name || agency.contact_person;
         }
     }
+
+    // Fetch teams
+    const dancerTeams = await getTeamsForDancer(dancer.id);
+    const teams = dancerTeams.map((tm: any) => ({
+        id: tm.teams.id,
+        name: tm.teams.name,
+        slug: tm.teams.slug,
+        profile_img: tm.teams.profile_img,
+        is_verified: tm.teams.is_verified,
+    }));
 
     // Fetch career data
     const { data: careers, error: careersError } = await supabase
@@ -263,12 +284,14 @@ export default async function ProfilePage({ params }: PageProps) {
         stats: { followers: '0', views: '0' },
         socialLinks: dancer.social_links || null,
         agencyName,
+        agencies,
+        teams,
         careers: groupedCareers,
         media: Array.isArray(dancer.portfolio) ? dancer.portfolio.map((item: any) => ({
             id: item.id,
             type: item.type,
             url: item.url,
-            thumbnail: item.thumbnail || item.url // Use url as thumbnail for images if not provided
+            thumbnail: item.thumbnail || item.url
         })) : []
     };
 

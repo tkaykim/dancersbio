@@ -15,7 +15,7 @@ export default function LayoutSwitcher({ children }: { children: React.ReactNode
     return <>{children}</>
   }
 
-  if (pathname.startsWith('/profile')) {
+  if (pathname.startsWith('/profile') || pathname.startsWith('/team/') || pathname.startsWith('/agency/')) {
     return <>{children}</>
   }
 

@@ -62,6 +62,11 @@ export default function MyPage() {
             badge: totalProfiles > 0 ? `${totalProfiles}개` : undefined
         },
         {
+            label: '내 팀 관리',
+            href: '/my/teams',
+            icon: Users,
+        },
+        {
             label: '받은 제안',
             href: '/my/proposals?tab=inbox',
             icon: Inbox,

@@ -13,6 +13,8 @@
 *   **Projects** 1 : N **Proposals**
 *   **Teams** N : M **Dancers** (via `team_members` - 한 댄서는 여러 팀 소속 가능)
 *   **Teams** 1 : 1 **Users** (Team Leader/Owner)
+*   **Teams** 1 : N **TeamCareers** (팀 단위 경력)
+*   **Dancers** N : M **Clients(agency)** (via `dancer_agencies` - 한 댄서는 여러 소속사에 소속 가능)
 
 ---
 
@@ -192,11 +194,15 @@ JSONB를 활용하여 다양한 활동 유형을 유연하게 저장합니다.
 | :--- | :--- | :--- | :--- |
 | `id` | uuid | No | PK |
 | `name` | text | No | 팀 이름 (예: Just Jerk, BEBE, LaChica) |
+| `slug` | text | Yes | URL slug (unique) |
 | `leader_id` | uuid | Yes | `users.id` (팀 리더) |
 | `profile_img` | text | Yes | 팀 대표 이미지 |
 | `bio` | text | Yes | 팀 소개 |
 | `founded_date` | date | Yes | 창단일 |
 | `location` | text | Yes | 주 활동 지역 |
+| `social_links` | jsonb | Yes | SNS 링크 `{ instagram?, twitter?, youtube? }` |
+| `portfolio` | jsonb | Yes | 포트폴리오 미디어 배열 (dancers.portfolio와 동일 구조) |
+| `representative_video` | text | Yes | 대표영상 URL (YouTube 등) |
 | `is_verified` | boolean | No | 공식 인증 여부 (default: false) |
 | `created_at` | timestamptz | No | 등록일 |
 
@@ -214,6 +220,36 @@ JSONB를 활용하여 다양한 활동 유형을 유연하게 저장합니다.
 | `created_at` | timestamptz | No | 등록일 |
 
 **Unique Constraint**: `(team_id, dancer_id)` - 한 댄서가 같은 팀에 중복 등록 불가
+
+### 3.8.1. `team_careers` (팀 경력)
+팀 단위의 경력/활동 이력을 저장합니다. `careers` 테이블과 유사한 구조입니다.
+
+| Column | Type | Nullable | Description |
+| :--- | :--- | :--- | :--- |
+| `id` | int8 | No | PK (자동 증가) |
+| `team_id` | uuid | No | FK `teams` |
+| `type` | text | No | 'choreo', 'performance', 'award' 등 |
+| `title` | text | No | 활동 제목 |
+| `date` | text | Yes | 날짜/연도 |
+| `details` | jsonb | Yes | 상세 데이터 (youtube_url, link 등) |
+| `is_public` | boolean | No | 공개 여부 (default: false) |
+| `is_representative` | boolean | No | 대표 경력 여부 (default: false) |
+| `sort_order` | integer | Yes | 정렬 순서 |
+| `created_at` | timestamptz | No | 등록일 |
+
+### 3.8.2. `dancer_agencies` (댄서-소속사 N:M)
+한 댄서가 여러 소속사에 소속될 수 있도록 하는 junction 테이블입니다.
+
+| Column | Type | Nullable | Description |
+| :--- | :--- | :--- | :--- |
+| `id` | uuid | No | PK |
+| `dancer_id` | uuid | No | FK `dancers` |
+| `agency_id` | uuid | No | FK `clients` (type='agency') |
+| `role` | text | Yes | 소속 역할 (선택) |
+| `is_primary` | boolean | No | 주 소속사 여부 (default: false) |
+| `created_at` | timestamptz | No | 등록일 |
+
+**Unique Constraint**: `(dancer_id, agency_id)` - 한 댄서가 같은 소속사에 중복 등록 불가
 
 ### 3.9. `profile_requests` (프로필 권한 요청)
 프로필 소유권(claim) 또는 매니저 권한 요청을 관리자가 승인/거절하는 워크플로우입니다.

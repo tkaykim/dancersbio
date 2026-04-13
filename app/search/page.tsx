@@ -2,10 +2,12 @@
 
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
-import { ArrowLeft, Search, User, CheckCircle2, Plus } from 'lucide-react'
+import { ArrowLeft, Search, User, CheckCircle2, Plus, Users } from 'lucide-react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { useBackWithFallback } from '@/lib/useBackWithFallback'
+import { cn } from '@/lib/utils'
 
 interface DancerSearchResult {
     id: string
@@ -21,13 +23,26 @@ interface DancerSearchResult {
     slug: string | null
 }
 
+interface TeamSearchResult {
+    id: string
+    name: string
+    slug: string | null
+    profile_img: string | null
+    is_verified: boolean
+    member_count: number
+}
+
+type SearchTab = 'dancers' | 'teams'
+
 export default function FindYourNamePage() {
     const router = useRouter()
     const handleBack = useBackWithFallback('/')
     const [searchQuery, setSearchQuery] = useState('')
     const [results, setResults] = useState<DancerSearchResult[]>([])
+    const [teamResults, setTeamResults] = useState<TeamSearchResult[]>([])
     const [loading, setLoading] = useState(false)
     const [searched, setSearched] = useState(false)
+    const [activeTab, setActiveTab] = useState<SearchTab>('dancers')
 
     useEffect(() => {
         if (searchQuery.length >= 2) {
@@ -37,6 +52,7 @@ export default function FindYourNamePage() {
             return () => clearTimeout(debounce)
         } else {
             setResults([])
+            setTeamResults([])
             setSearched(false)
         }
     }, [searchQuery])
@@ -46,7 +62,7 @@ export default function FindYourNamePage() {
         setSearched(true)
 
         try {
-            // Use the fuzzy search function
+            // Dancer search
             const { data, error } = await supabase.rpc('search_dancers_fuzzy', {
                 search_query: searchQuery,
                 similarity_threshold: 0.2
@@ -55,6 +71,22 @@ export default function FindYourNamePage() {
             if (error) throw error
             const verified = (data || []).filter((d: any) => d.is_verified !== false)
             setResults(verified)
+
+            // Team search
+            const { data: teams } = await supabase
+                .from('teams')
+                .select('id, name, slug, profile_img, is_verified, team_members(id)')
+                .eq('is_verified', true)
+                .ilike('name', `%${searchQuery}%`)
+                .order('name', { ascending: true })
+                .limit(20)
+
+            if (teams) {
+                setTeamResults(teams.map((t: any) => ({
+                    ...t,
+                    member_count: t.team_members?.length || 0,
+                })))
+            }
         } catch (err) {
             console.error('Search error:', err)
             setResults([])
@@ -113,12 +145,76 @@ export default function FindYourNamePage() {
                 )}
             </div>
 
+            {/* Tabs */}
+            {searched && (
+                <div className="px-6 flex gap-2 mb-2">
+                    <button
+                        type="button"
+                        onClick={() => setActiveTab('dancers')}
+                        className={cn(
+                            'px-4 py-2 rounded-full text-sm font-medium transition-colors',
+                            activeTab === 'dancers' ? 'bg-primary text-black' : 'bg-neutral-800 text-white/60 hover:text-white'
+                        )}
+                    >
+                        댄서 {results.length > 0 && `(${results.length})`}
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => setActiveTab('teams')}
+                        className={cn(
+                            'px-4 py-2 rounded-full text-sm font-medium transition-colors',
+                            activeTab === 'teams' ? 'bg-primary text-black' : 'bg-neutral-800 text-white/60 hover:text-white'
+                        )}
+                    >
+                        팀 {teamResults.length > 0 && `(${teamResults.length})`}
+                    </button>
+                </div>
+            )}
+
             {/* Results */}
             <div className="px-6 pb-6">
                 {loading ? (
                     <div className="text-center py-12">
                         <div className="text-white/60">검색 중...</div>
                     </div>
+                ) : searched && activeTab === 'teams' ? (
+                    teamResults.length === 0 ? (
+                        <div className="text-center py-12">
+                            <Users className="w-16 h-16 text-white/20 mx-auto mb-4" />
+                            <h3 className="text-white font-semibold mb-2">
+                                &quot;{searchQuery}&quot; 팀 검색 결과가 없습니다
+                            </h3>
+                        </div>
+                    ) : (
+                        <div className="space-y-3">
+                            {teamResults.map((team) => (
+                                <Link
+                                    key={team.id}
+                                    href={`/team/${team.slug || team.id}`}
+                                    className="block bg-neutral-900 border border-neutral-800 rounded-lg p-4 hover:border-primary/50 transition-colors"
+                                >
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-14 h-14 bg-neutral-800 rounded-lg flex-shrink-0 overflow-hidden relative">
+                                            {team.profile_img ? (
+                                                <Image src={team.profile_img} alt={team.name} fill className="object-cover" />
+                                            ) : (
+                                                <div className="w-full h-full flex items-center justify-center">
+                                                    <Users className="w-6 h-6 text-white/30" />
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-center gap-2">
+                                                <h3 className="text-white font-semibold truncate">{team.name}</h3>
+                                                {team.is_verified && <CheckCircle2 className="w-4 h-4 text-blue-400 fill-blue-900/40 flex-shrink-0" />}
+                                            </div>
+                                            <p className="text-xs text-white/40 mt-0.5">{team.member_count}명</p>
+                                        </div>
+                                    </div>
+                                </Link>
+                            ))}
+                        </div>
+                    )
                 ) : searched && results.length === 0 ? (
                     <div className="text-center py-12">
                         <User className="w-16 h-16 text-white/20 mx-auto mb-4" />
