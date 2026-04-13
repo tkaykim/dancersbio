@@ -7,6 +7,7 @@ import MediaGrid from "@/components/profile/MediaGrid";
 import ViralFooterCard from "@/components/layout/ViralFooterCard";
 import { notFound } from "next/navigation";
 import { getTeamBySlug, getTeamCareers } from "@/lib/teams";
+import { getAgenciesForTeam } from "@/lib/agencies";
 import { extractYouTubeId, getYouTubeThumbnail } from "@/lib/youtube";
 import type { Metadata } from "next";
 
@@ -70,6 +71,13 @@ export default async function TeamProfilePage({ params }: PageProps) {
     }
 
     const careers = await getTeamCareers(team.id);
+
+    const teamAgencies = await getAgenciesForTeam(team.id);
+    const agencies = teamAgencies.map(ta => ({
+        id: ta.agency_id,
+        name: ta.clients.company_name || ta.clients.contact_person,
+        is_primary: ta.is_primary,
+    }));
 
     const activeMembers = (team.team_members || []).filter(m => m.is_active);
 
@@ -163,7 +171,7 @@ export default async function TeamProfilePage({ params }: PageProps) {
     return (
         <div className="min-h-screen bg-background text-foreground">
             <main className="w-full max-w-[960px] mx-auto pb-20">
-                <TeamProfileHeader team={team} memberCount={activeMembers.length} />
+                <TeamProfileHeader team={team} memberCount={activeMembers.length} agencies={agencies} />
                 <TeamRepresentativeVideo url={team.representative_video} teamName={team.name} />
                 <ProfileHighlights highlights={highlights} />
                 <TeamMemberList members={activeMembers} />

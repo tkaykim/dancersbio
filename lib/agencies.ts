@@ -1,5 +1,5 @@
 import { supabase } from './supabase'
-import type { DancerAgencyWithDetails } from './supabase'
+import type { DancerAgencyWithDetails, TeamAgencyWithDetails } from './supabase'
 
 export async function getAgenciesForDancer(dancerId: string): Promise<DancerAgencyWithDetails[]> {
     const { data, error } = await supabase
@@ -38,6 +38,20 @@ export async function getDancersForAgency(agencyId: string) {
 
     if (error) return []
     return data || []
+}
+
+export async function getAgenciesForTeam(teamId: string): Promise<TeamAgencyWithDetails[]> {
+    const { data, error } = await supabase
+        .from('team_agencies')
+        .select(`
+            *,
+            clients:agency_id (id, company_name, contact_person, logo_url)
+        `)
+        .eq('team_id', teamId)
+        .order('is_primary', { ascending: false })
+
+    if (error) return []
+    return (data || []) as TeamAgencyWithDetails[]
 }
 
 export async function getAllAgencies() {

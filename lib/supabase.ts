@@ -101,7 +101,25 @@ export interface TeamWithMembers extends Team {
     })[]
 }
 
+export interface TeamAgency {
+    id: string
+    team_id: string
+    agency_id: string
+    role: string | null
+    is_primary: boolean
+    created_at: string
+}
+
 export interface DancerAgencyWithDetails extends DancerAgency {
+    clients: {
+        id: string
+        company_name: string | null
+        contact_person: string
+        logo_url: string | null
+    }
+}
+
+export interface TeamAgencyWithDetails extends TeamAgency {
     clients: {
         id: string
         company_name: string | null

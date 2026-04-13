@@ -12,6 +12,7 @@ import ProfilePhotoUpload from '@/components/profile/ProfilePhotoUpload'
 import PortfolioMediaManager from '@/components/portfolio/PortfolioMediaManager'
 import TeamMemberManager from '@/components/team/TeamMemberManager'
 import TeamCareerManager from '@/components/team/TeamCareerManager'
+import MultiAgencySelector from '@/components/profile/MultiAgencySelector'
 
 interface MediaItem {
     id: string
@@ -44,6 +45,7 @@ export default function TeamEditPage({ params }: PageProps) {
         representative_video: '',
     })
     const [portfolioMedia, setPortfolioMedia] = useState<MediaItem[]>([])
+    const [selectedAgencies, setSelectedAgencies] = useState<{ agency_id: string; name: string; is_primary: boolean }[]>([])
 
     useEffect(() => {
         if (!authLoading && !user) router.push('/auth/signin')
@@ -92,6 +94,19 @@ export default function TeamEditPage({ params }: PageProps) {
         if (data.portfolio && Array.isArray(data.portfolio)) {
             setPortfolioMedia(data.portfolio)
         }
+
+        const { data: agencyData } = await supabase
+            .from('team_agencies')
+            .select('agency_id, is_primary, clients:agency_id (id, company_name, contact_person)')
+            .eq('team_id', id)
+        if (agencyData) {
+            setSelectedAgencies(agencyData.map((a: any) => ({
+                agency_id: a.agency_id,
+                name: a.clients?.company_name || a.clients?.contact_person || '',
+                is_primary: a.is_primary,
+            })))
+        }
+
         setLoading(false)
     }
 
@@ -124,6 +139,18 @@ export default function TeamEditPage({ params }: PageProps) {
                 .eq('id', id)
 
             if (error) throw error
+
+            await supabase.from('team_agencies').delete().eq('team_id', id)
+            if (selectedAgencies.length > 0) {
+                await supabase.from('team_agencies').insert(
+                    selectedAgencies.map(a => ({
+                        team_id: id,
+                        agency_id: a.agency_id,
+                        is_primary: a.is_primary,
+                    }))
+                )
+            }
+
             alert('팀 정보가 저장되었습니다!')
             router.push(`/team/${team.slug || id}`)
         } catch (err: any) {
@@ -210,6 +237,16 @@ export default function TeamEditPage({ params }: PageProps) {
                             className="w-full px-4 py-3 bg-neutral-900 border border-neutral-800 rounded-lg text-white focus:outline-none focus:border-primary"
                         />
                     </div>
+                </div>
+
+                <div className="space-y-4">
+                    <h2 className="text-lg font-bold text-white">소속사</h2>
+                    <p className="text-white/40 text-sm">소속사가 있다면 검색하여 추가하세요. 여러 소속사를 등록할 수 있습니다.</p>
+                    <MultiAgencySelector
+                        dancerId={id}
+                        value={selectedAgencies}
+                        onChange={setSelectedAgencies}
+                    />
                 </div>
 
                 <div className="space-y-4">

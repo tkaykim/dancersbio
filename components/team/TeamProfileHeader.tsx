@@ -1,6 +1,7 @@
 "use client";
 
-import { CheckCircle2, MapPin, Share2, ChevronLeft, Users, Calendar } from "lucide-react";
+import { CheckCircle2, MapPin, Share2, ChevronLeft, Users, Calendar, Building2 } from "lucide-react";
+import Link from "next/link";
 import Image from "next/image";
 import { useBackWithFallback } from "@/lib/useBackWithFallback";
 import { useToast } from "@/components/push/ToastContext";
@@ -18,12 +19,19 @@ function getSocialUrl(platform: string, value: string): string {
     }
 }
 
+interface AgencyInfo {
+    id: string;
+    name: string;
+    is_primary: boolean;
+}
+
 interface TeamProfileHeaderProps {
     team: Team;
     memberCount: number;
+    agencies?: AgencyInfo[];
 }
 
-export default function TeamProfileHeader({ team, memberCount }: TeamProfileHeaderProps) {
+export default function TeamProfileHeader({ team, memberCount, agencies }: TeamProfileHeaderProps) {
     const { showToast } = useToast();
     const handleBack = useBackWithFallback("/");
     const socialLinks = team.social_links;
@@ -90,6 +98,21 @@ export default function TeamProfileHeader({ team, memberCount }: TeamProfileHead
                             <CheckCircle2 className="w-5 h-5 md:w-7 md:h-7 text-blue-400 fill-blue-900/40" />
                         )}
                     </h1>
+
+                    {agencies && agencies.length > 0 && (
+                        <div className="flex flex-wrap items-center justify-center gap-1.5 mb-2">
+                            {agencies.map((agency) => (
+                                <Link
+                                    key={agency.id}
+                                    href={`/agency/${agency.id}`}
+                                    className="flex items-center gap-1 text-xs md:text-sm text-white/50 hover:text-white/70 transition-colors"
+                                >
+                                    <Building2 className="w-3 h-3" />
+                                    {agency.name}
+                                </Link>
+                            ))}
+                        </div>
+                    )}
 
                     {team.bio && (
                         <p className="text-xs md:text-sm text-white/60 mb-2 max-w-md line-clamp-2">
