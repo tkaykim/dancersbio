@@ -95,21 +95,25 @@ export default async function ProfilePage({ params }: PageProps) {
 
     // Fetch agencies (N:M via dancer_agencies)
     const dancerAgencies = await getAgenciesForDancer(dancer.id);
-    const agencies = dancerAgencies.map(da => ({
-        id: da.agency_id,
-        name: da.clients.company_name || da.clients.contact_person,
-        is_primary: da.is_primary,
-    }));
+    const agencies = dancerAgencies
+        .filter(da => da.clients)
+        .map(da => ({
+            id: da.agency_id,
+            name: da.clients.company_name || da.clients.contact_person,
+            is_primary: da.is_primary,
+        }));
 
     // Fetch teams
     const dancerTeams = await getTeamsForDancer(dancer.id);
-    const teams = dancerTeams.map((tm: any) => ({
-        id: tm.teams.id,
-        name: tm.teams.name,
-        slug: tm.teams.slug,
-        profile_img: tm.teams.profile_img,
-        is_verified: tm.teams.is_verified,
-    }));
+    const teams = dancerTeams
+        .filter((tm: any) => tm.teams)
+        .map((tm: any) => ({
+            id: tm.teams.id,
+            name: tm.teams.name,
+            slug: tm.teams.slug,
+            profile_img: tm.teams.profile_img,
+            is_verified: tm.teams.is_verified,
+        }));
 
     // Fetch career data
     const { data: careers, error: careersError } = await supabase

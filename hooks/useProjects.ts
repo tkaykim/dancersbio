@@ -22,7 +22,7 @@ export function useProjects() {
                 .eq('user_id', user.id)
             setArchivedProjectIds(new Set((archived || []).map((r: { project_id: string }) => r.project_id)))
 
-            // 1. Projects I own (삭제된 것 제외)
+            // 1. Projects I own (삭제된 것 제외, 서브프로젝트는 부모 상세에서 표시)
             const { data: owned } = await supabase
                 .from('projects')
                 .select(`
@@ -33,6 +33,7 @@ export function useProjects() {
                 `)
                 .eq('owner_id', user.id)
                 .is('deleted_at', null)
+                .is('parent_project_id', null)
                 .order('created_at', { ascending: false })
 
             // 2. Projects where I have an accepted proposal (as a dancer)

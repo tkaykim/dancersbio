@@ -16,6 +16,7 @@ import { useBackWithFallback } from '@/lib/useBackWithFallback'
 import { getRelativeTime, getProjectStatuses, isEmbargoActive, formatEmbargoDate, getKSTDateString, isProjectPublic } from '@/lib/utils'
 import type { Project, ConfirmationStatus, ProgressStatus } from '@/lib/types'
 import TaskManager from '@/components/projects/TaskManager'
+import DrawerAddSubProject from '@/components/projects/DrawerAddSubProject'
 import { ensurePmCareer } from '@/lib/ensure-pm-career'
 import { syncProjectStatusIfNoActiveProposals } from '@/lib/sync-project-status-on-proposal'
 import { triggerPushEvent } from '@/lib/trigger-push-event'
@@ -267,7 +268,7 @@ export default function ProjectDetailPage() {
     }
 
     const [myDancerIds, setMyDancerIds] = useState<string[]>([])
-    const [childProjects, setChildProjects] = useState<Array<{ id: string; title: string; confirmation_status?: string; progress_status?: string; proposals?: Array<{ id: string; dancer_id: string; status: string; dancers?: { stage_name: string } }> }>>([])
+    const [childProjects, setChildProjects] = useState<Array<{ id: string; title: string; confirmation_status?: string; progress_status?: string; budget?: number | null; proposals?: Array<{ id: string; dancer_id: string; fee?: number | null; status: string; dancers?: { stage_name: string } }> }>>([])
 
     useEffect(() => {
         if (!user) return
@@ -275,21 +276,24 @@ export default function ProjectDetailPage() {
             .then(({ data }) => setMyDancerIds((data || []).map((d: { id: string }) => d.id)))
     }, [user])
 
+    const [showSubProjectDrawer, setShowSubProjectDrawer] = useState(false)
+
     useEffect(() => {
-        if (!project || project.parent_project_id != null) {
+        if (!project) {
             setChildProjects([])
             return
         }
         supabase
             .from('projects')
             .select(`
-                id, title, confirmation_status, progress_status,
-                proposals (id, dancer_id, status, dancers (id, stage_name))
+                id, title, confirmation_status, progress_status, budget,
+                proposals (id, dancer_id, fee, status, dancers (id, stage_name))
             `)
             .eq('parent_project_id', project.id)
+            .is('deleted_at', null)
             .order('created_at', { ascending: false })
             .then(({ data }) => setChildProjects((data as any) || []))
-    }, [project?.id, project?.parent_project_id])
+    }, [project?.id])
 
     const myProposal = useMemo(() => {
         if (!project?.proposals) return null
@@ -446,30 +450,48 @@ export default function ProjectDetailPage() {
                     )}
                 </div>
 
-                {/* ── 브리프: 파생된 프로젝트(안무가별) 목록 ── */}
-                {isOwner && project.parent_project_id == null && childProjects.length > 0 && (
+                {/* ── 서브 프로젝트 목록 ── */}
+                {canManageProject && (childProjects.length > 0 || true) && (
                     <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-3">
-                        <h3 className="text-xs font-semibold text-white/40 mb-2">파생된 프로젝트 (안무가별)</h3>
-                        <p className="text-[11px] text-white/30 mb-3">각 안무가에게 보낸 제안이 별도 프로젝트로 진행됩니다. 수락 시 해당 프로젝트의 PM이 됩니다.</p>
-                        <ul className="space-y-2">
-                            {childProjects.map((child: any) => {
-                                const prop = child.proposals?.[0]
-                                const statusLabel = !prop ? '-' : prop.status === 'accepted' ? '수락' : prop.status === 'declined' ? '거절' : prop.status === 'cancelled' ? '취소됨' : '대기'
-                                const statusColor = prop?.status === 'accepted' ? 'text-green-500' : prop?.status === 'declined' || prop?.status === 'cancelled' ? 'text-red-400' : 'text-yellow-400'
-                                return (
-                                    <li key={child.id}>
-                                        <Link href={`/my/projects/${child.id}`} className="flex items-center justify-between py-2 px-3 rounded-lg bg-neutral-800/50 hover:bg-neutral-800 border border-neutral-700/50">
-                                            <div className="min-w-0">
-                                                <span className="text-sm font-medium text-white block truncate">{child.title}</span>
-                                                <span className="text-[11px] text-white/50">{prop?.dancers?.stage_name ?? '수신자'} · </span>
-                                                <span className={`text-[11px] font-medium ${statusColor}`}>{statusLabel}</span>
-                                            </div>
-                                            <ChevronRight className="w-4 h-4 text-white/30 shrink-0 ml-2" />
-                                        </Link>
-                                    </li>
-                                )
-                            })}
-                        </ul>
+                        <div className="flex items-center justify-between mb-2">
+                            <h3 className="text-xs font-semibold text-white/40">서브 프로젝트</h3>
+                            <button
+                                type="button"
+                                onClick={() => setShowSubProjectDrawer(true)}
+                                className="text-[11px] text-primary/70 hover:text-primary flex items-center gap-0.5"
+                            >
+                                <Plus className="w-3 h-3" /> 추가
+                            </button>
+                        </div>
+                        {childProjects.length === 0 ? (
+                            <p className="text-[11px] text-white/25 text-center py-3">서브 프로젝트가 없습니다. 시안 제작, 디렉팅, 출연 등을 추가할 수 있습니다.</p>
+                        ) : (
+                            <ul className="space-y-2">
+                                {childProjects.map((child: any) => {
+                                    const prop = child.proposals?.[0]
+                                    const statusLabel = !prop ? '미배정' : prop.status === 'accepted' ? '수락' : prop.status === 'declined' ? '거절' : prop.status === 'cancelled' ? '취소됨' : prop.status === 'negotiating' ? '협상중' : '대기'
+                                    const statusColor = prop?.status === 'accepted' ? 'text-green-500' : prop?.status === 'declined' || prop?.status === 'cancelled' ? 'text-red-400' : prop?.status === 'negotiating' ? 'text-blue-400' : !prop ? 'text-white/30' : 'text-yellow-400'
+                                    const feeDisplay = prop?.fee ? `${prop.fee.toLocaleString()}원` : child.budget ? `${child.budget.toLocaleString()}원` : null
+                                    return (
+                                        <li key={child.id}>
+                                            <Link href={`/my/projects/${child.id}`} className="flex items-center justify-between py-2.5 px-3 rounded-lg bg-neutral-800/50 hover:bg-neutral-800 border border-neutral-700/50 transition">
+                                                <div className="min-w-0 flex-1">
+                                                    <span className="text-sm font-medium text-white block truncate">{child.title}</span>
+                                                    <div className="flex items-center gap-1.5 mt-0.5">
+                                                        {prop?.dancers?.stage_name && (
+                                                            <span className="text-[11px] text-white/50">{prop.dancers.stage_name}</span>
+                                                        )}
+                                                        <span className={`text-[11px] font-medium ${statusColor}`}>{statusLabel}</span>
+                                                        {feeDisplay && <span className="text-[11px] text-primary/60">{feeDisplay}</span>}
+                                                    </div>
+                                                </div>
+                                                <ChevronRight className="w-4 h-4 text-white/30 shrink-0 ml-2" />
+                                            </Link>
+                                        </li>
+                                    )
+                                })}
+                            </ul>
+                        )}
                     </div>
                 )}
 
@@ -727,6 +749,21 @@ export default function ProjectDetailPage() {
                     </div>
                 )}
             </div>
+
+            {canManageProject && (
+                <DrawerAddSubProject
+                    isOpen={showSubProjectDrawer}
+                    onClose={() => setShowSubProjectDrawer(false)}
+                    parentProject={{
+                        id: project.id,
+                        owner_id: project.owner_id,
+                        client_profile_id: project.client_profile_id,
+                        category: project.category,
+                        title: project.title,
+                    }}
+                    onSuccess={fetchProject}
+                />
+            )}
         </div>
     )
 }

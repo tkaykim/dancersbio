@@ -29,6 +29,7 @@ export function useClientProjects() {
         `)
         .eq('owner_id', user.id)
         .is('deleted_at', null)
+        .is('parent_project_id', null)
         .order('created_at', { ascending: false })
 
       if (error) throw error

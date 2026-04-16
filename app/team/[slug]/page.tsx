@@ -73,11 +73,13 @@ export default async function TeamProfilePage({ params }: PageProps) {
     const careers = await getTeamCareers(team.id);
 
     const teamAgencies = await getAgenciesForTeam(team.id);
-    const agencies = teamAgencies.map(ta => ({
-        id: ta.agency_id,
-        name: ta.clients.company_name || ta.clients.contact_person,
-        is_primary: ta.is_primary,
-    }));
+    const agencies = teamAgencies
+        .filter(ta => ta.clients)
+        .map(ta => ({
+            id: ta.agency_id,
+            name: ta.clients.company_name || ta.clients.contact_person,
+            is_primary: ta.is_primary,
+        }));
 
     const activeMembers = (team.team_members || []).filter(m => m.is_active);
 
