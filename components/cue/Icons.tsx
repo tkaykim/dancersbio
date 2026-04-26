@@ -1,0 +1,36 @@
+import * as React from 'react';
+
+type IcoFn = (c?: string, s?: number) => React.ReactElement;
+
+export const Ico: Record<string, IcoFn> = {
+  search:   (c='currentColor', s=18) => (<svg width={s} height={s} viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke={c} strokeWidth="1.6"/><path d="M20 20l-3.5-3.5" stroke={c} strokeWidth="1.6" strokeLinecap="round"/></svg>),
+  bell:     (c='currentColor', s=18) => (<svg width={s} height={s} viewBox="0 0 24 24" fill="none"><path d="M6 16V11a6 6 0 1112 0v5l1.5 2H4.5L6 16z" stroke={c} strokeWidth="1.6" strokeLinejoin="round"/><path d="M10 21h4" stroke={c} strokeWidth="1.6" strokeLinecap="round"/></svg>),
+  msg:      (c='currentColor', s=18) => (<svg width={s} height={s} viewBox="0 0 24 24" fill="none"><path d="M4 6a2 2 0 012-2h12a2 2 0 012 2v9a2 2 0 01-2 2h-7l-4 3v-3H6a2 2 0 01-2-2V6z" stroke={c} strokeWidth="1.6" strokeLinejoin="round"/></svg>),
+  plus:     (c='currentColor', s=18) => (<svg width={s} height={s} viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke={c} strokeWidth="1.8" strokeLinecap="round"/></svg>),
+  filter:   (c='currentColor', s=18) => (<svg width={s} height={s} viewBox="0 0 24 24" fill="none"><path d="M3 5h18l-7 9v6l-4-2v-4L3 5z" stroke={c} strokeWidth="1.6" strokeLinejoin="round"/></svg>),
+  bookmark: (c='currentColor', s=18) => (<svg width={s} height={s} viewBox="0 0 24 24" fill="none"><path d="M6 4h12v17l-6-4-6 4V4z" stroke={c} strokeWidth="1.6" strokeLinejoin="round"/></svg>),
+  bookmarkF:(c='currentColor', s=18) => (<svg width={s} height={s} viewBox="0 0 24 24"><path d="M6 4h12v17l-6-4-6 4V4z" fill={c}/></svg>),
+  pin:      (c='currentColor', s=14) => (<svg width={s} height={s} viewBox="0 0 24 24" fill="none"><path d="M12 2l3 5h4l-5 4 2 7-7-5-7 5 2-7-5-4h6z" fill={c}/></svg>),
+  check:    (c='currentColor', s=18) => (<svg width={s} height={s} viewBox="0 0 24 24" fill="none"><path d="M5 12l4 4 10-10" stroke={c} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>),
+  x:        (c='currentColor', s=18) => (<svg width={s} height={s} viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke={c} strokeWidth="1.8" strokeLinecap="round"/></svg>),
+  arrow:    (c='currentColor', s=16) => (<svg width={s} height={s} viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke={c} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>),
+  chev:     (c='currentColor', s=14) => (<svg width={s} height={s} viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke={c} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>),
+  chevDown: (c='currentColor', s=14) => (<svg width={s} height={s} viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke={c} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>),
+  chevLeft: (c='currentColor', s=14) => (<svg width={s} height={s} viewBox="0 0 24 24" fill="none"><path d="M15 6l-6 6 6 6" stroke={c} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>),
+  dot:      (c='currentColor', s=8) => (<svg width={s} height={s} viewBox="0 0 8 8"><circle cx="4" cy="4" r="3.5" fill={c}/></svg>),
+  play:     (c='currentColor', s=18) => (<svg width={s} height={s} viewBox="0 0 24 24"><path d="M7 4l13 8-13 8V4z" fill={c}/></svg>),
+  cal:      (c='currentColor', s=18) => (<svg width={s} height={s} viewBox="0 0 24 24" fill="none"><rect x="3.5" y="5.5" width="17" height="15" rx="2" stroke={c} strokeWidth="1.6"/><path d="M3.5 10h17M8 3v4M16 3v4" stroke={c} strokeWidth="1.6" strokeLinecap="round"/></svg>),
+  pin2:     (c='currentColor', s=18) => (<svg width={s} height={s} viewBox="0 0 24 24" fill="none"><path d="M12 22s7-7 7-12a7 7 0 10-14 0c0 5 7 12 7 12z" stroke={c} strokeWidth="1.6"/><circle cx="12" cy="10" r="2.5" stroke={c} strokeWidth="1.6"/></svg>),
+  won:      (c='currentColor', s=18) => (<svg width={s} height={s} viewBox="0 0 24 24" fill="none"><path d="M5 6l3 8 4-7 4 7 3-8M3 12h18M3 16h18" stroke={c} strokeWidth="1.5" strokeLinecap="round"/></svg>),
+  user:     (c='currentColor', s=18) => (<svg width={s} height={s} viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke={c} strokeWidth="1.6"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8" stroke={c} strokeWidth="1.6" strokeLinecap="round"/></svg>),
+  briefcase:(c='currentColor', s=18) => (<svg width={s} height={s} viewBox="0 0 24 24" fill="none"><rect x="3" y="7" width="18" height="13" rx="2" stroke={c} strokeWidth="1.6"/><path d="M9 7V5a2 2 0 012-2h2a2 2 0 012 2v2M3 13h18" stroke={c} strokeWidth="1.6"/></svg>),
+  home:     (c='currentColor', s=18) => (<svg width={s} height={s} viewBox="0 0 24 24" fill="none"><path d="M3 11l9-8 9 8v9a2 2 0 01-2 2h-4v-7h-6v7H5a2 2 0 01-2-2v-9z" stroke={c} strokeWidth="1.6" strokeLinejoin="round"/></svg>),
+  spark:    (c='currentColor', s=14) => (<svg width={s} height={s} viewBox="0 0 24 24"><path d="M12 2l1.7 6.3L20 10l-6.3 1.7L12 18l-1.7-6.3L4 10l6.3-1.7L12 2z" fill={c}/></svg>),
+  more:     (c='currentColor', s=18) => (<svg width={s} height={s} viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.6" fill={c}/><circle cx="12" cy="12" r="1.6" fill={c}/><circle cx="19" cy="12" r="1.6" fill={c}/></svg>),
+  send:     (c='currentColor', s=18) => (<svg width={s} height={s} viewBox="0 0 24 24" fill="none"><path d="M3 11l18-8-8 18-2-8-8-2z" stroke={c} strokeWidth="1.6" strokeLinejoin="round"/></svg>),
+  upDown:   (c='currentColor', s=14) => (<svg width={s} height={s} viewBox="0 0 24 24" fill="none"><path d="M8 4v16M4 8l4-4 4 4M16 4v16M12 16l4 4 4-4" stroke={c} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>),
+  logout:   (c='currentColor', s=18) => (<svg width={s} height={s} viewBox="0 0 24 24" fill="none"><path d="M9 4H5a2 2 0 00-2 2v12a2 2 0 002 2h4M16 17l5-5-5-5M21 12H9" stroke={c} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>),
+  ext:      (c='currentColor', s=14) => (<svg width={s} height={s} viewBox="0 0 24 24" fill="none"><path d="M14 4h6v6M20 4l-9 9M10 4H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2v-4" stroke={c} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>),
+  building: (c='currentColor', s=18) => (<svg width={s} height={s} viewBox="0 0 24 24" fill="none"><rect x="4" y="3" width="16" height="18" rx="2" stroke={c} strokeWidth="1.6"/><path d="M9 7h2M13 7h2M9 11h2M13 11h2M9 15h2M13 15h2M10 21v-3h4v3" stroke={c} strokeWidth="1.6" strokeLinecap="round"/></svg>),
+  dashboard:(c='currentColor', s=18) => (<svg width={s} height={s} viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="8" height="8" rx="1.5" stroke={c} strokeWidth="1.6"/><rect x="13" y="3" width="8" height="5" rx="1.5" stroke={c} strokeWidth="1.6"/><rect x="13" y="10" width="8" height="11" rx="1.5" stroke={c} strokeWidth="1.6"/><rect x="3" y="13" width="8" height="8" rx="1.5" stroke={c} strokeWidth="1.6"/></svg>),
+};

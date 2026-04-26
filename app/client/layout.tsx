@@ -4,7 +4,7 @@ import { useEffect } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/lib/auth-context'
-import { LayoutDashboard, Building2, LogOut, ExternalLink, Loader2, User } from 'lucide-react'
+import { Ico } from '@/components/cue'
 
 export default function ClientPortalLayout({
   children,
@@ -14,6 +14,13 @@ export default function ClientPortalLayout({
   const { user, loading, signOut } = useAuth()
   const router = useRouter()
   const pathname = usePathname() ?? ''
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', 'light')
+    return () => {
+      document.documentElement.removeAttribute('data-theme')
+    }
+  }, [])
 
   useEffect(() => {
     if (!loading && !user) {
@@ -28,68 +35,173 @@ export default function ClientPortalLayout({
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-black">
-        <Loader2 className="w-8 h-8 text-primary animate-spin" />
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--cue-bg)' }}>
+        <div
+          style={{
+            width: 24,
+            height: 24,
+            borderRadius: '50%',
+            border: '2px solid var(--cue-hairline-2)',
+            borderTopColor: 'var(--cue-accent)',
+            animation: 'cue-spin 0.7s linear infinite',
+          }}
+        />
+        <style>{`@keyframes cue-spin { to { transform: rotate(360deg) } }`}</style>
       </div>
     )
   }
 
-  if (!user) {
-    return null
-  }
+  if (!user) return null
+
+  const navItems: { href: string; label: string; icon: keyof typeof Ico; active: boolean }[] = [
+    { href: '/client', label: '대시보드', icon: 'dashboard', active: pathname === '/client' },
+    { href: '/client/onboarding', label: '회사 정보', icon: 'building', active: pathname.startsWith('/client/onboarding') },
+  ]
+
+  const userName = (user.user_metadata?.name as string | undefined) ?? user.email ?? '사용자'
+  const initials = userName
+    .split(/\s+/)
+    .map((s) => s[0])
+    .slice(0, 2)
+    .join('')
+    .toUpperCase()
 
   return (
-    <div className="min-h-screen bg-black text-white flex">
+    <div className="min-h-screen flex" style={{ background: 'var(--cue-bg)', color: 'var(--cue-ink)' }}>
       {/* Sidebar */}
-      <aside className="w-56 border-r border-neutral-800 flex flex-col shrink-0">
-        <div className="p-4 border-b border-neutral-800">
-          <Link href="/client" className="font-bold text-lg text-white hover:text-primary transition">
-            클라이언트 포털
-          </Link>
-        </div>
-        <nav className="p-2 flex-1">
-          <Link
-            href="/client"
-            className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition ${pathname === '/client' ? 'bg-neutral-800 text-primary' : 'text-white/80 hover:bg-neutral-800/50 hover:text-white'}`}
+      <aside
+        className="w-56 shrink-0 flex flex-col"
+        style={{
+          background: 'var(--cue-surface-2)',
+          borderRight: '1px solid var(--cue-hairline)',
+          padding: '20px 14px',
+        }}
+      >
+        <Link href="/client" className="flex items-center gap-2.5" style={{ padding: '0 6px 24px' }}>
+          <div
+            style={{
+              width: 28,
+              height: 28,
+              borderRadius: 8,
+              background: 'var(--cue-ink)',
+              color: 'var(--cue-accent)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontFamily: 'var(--font-cue-serif)',
+              fontStyle: 'italic',
+              fontSize: 18,
+              fontWeight: 700,
+            }}
           >
-            <LayoutDashboard className="w-4 h-4" />
-            대시보드
-          </Link>
-          <Link
-            href="/client/onboarding"
-            className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition ${pathname.startsWith('/client/onboarding') ? 'bg-neutral-800 text-primary' : 'text-white/80 hover:bg-neutral-800/50 hover:text-white'}`}
-          >
-            <Building2 className="w-4 h-4" />
-            회사 정보
-          </Link>
-        </nav>
-        <div className="p-2 border-t border-neutral-800 space-y-2">
-          <div className="px-3 py-2.5 rounded-lg bg-neutral-800/50 border border-neutral-700/50">
-            <p className="text-[10px] uppercase tracking-wider text-white/40 mb-1.5 flex items-center gap-1">
-              <User className="w-3 h-3" />
-              접속 계정
-            </p>
-            {user.user_metadata?.name && (
-              <p className="text-sm font-medium text-white truncate">{user.user_metadata.name}</p>
-            )}
-            <p className="text-xs text-white/60 truncate mt-0.5" title={user.email ?? ''}>
-              {user.email}
-            </p>
+            d
           </div>
+          <div>
+            <div style={{ fontSize: 14, fontWeight: 600, letterSpacing: -0.2 }}>Dancers.bio</div>
+            <div className="cue-eyebrow" style={{ fontSize: 9.5, marginTop: 1 }}>CLIENT</div>
+          </div>
+        </Link>
+
+        <nav className="flex-1">
+          {navItems.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 10,
+                padding: '8px 10px',
+                borderRadius: 8,
+                marginBottom: 2,
+                background: item.active ? 'var(--cue-surface)' : 'transparent',
+                color: item.active ? 'var(--cue-ink)' : 'var(--cue-ink-2)',
+                fontSize: 13,
+                fontWeight: item.active ? 600 : 500,
+                border: item.active ? '1px solid var(--cue-hairline)' : '1px solid transparent',
+                textDecoration: 'none',
+              }}
+            >
+              {Ico[item.icon]('currentColor', 16)}
+              <span style={{ flex: 1 }}>{item.label}</span>
+            </Link>
+          ))}
+        </nav>
+
+        <div className="space-y-2 mt-2">
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 10,
+              padding: '10px 8px',
+              borderRadius: 10,
+              background: 'var(--cue-surface)',
+              border: '1px solid var(--cue-hairline)',
+            }}
+          >
+            <div
+              style={{
+                width: 28,
+                height: 28,
+                borderRadius: '50%',
+                background: 'linear-gradient(135deg, oklch(0.78 0.12 200), oklch(0.62 0.14 240))',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#0E0E0C',
+                fontWeight: 600,
+                fontSize: 11,
+              }}
+            >
+              {initials || '·'}
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 12, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {userName}
+              </div>
+              <div style={{ fontSize: 10, color: 'var(--cue-ink-3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={user.email ?? ''}>
+                {user.email}
+              </div>
+            </div>
+          </div>
+
           <a
             href="/"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-white/70 hover:bg-neutral-800/50 hover:text-white transition"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 10,
+              padding: '8px 10px',
+              borderRadius: 8,
+              fontSize: 12,
+              color: 'var(--cue-ink-2)',
+              textDecoration: 'none',
+            }}
           >
-            <ExternalLink className="w-4 h-4" />
+            {Ico.ext('currentColor', 14)}
             메인 사이트
           </a>
           <button
             onClick={handleSignOut}
-            className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-white/70 hover:bg-neutral-800/50 hover:text-white transition"
+            style={{
+              width: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 10,
+              padding: '8px 10px',
+              borderRadius: 8,
+              fontSize: 12,
+              color: 'var(--cue-ink-2)',
+              background: 'transparent',
+              border: 'none',
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+            }}
           >
-            <LogOut className="w-4 h-4" />
+            {Ico.logout('currentColor', 14)}
             로그아웃
           </button>
         </div>
@@ -97,14 +209,7 @@ export default function ClientPortalLayout({
 
       {/* Main */}
       <main className="flex-1 flex flex-col min-w-0">
-        <header className="h-14 border-b border-neutral-800 flex items-center justify-between px-6 shrink-0">
-          <div className="text-white/60 text-sm truncate">
-            {user.email}
-          </div>
-        </header>
-        <div className="flex-1 overflow-auto p-6">
-          {children}
-        </div>
+        <div className="flex-1 overflow-auto">{children}</div>
       </main>
     </div>
   )

@@ -1,39 +1,120 @@
 @import "tailwindcss";
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  --color-border: var(--border);
+  /* Cue tokens — exposed to Tailwind */
+  --color-cue-bg: var(--cue-bg);
+  --color-cue-surface: var(--cue-surface);
+  --color-cue-surface-2: var(--cue-surface-2);
+  --color-cue-surface-3: var(--cue-surface-3);
+  --color-cue-ink: var(--cue-ink);
+  --color-cue-ink-2: var(--cue-ink-2);
+  --color-cue-ink-3: var(--cue-ink-3);
+  --color-cue-ink-4: var(--cue-ink-4);
+  --color-cue-accent: var(--cue-accent);
+  --color-cue-accent-ink: var(--cue-accent-ink);
+  --color-cue-ok: var(--cue-ok);
+  --color-cue-warn: var(--cue-warn);
+  --color-cue-bad: var(--cue-bad);
+  --color-cue-info: var(--cue-info);
 
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  /* Legacy aliases (mapped to Cue) */
+  --color-background: var(--cue-bg);
+  --color-foreground: var(--cue-ink);
+  --color-primary: var(--cue-accent);
+  --color-primary-foreground: var(--cue-accent-ink);
+  --color-muted: var(--cue-surface-2);
+  --color-muted-foreground: var(--cue-ink-3);
+  --color-card: var(--cue-surface);
+  --color-card-foreground: var(--cue-ink);
+  --color-border: var(--cue-hairline);
+
+  --font-sans: var(--font-cue-sans);
+  --font-serif: var(--font-cue-serif);
+  --font-mono: var(--font-cue-mono);
+
+  --radius-cue-1: 8px;
+  --radius-cue-2: 12px;
+  --radius-cue-3: 18px;
+  --radius-cue-4: 24px;
+  --radius-cue-5: 32px;
 }
 
+/* Default theme = dark (Cue mobile) */
 :root {
-  /* Dark theme as default */
-  --background: #09090b;
-  --foreground: #ededed;
-  --primary: #22C55E;
-  --primary-foreground: #000000;
-  --muted: #27272a;
-  --muted-foreground: #a1a1aa;
-  --card: #18181b;
-  --card-foreground: #ededed;
-  --border: #27272a;
+  --cue-bg:        #0E0E0C;
+  --cue-surface:   #161614;
+  --cue-surface-2: #1E1E1B;
+  --cue-surface-3: #272723;
+  --cue-hairline:  rgba(255, 250, 235, 0.08);
+  --cue-hairline-2: rgba(255, 250, 235, 0.14);
+
+  --cue-ink:   #F4F0E6;
+  --cue-ink-2: rgba(244, 240, 230, 0.72);
+  --cue-ink-3: rgba(244, 240, 230, 0.48);
+  --cue-ink-4: rgba(244, 240, 230, 0.28);
+
+  --cue-accent:     #D9FF3C;
+  --cue-accent-ink: #0E0E0C;
+  --cue-accent-dim: rgba(217, 255, 60, 0.18);
+
+  --cue-ok:   #7DE2A0;
+  --cue-warn: #FFC061;
+  --cue-bad:  #FF7A6E;
+  --cue-info: #9BC8FF;
+
+  /* Legacy mapping */
+  --background: var(--cue-bg);
+  --foreground: var(--cue-ink);
+  --primary: var(--cue-accent);
+  --primary-foreground: var(--cue-accent-ink);
+  --muted: var(--cue-surface-2);
+  --muted-foreground: var(--cue-ink-3);
+  --card: var(--cue-surface);
+  --card-foreground: var(--cue-ink);
+  --border: var(--cue-hairline);
+}
+
+/* Light theme — Cue web */
+[data-theme="light"] {
+  --cue-bg:        #F6F3EC;
+  --cue-surface:   #FFFFFF;
+  --cue-surface-2: #F0ECE2;
+  --cue-surface-3: #E6E1D3;
+  --cue-hairline:  rgba(20, 18, 12, 0.08);
+  --cue-hairline-2: rgba(20, 18, 12, 0.14);
+
+  --cue-ink:   #14120C;
+  --cue-ink-2: rgba(20, 18, 12, 0.72);
+  --cue-ink-3: rgba(20, 18, 12, 0.50);
+  --cue-ink-4: rgba(20, 18, 12, 0.28);
+
+  --cue-accent:     #7CC435;
+  --cue-accent-ink: #0E0E0C;
+  --cue-accent-dim: rgba(124, 196, 53, 0.16);
+
+  --cue-ok:   #2E9D5C;
+  --cue-warn: #C77A12;
+  --cue-bad:  #D64A3D;
+  --cue-info: #3878C8;
+
+  --background: var(--cue-bg);
+  --foreground: var(--cue-ink);
+  --card: var(--cue-surface);
+  --card-foreground: var(--cue-ink);
+  --border: var(--cue-hairline);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-sans), sans-serif;
+  background: var(--cue-bg);
+  color: var(--cue-ink);
+  font-family: var(--font-cue-sans), "Pretendard", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
+
+/* Cue typography helpers */
+.cue-serif { font-family: var(--font-cue-serif), "Times New Roman", serif; font-style: italic; letter-spacing: -0.4px; }
+.cue-mono  { font-family: var(--font-cue-mono), ui-monospace, "SF Mono", Menlo, monospace; }
+.cue-eyebrow { font-size: 11px; letter-spacing: 1.4px; text-transform: uppercase; color: var(--cue-ink-3); font-family: var(--font-cue-mono), ui-monospace, monospace; }
 
 /* Safe Area Insets for mobile (notch, home indicator) */
 .safe-area-inset-top {

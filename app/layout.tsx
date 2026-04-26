@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter, Instrument_Serif, JetBrains_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 import { AuthProvider } from "@/lib/auth-context";
@@ -13,14 +13,23 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const inter = Inter({
+  variable: "--font-cue-sans",
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const instrumentSerif = Instrument_Serif({
+  variable: "--font-cue-serif",
   subsets: ["latin"],
+  weight: ["400"],
+  style: ["normal", "italic"],
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  variable: "--font-cue-mono",
+  subsets: ["latin"],
+  weight: ["400", "500"],
 });
 
 export const metadata: Metadata = {
@@ -36,7 +45,7 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-black`}
+        className={`${inter.variable} ${instrumentSerif.variable} ${jetbrainsMono.variable} antialiased bg-[var(--cue-bg)] text-[var(--cue-ink)]`}
       >
         <AuthProvider>
           <ToastProvider>
@@ -50,4 +59,3 @@ export default function RootLayout({
     </html>
   );
 }
-

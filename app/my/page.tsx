@@ -35,8 +35,11 @@ export default function MyPage() {
 
     if (authLoading || profilesLoading || projectsLoading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-background">
-                <Loader2 className="w-8 h-8 text-primary animate-spin" />
+            <div
+                className="min-h-screen flex items-center justify-center"
+                style={{ background: 'var(--cue-bg)' }}
+            >
+                <Loader2 className="w-8 h-8 animate-spin" style={{ color: 'var(--cue-accent)' }} />
             </div>
         )
     }
@@ -106,43 +109,85 @@ export default function MyPage() {
     ]
 
     return (
-        <div className="min-h-screen bg-background pb-20">
+        <div
+            className="min-h-screen pb-20"
+            style={{ background: 'var(--cue-bg)', color: 'var(--cue-ink)' }}
+        >
             {/* Header */}
-            <div className="sticky top-0 bg-background border-b border-neutral-800 z-10 pt-header-safe">
+            <div
+                className="sticky top-0 z-10 pt-header-safe"
+                style={{
+                    background: 'color-mix(in srgb, var(--cue-bg) 92%, transparent)',
+                    backdropFilter: 'blur(18px)',
+                    WebkitBackdropFilter: 'blur(18px)',
+                    borderBottom: '1px solid var(--cue-hairline)',
+                }}
+            >
                 <div className="px-6 pb-4">
-                    <h1 className="text-2xl font-bold text-white">MY</h1>
+                    <div
+                        style={{
+                            fontSize: 11,
+                            letterSpacing: 1.4,
+                            textTransform: 'uppercase',
+                            color: 'var(--cue-ink-3)',
+                            fontFamily: 'var(--font-cue-mono), ui-monospace, monospace',
+                            marginBottom: 2,
+                        }}
+                    >
+                        ME · 마이페이지
+                    </div>
+                    <h1
+                        style={{
+                            fontFamily: 'var(--font-cue-serif), serif',
+                            fontStyle: 'italic',
+                            fontSize: 28,
+                            letterSpacing: -0.6,
+                            color: 'var(--cue-ink)',
+                        }}
+                    >
+                        Your stage<span style={{ color: 'var(--cue-accent)' }}>.</span>
+                    </h1>
                 </div>
             </div>
 
             {/* Content */}
             <div className="p-6 space-y-6">
-                {/* User Profile Card */}
                 <UserProfileCard user={user} primaryDancer={primaryDancer} />
 
-                {/* Quick Stats */}
                 <div className="grid grid-cols-4 gap-2.5">
                     <QuickStatCard label="활성 제안" value={activeProposals} />
-                    <QuickStatCard label="프로젝트" value={activeProjectCount} accent="text-primary" />
-                    <QuickStatCard label="프로필" value={totalProfiles} accent="text-white" />
-                    <QuickStatCard label="정산 대기" value="0원" accent="text-white/60" />
+                    <QuickStatCard label="프로젝트" value={activeProjectCount} />
+                    <QuickStatCard label="프로필" value={totalProfiles} accent="ink" />
+                    <QuickStatCard label="정산 대기" value="0원" accent="ink-3" />
                 </div>
 
-                {/* Main Menu */}
                 <MenuSection items={profileMenuItems} />
-
-                {/* Settings Menu */}
                 <MenuSection items={settingsMenuItems} />
 
-                {/* Sign Out */}
                 <button
                     onClick={handleSignOut}
-                    className="w-full py-4 bg-red-500/10 border border-red-500/30 rounded-2xl text-red-500 font-bold hover:bg-red-500/20 transition-colors flex items-center justify-center gap-2"
+                    className="w-full py-4 rounded-2xl font-semibold transition-opacity hover:opacity-90 flex items-center justify-center gap-2"
+                    style={{
+                        background: 'color-mix(in srgb, var(--cue-bad) 12%, transparent)',
+                        border: '1px solid color-mix(in srgb, var(--cue-bad) 35%, transparent)',
+                        color: 'var(--cue-bad)',
+                        fontSize: 13,
+                        letterSpacing: 0.4,
+                    }}
                 >
                     <LogOut className="w-5 h-5" />
                     로그아웃
                 </button>
 
-                <p className="text-center text-white/20 text-[10px]">
+                <p
+                    className="text-center"
+                    style={{
+                        fontSize: 10,
+                        color: 'var(--cue-ink-4)',
+                        fontFamily: 'var(--font-cue-mono), ui-monospace, monospace',
+                        letterSpacing: 0.6,
+                    }}
+                >
                     dancers.bio v2.2.0
                 </p>
             </div>

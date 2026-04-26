@@ -33,28 +33,66 @@ export default async function AgencyProfilePage({ params }: PageProps) {
     const agencyName = agency.company_name || agency.contact_person;
 
     return (
-        <div className="min-h-screen bg-background text-foreground pb-20">
+        <div className="min-h-screen pb-20" style={{ background: 'var(--cue-bg)', color: 'var(--cue-ink)' }}>
             <PageHeader title={agencyName} />
 
             <div className="max-w-[960px] mx-auto px-6 pt-6">
                 {/* Agency Header */}
                 <div className="flex items-start gap-4 mb-8">
-                    <div className="w-20 h-20 rounded-xl overflow-hidden bg-neutral-800 flex-shrink-0 relative">
+                    <div
+                        className="w-20 h-20 rounded-xl overflow-hidden flex-shrink-0 relative"
+                        style={{ background: 'var(--cue-surface-2)', border: '1px solid var(--cue-hairline)' }}
+                    >
                         {agency.logo_url ? (
                             <Image src={agency.logo_url} alt={agencyName} fill className="object-cover" />
                         ) : (
                             <div className="w-full h-full flex items-center justify-center">
-                                <Building2 className="w-8 h-8 text-white/30" />
+                                <Building2 className="w-8 h-8" style={{ color: 'var(--cue-ink-3)' }} />
                             </div>
                         )}
                     </div>
                     <div className="flex-1 min-w-0">
-                        <h1 className="text-2xl font-bold text-white">{agencyName}</h1>
+                        <div
+                            style={{
+                                fontSize: 11,
+                                letterSpacing: 1.4,
+                                textTransform: 'uppercase',
+                                color: 'var(--cue-ink-3)',
+                                fontFamily: 'var(--font-cue-mono), ui-monospace, monospace',
+                                marginBottom: 4,
+                            }}
+                        >
+                            AGENCY · 소속사
+                        </div>
+                        <h1
+                            style={{
+                                fontFamily: 'var(--font-cue-serif), serif',
+                                fontStyle: 'italic',
+                                fontSize: 32,
+                                lineHeight: 1.05,
+                                letterSpacing: -0.6,
+                                color: 'var(--cue-ink)',
+                            }}
+                        >
+                            {agencyName}<span style={{ color: 'var(--cue-accent)' }}>.</span>
+                        </h1>
                         {agency.description && (
-                            <p className="text-sm text-white/50 mt-1 line-clamp-3">{agency.description}</p>
+                            <p style={{ fontSize: 13, color: 'var(--cue-ink-2)', marginTop: 8, lineHeight: 1.5 }} className="line-clamp-3">
+                                {agency.description}
+                            </p>
                         )}
-                        <div className="flex items-center gap-3 mt-2 text-xs text-white/40">
-                            <span className="flex items-center gap-1">
+                        <div
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 12,
+                                marginTop: 8,
+                                fontSize: 11,
+                                color: 'var(--cue-ink-3)',
+                                fontFamily: 'var(--font-cue-mono), ui-monospace, monospace',
+                            }}
+                        >
+                            <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                                 <Users className="w-3 h-3" />
                                 소속 댄서 {dancers.length}명
                             </span>
@@ -64,9 +102,22 @@ export default async function AgencyProfilePage({ params }: PageProps) {
 
                 {/* Dancers */}
                 <div>
-                    <h2 className="text-lg font-bold text-white mb-4">소속 댄서</h2>
+                    <div
+                        style={{
+                            fontSize: 11,
+                            letterSpacing: 1.4,
+                            textTransform: 'uppercase',
+                            color: 'var(--cue-ink-3)',
+                            fontFamily: 'var(--font-cue-mono), ui-monospace, monospace',
+                            marginBottom: 8,
+                        }}
+                    >
+                        ROSTER · 소속 댄서
+                    </div>
                     {dancers.length === 0 ? (
-                        <p className="text-sm text-white/40 text-center py-10">소속 댄서가 없습니다</p>
+                        <p style={{ fontSize: 13, color: 'var(--cue-ink-3)', textAlign: 'center', padding: '40px 0' }}>
+                            소속 댄서가 없습니다
+                        </p>
                     ) : (
                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                             {dancers.map((d: any) => {
@@ -78,7 +129,10 @@ export default async function AgencyProfilePage({ params }: PageProps) {
                                         href={`/profile/${dancer.slug || dancer.id}`}
                                         className="group"
                                     >
-                                        <div className="relative aspect-square rounded-xl overflow-hidden bg-neutral-900 mb-2">
+                                        <div
+                                            className="relative aspect-square rounded-xl overflow-hidden mb-2"
+                                            style={{ background: 'var(--cue-surface-2)', border: '1px solid var(--cue-hairline)' }}
+                                        >
                                             {dancer.profile_img ? (
                                                 <Image
                                                     src={dancer.profile_img}
@@ -88,20 +142,44 @@ export default async function AgencyProfilePage({ params }: PageProps) {
                                                 />
                                             ) : (
                                                 <div className="w-full h-full flex items-center justify-center">
-                                                    <span className="text-white/20 font-bold text-2xl">
+                                                    <span style={{ color: 'var(--cue-ink-4)', fontWeight: 700, fontSize: 24 }}>
                                                         {dancer.stage_name?.slice(0, 2)}
                                                     </span>
                                                 </div>
                                             )}
                                         </div>
-                                        <p className="text-sm font-medium text-white flex items-center gap-1 truncate px-1">
+                                        <p
+                                            style={{
+                                                fontSize: 13,
+                                                fontWeight: 500,
+                                                color: 'var(--cue-ink)',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: 4,
+                                                padding: '0 4px',
+                                                overflow: 'hidden',
+                                                textOverflow: 'ellipsis',
+                                                whiteSpace: 'nowrap',
+                                            }}
+                                        >
                                             {dancer.stage_name}
                                             {dancer.is_verified && (
-                                                <CheckCircle2 className="w-3.5 h-3.5 text-blue-400 fill-blue-900/40 flex-shrink-0" />
+                                                <CheckCircle2 className="w-3.5 h-3.5 flex-shrink-0" style={{ color: 'var(--cue-accent)' }} />
                                             )}
                                         </p>
                                         {d.role && (
-                                            <p className="text-[11px] text-white/40 px-1 truncate">{d.role}</p>
+                                            <p
+                                                style={{
+                                                    fontSize: 11,
+                                                    color: 'var(--cue-ink-3)',
+                                                    padding: '0 4px',
+                                                    overflow: 'hidden',
+                                                    textOverflow: 'ellipsis',
+                                                    whiteSpace: 'nowrap',
+                                                }}
+                                            >
+                                                {d.role}
+                                            </p>
                                         )}
                                     </Link>
                                 );

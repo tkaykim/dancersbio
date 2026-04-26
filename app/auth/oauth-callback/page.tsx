@@ -5,8 +5,6 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { Loader2 } from 'lucide-react'
 
-/** OAuth 콜백: Supabase 인증 Redirect URL을 /auth/oauth-callback 로 설정하세요. */
-
 function OAuthCallbackContent() {
     const router = useRouter()
     const searchParams = useSearchParams()
@@ -38,11 +36,24 @@ function OAuthCallbackContent() {
     }, [searchParams, router])
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-background px-6">
+        <div
+            className="min-h-screen flex items-center justify-center px-6"
+            style={{ background: 'var(--cue-bg)', color: 'var(--cue-ink)' }}
+        >
             <div className="text-center">
-                <Loader2 className="w-16 h-16 text-primary mx-auto mb-4 animate-spin" />
-                <h1 className="text-xl font-bold text-white">로그인 처리 중...</h1>
-                <p className="text-white/60 mt-2">
+                <Loader2 className="w-12 h-12 mx-auto mb-4 animate-spin" style={{ color: 'var(--cue-accent)' }} />
+                <h1
+                    style={{
+                        fontFamily: 'var(--font-cue-serif), serif',
+                        fontStyle: 'italic',
+                        fontSize: 24,
+                        letterSpacing: -0.4,
+                        color: 'var(--cue-ink)',
+                    }}
+                >
+                    Signing you in<span style={{ color: 'var(--cue-accent)' }}>.</span>
+                </h1>
+                <p style={{ fontSize: 13, color: 'var(--cue-ink-3)', marginTop: 8 }}>
                     {status === 'error' ? '로그인에 실패했습니다. 로그인 페이지로 이동합니다.' : '잠시만 기다려주세요'}
                 </p>
             </div>
@@ -52,11 +63,16 @@ function OAuthCallbackContent() {
 
 export default function OAuthCallbackPage() {
     return (
-        <Suspense fallback={
-            <div className="min-h-screen flex items-center justify-center bg-background px-6">
-                <Loader2 className="w-16 h-16 text-primary animate-spin" />
-            </div>
-        }>
+        <Suspense
+            fallback={
+                <div
+                    className="min-h-screen flex items-center justify-center"
+                    style={{ background: 'var(--cue-bg)' }}
+                >
+                    <Loader2 className="w-12 h-12 animate-spin" style={{ color: 'var(--cue-accent)' }} />
+                </div>
+            }
+        >
             <OAuthCallbackContent />
         </Suspense>
     )

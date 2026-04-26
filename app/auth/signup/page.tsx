@@ -5,6 +5,20 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
 import Link from 'next/link'
 
+const inputStyle: React.CSSProperties = {
+    background: 'var(--cue-surface)',
+    border: '1px solid var(--cue-hairline)',
+    color: 'var(--cue-ink)',
+}
+
+const labelStyle: React.CSSProperties = {
+    fontSize: 11,
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
+    color: 'var(--cue-ink-3)',
+    fontFamily: 'var(--font-cue-mono), ui-monospace, monospace',
+}
+
 export default function SignUpPage() {
     const router = useRouter()
     const { signUp } = useAuth()
@@ -43,23 +57,58 @@ export default function SignUpPage() {
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-background px-6 py-12">
+        <div
+            className="min-h-screen flex items-center justify-center px-6 py-12"
+            style={{ background: 'var(--cue-bg)', color: 'var(--cue-ink)' }}
+        >
             <div className="w-full max-w-md">
-                <div className="text-center mb-8">
-                    <h1 className="text-3xl font-bold text-white mb-2">회원가입</h1>
-                    <p className="text-white/60">댄서스바이오와 함께 시작하세요</p>
+                <div className="text-center mb-10">
+                    <div
+                        style={{
+                            fontSize: 11,
+                            letterSpacing: 1.4,
+                            textTransform: 'uppercase',
+                            color: 'var(--cue-ink-3)',
+                            fontFamily: 'var(--font-cue-mono), ui-monospace, monospace',
+                            marginBottom: 8,
+                        }}
+                    >
+                        DANCERS.BIO · SIGN UP
+                    </div>
+                    <h1
+                        style={{
+                            fontFamily: 'var(--font-cue-serif), serif',
+                            fontStyle: 'italic',
+                            fontSize: 40,
+                            lineHeight: 1.05,
+                            letterSpacing: -0.8,
+                            color: 'var(--cue-ink)',
+                        }}
+                    >
+                        Join the stage<span style={{ color: 'var(--cue-accent)' }}>.</span>
+                    </h1>
+                    <p style={{ fontSize: 13, color: 'var(--cue-ink-3)', marginTop: 8 }}>
+                        댄서스바이오와 함께 시작하세요
+                    </p>
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                     {error && (
-                        <div className="bg-red-500/10 border border-red-500/50 rounded-lg p-3 text-red-500 text-sm">
+                        <div
+                            className="rounded-lg p-3 text-sm"
+                            style={{
+                                background: 'color-mix(in srgb, var(--cue-bad) 12%, transparent)',
+                                border: '1px solid color-mix(in srgb, var(--cue-bad) 50%, transparent)',
+                                color: 'var(--cue-bad)',
+                            }}
+                        >
                             {error}
                         </div>
                     )}
 
                     <div>
-                        <label htmlFor="name" className="block text-sm font-medium text-white/80 mb-2">
-                            이름
+                        <label htmlFor="name" className="block mb-2" style={labelStyle}>
+                            NAME
                         </label>
                         <input
                             id="name"
@@ -67,14 +116,15 @@ export default function SignUpPage() {
                             value={name}
                             onChange={(e) => setName(e.target.value)}
                             required
-                            className="w-full px-4 py-3 bg-neutral-900 border border-neutral-800 rounded-lg text-white placeholder-white/40 focus:outline-none focus:border-primary"
+                            className="w-full px-4 py-3 rounded-lg focus:outline-none"
+                            style={inputStyle}
                             placeholder="홍길동"
                         />
                     </div>
 
                     <div>
-                        <label htmlFor="email" className="block text-sm font-medium text-white/80 mb-2">
-                            이메일
+                        <label htmlFor="email" className="block mb-2" style={labelStyle}>
+                            EMAIL
                         </label>
                         <input
                             id="email"
@@ -82,14 +132,15 @@ export default function SignUpPage() {
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             required
-                            className="w-full px-4 py-3 bg-neutral-900 border border-neutral-800 rounded-lg text-white placeholder-white/40 focus:outline-none focus:border-primary"
+                            className="w-full px-4 py-3 rounded-lg focus:outline-none"
+                            style={inputStyle}
                             placeholder="your@email.com"
                         />
                     </div>
 
                     <div>
-                        <label htmlFor="password" className="block text-sm font-medium text-white/80 mb-2">
-                            비밀번호
+                        <label htmlFor="password" className="block mb-2" style={labelStyle}>
+                            PASSWORD
                         </label>
                         <input
                             id="password"
@@ -97,14 +148,15 @@ export default function SignUpPage() {
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             required
-                            className="w-full px-4 py-3 bg-neutral-900 border border-neutral-800 rounded-lg text-white placeholder-white/40 focus:outline-none focus:border-primary"
+                            className="w-full px-4 py-3 rounded-lg focus:outline-none"
+                            style={inputStyle}
                             placeholder="최소 6자"
                         />
                     </div>
 
                     <div>
-                        <label htmlFor="confirmPassword" className="block text-sm font-medium text-white/80 mb-2">
-                            비밀번호 확인
+                        <label htmlFor="confirmPassword" className="block mb-2" style={labelStyle}>
+                            CONFIRM PASSWORD
                         </label>
                         <input
                             id="confirmPassword"
@@ -112,7 +164,8 @@ export default function SignUpPage() {
                             value={confirmPassword}
                             onChange={(e) => setConfirmPassword(e.target.value)}
                             required
-                            className="w-full px-4 py-3 bg-neutral-900 border border-neutral-800 rounded-lg text-white placeholder-white/40 focus:outline-none focus:border-primary"
+                            className="w-full px-4 py-3 rounded-lg focus:outline-none"
+                            style={inputStyle}
                             placeholder="비밀번호 재입력"
                         />
                     </div>
@@ -120,16 +173,23 @@ export default function SignUpPage() {
                     <button
                         type="submit"
                         disabled={loading}
-                        className="w-full py-3 bg-primary text-black font-semibold rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="w-full py-3 rounded-full font-semibold transition-opacity hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                        style={{
+                            background: 'var(--cue-accent)',
+                            color: 'var(--cue-accent-ink)',
+                            fontSize: 13,
+                            letterSpacing: 0.4,
+                            marginTop: 8,
+                        }}
                     >
                         {loading ? '가입 중...' : '회원가입'}
                     </button>
                 </form>
 
-                <div className="mt-6 text-center">
-                    <p className="text-white/60 text-sm">
+                <div className="mt-8 text-center">
+                    <p style={{ fontSize: 13, color: 'var(--cue-ink-3)' }}>
                         이미 계정이 있으신가요?{' '}
-                        <Link href="/auth/signin" className="text-primary hover:underline">
+                        <Link href="/auth/signin" style={{ color: 'var(--cue-accent)' }} className="hover:underline">
                             로그인
                         </Link>
                     </p>

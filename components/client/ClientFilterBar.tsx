@@ -1,6 +1,6 @@
 'use client'
 
-import { Search } from 'lucide-react'
+import { Ico } from '@/components/cue'
 
 const STATUS_OPTIONS = [
   { value: '', label: '전체 상태' },
@@ -20,6 +20,17 @@ interface ClientFilterBarProps {
   onDancerNameFilterChange: (v: string) => void
 }
 
+const inputStyle: React.CSSProperties = {
+  padding: '7px 12px',
+  borderRadius: 8,
+  background: 'var(--cue-surface)',
+  border: '1px solid var(--cue-hairline)',
+  color: 'var(--cue-ink)',
+  fontSize: 12,
+  outline: 'none',
+  fontFamily: 'inherit',
+}
+
 export default function ClientFilterBar({
   statusFilter,
   onStatusFilterChange,
@@ -29,12 +40,8 @@ export default function ClientFilterBar({
   onDancerNameFilterChange,
 }: ClientFilterBarProps) {
   return (
-    <div className="flex flex-wrap items-center gap-3 py-2">
-      <select
-        value={statusFilter}
-        onChange={(e) => onStatusFilterChange(e.target.value)}
-        className="px-3 py-1.5 rounded-lg bg-neutral-900 border border-neutral-800 text-white text-sm focus:outline-none focus:border-primary"
-      >
+    <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 10, padding: '6px 0' }}>
+      <select value={statusFilter} onChange={(e) => onStatusFilterChange(e.target.value)} style={inputStyle}>
         {STATUS_OPTIONS.map((opt) => (
           <option key={opt.value || 'all'} value={opt.value}>
             {opt.label}
@@ -46,16 +53,18 @@ export default function ClientFilterBar({
         value={roleFilter}
         onChange={(e) => onRoleFilterChange(e.target.value)}
         placeholder="역할 검색"
-        className="px-3 py-1.5 rounded-lg bg-neutral-900 border border-neutral-800 text-white text-sm w-32 placeholder-white/40 focus:outline-none focus:border-primary"
+        style={{ ...inputStyle, width: 128 }}
       />
-      <div className="relative flex-1 min-w-[140px]">
-        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+      <div style={{ position: 'relative', flex: 1, minWidth: 160 }}>
+        <div style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--cue-ink-3)' }}>
+          {Ico.search('currentColor', 14)}
+        </div>
         <input
           type="text"
           value={dancerNameFilter}
           onChange={(e) => onDancerNameFilterChange(e.target.value)}
           placeholder="댄서명 검색"
-          className="w-full pl-8 pr-3 py-1.5 rounded-lg bg-neutral-900 border border-neutral-800 text-white text-sm placeholder-white/40 focus:outline-none focus:border-primary"
+          style={{ ...inputStyle, width: '100%', paddingLeft: 32 }}
         />
       </div>
     </div>

@@ -1,9 +1,9 @@
 'use client'
 
 import { useMemo, useState, useEffect } from 'react'
-import { Plus, ChevronRight } from 'lucide-react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
+import { Ico, CueButton, CueEyebrow, CueSerif, CueTag } from '@/components/cue'
 import ClientFilterBar from './ClientFilterBar'
 import ClientProposalTable, { type ProposalRow } from './ClientProposalTable'
 import DrawerAddSubProject from '@/components/projects/DrawerAddSubProject'
@@ -51,18 +51,14 @@ export default function ClientProjectDetail({
   const proposals = (project.proposals || []) as ProposalRow[]
   const filteredProposals = useMemo(() => {
     let list = proposals
-    if (statusFilter) {
-      list = list.filter((p) => p.status === statusFilter)
-    }
+    if (statusFilter) list = list.filter((p) => p.status === statusFilter)
     if (roleFilter.trim()) {
       const q = roleFilter.toLowerCase()
       list = list.filter((p) => (p.role ?? '').toLowerCase().includes(q))
     }
     if (dancerNameFilter.trim()) {
       const q = dancerNameFilter.toLowerCase()
-      list = list.filter((p) =>
-        (p.dancers?.stage_name ?? '').toLowerCase().includes(q)
-      )
+      list = list.filter((p) => (p.dancers?.stage_name ?? '').toLowerCase().includes(q))
     }
     return list
   }, [proposals, statusFilter, roleFilter, dancerNameFilter])
@@ -78,38 +74,46 @@ export default function ClientProjectDetail({
     }[project.category ?? ''] ?? project.category ?? '—'
 
   return (
-    <div className="space-y-4 flex-1 min-w-0">
-      <div className="flex items-start justify-between gap-4">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16, flex: 1, minWidth: 0 }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 }}>
         <div>
-          <h1 className="text-xl font-bold text-white">{project.title}</h1>
-          <p className="text-sm text-white/50 mt-0.5">
-            {categoryLabel} · 제안 {proposals.length}건
-          </p>
-          {(project.event_dates?.length
-            ? (
-                <p className="text-xs text-white/40 mt-1">
-                  {project.event_dates
-                    .sort((a, b) => a.sort_order - b.sort_order)
-                    .map((ed) => `${ed.event_date}${ed.event_time ? ` ${ed.event_time.slice(0, 5)}` : ''}${ed.label ? ` (${ed.label})` : ''}`)
-                    .join(' · ')}
-                </p>
-              )
-            : project.start_date && (
-                <p className="text-xs text-white/40 mt-1">
-                  {project.start_date}
-                  {project.end_date && ` ~ ${project.end_date}`}
-                </p>
-              )
-          )}
+          <CueEyebrow>{categoryLabel} · 제안 {proposals.length}건</CueEyebrow>
+          <div style={{ marginTop: 4 }}>
+            <CueSerif size={26}>{project.title}</CueSerif>
+          </div>
+          {(project.event_dates?.length ? (
+            <p
+              style={{
+                fontSize: 11,
+                color: 'var(--cue-ink-3)',
+                marginTop: 6,
+                fontFamily: 'var(--font-cue-mono), ui-monospace, monospace',
+              }}
+            >
+              {project.event_dates
+                .sort((a, b) => a.sort_order - b.sort_order)
+                .map((ed) => `${ed.event_date}${ed.event_time ? ` ${ed.event_time.slice(0, 5)}` : ''}${ed.label ? ` (${ed.label})` : ''}`)
+                .join(' · ')}
+            </p>
+          ) : (
+            project.start_date && (
+              <p
+                style={{
+                  fontSize: 11,
+                  color: 'var(--cue-ink-3)',
+                  marginTop: 6,
+                  fontFamily: 'var(--font-cue-mono), ui-monospace, monospace',
+                }}
+              >
+                {project.start_date}
+                {project.end_date && ` ~ ${project.end_date}`}
+              </p>
+            )
+          ))}
         </div>
-        <button
-          type="button"
-          onClick={onAddProposal}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-black font-medium text-sm hover:bg-primary/90 transition shrink-0"
-        >
-          <Plus className="w-4 h-4" />
-          제안 추가
-        </button>
+        <CueButton onClick={onAddProposal}>
+          {Ico.plus('currentColor', 14)} 제안 추가
+        </CueButton>
       </div>
 
       <ClientFilterBar
@@ -128,45 +132,94 @@ export default function ClientProjectDetail({
       />
 
       {/* 서브 프로젝트 섹션 */}
-      <div className="border border-neutral-800 rounded-xl p-4 space-y-3">
-        <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-white/50">서브 프로젝트</h3>
+      <div
+        style={{
+          border: '1px solid var(--cue-hairline)',
+          borderRadius: 14,
+          padding: 16,
+          background: 'var(--cue-surface)',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 12,
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <CueEyebrow>서브 프로젝트</CueEyebrow>
           <button
             type="button"
             onClick={() => setShowSubProjectDrawer(true)}
-            className="text-xs text-primary/70 hover:text-primary flex items-center gap-0.5"
+            style={{
+              fontSize: 11,
+              color: 'var(--cue-accent)',
+              background: 'transparent',
+              border: 'none',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 4,
+              fontFamily: 'inherit',
+              padding: 0,
+            }}
           >
-            <Plus className="w-3.5 h-3.5" /> 추가
+            {Ico.plus('currentColor', 12)} 추가
           </button>
         </div>
         {childProjects.length === 0 ? (
-          <p className="text-xs text-white/25 text-center py-3">
+          <p style={{ fontSize: 11, color: 'var(--cue-ink-3)', textAlign: 'center', padding: '12px 0' }}>
             서브 프로젝트가 없습니다. 시안 제작, 디렉팅, 출연 등을 추가할 수 있습니다.
           </p>
         ) : (
-          <ul className="space-y-2">
+          <ul style={{ display: 'flex', flexDirection: 'column', gap: 8, listStyle: 'none', padding: 0, margin: 0 }}>
             {childProjects.map((child) => {
               const prop = child.proposals?.[0]
               const statusLabel = !prop ? '미배정' : prop.status === 'accepted' ? '수락' : prop.status === 'declined' ? '거절' : prop.status === 'cancelled' ? '취소됨' : prop.status === 'negotiating' ? '협상중' : '대기'
-              const statusColor = prop?.status === 'accepted' ? 'text-green-500' : prop?.status === 'declined' || prop?.status === 'cancelled' ? 'text-red-400' : prop?.status === 'negotiating' ? 'text-blue-400' : !prop ? 'text-white/30' : 'text-yellow-400'
+              const tone =
+                prop?.status === 'accepted' ? 'ok' :
+                prop?.status === 'declined' || prop?.status === 'cancelled' ? 'bad' :
+                prop?.status === 'negotiating' ? 'info' :
+                !prop ? 'ghost' : 'warn'
               const feeDisplay = prop?.fee ? `${prop.fee.toLocaleString()}원` : child.budget ? `${child.budget.toLocaleString()}원` : null
               return (
                 <li key={child.id}>
                   <Link
                     href={`/my/projects/${child.id}`}
-                    className="flex items-center justify-between py-2.5 px-3 rounded-lg bg-neutral-800/50 hover:bg-neutral-800 border border-neutral-700/50 transition"
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '12px 14px',
+                      borderRadius: 10,
+                      background: 'var(--cue-surface-2)',
+                      border: '1px solid var(--cue-hairline)',
+                      textDecoration: 'none',
+                      color: 'var(--cue-ink)',
+                    }}
                   >
-                    <div className="min-w-0 flex-1">
-                      <span className="text-sm font-medium text-white block truncate">{child.title}</span>
-                      <div className="flex items-center gap-1.5 mt-0.5">
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <span style={{ fontSize: 13, fontWeight: 500, display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {child.title}
+                      </span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
                         {prop?.dancers?.stage_name && (
-                          <span className="text-[11px] text-white/50">{prop.dancers.stage_name}</span>
+                          <span style={{ fontSize: 11, color: 'var(--cue-ink-3)' }}>{prop.dancers.stage_name}</span>
                         )}
-                        <span className={`text-[11px] font-medium ${statusColor}`}>{statusLabel}</span>
-                        {feeDisplay && <span className="text-[11px] text-primary/60">{feeDisplay}</span>}
+                        <CueTag tone={tone as any}>{statusLabel}</CueTag>
+                        {feeDisplay && (
+                          <span
+                            style={{
+                              fontSize: 11,
+                              color: 'var(--cue-ink-2)',
+                              fontFamily: 'var(--font-cue-mono), ui-monospace, monospace',
+                            }}
+                          >
+                            {feeDisplay}
+                          </span>
+                        )}
                       </div>
                     </div>
-                    <ChevronRight className="w-4 h-4 text-white/30 shrink-0 ml-2" />
+                    <span style={{ color: 'var(--cue-ink-3)', flexShrink: 0, marginLeft: 8 }}>
+                      {Ico.chev('currentColor', 14)}
+                    </span>
                   </Link>
                 </li>
               )

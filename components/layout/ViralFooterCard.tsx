@@ -18,7 +18,7 @@ export default function ViralFooterCard() {
             </p>
 
             <Link
-                href="/onboarding"
+                href="/crew"
                 className="w-full max-w-sm bg-white text-black font-bold h-12 rounded-full flex items-center justify-center gap-2 hover:scale-105 transition-transform"
             >
                 Create My Profile

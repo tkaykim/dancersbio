@@ -19,6 +19,10 @@ export default function LayoutSwitcher({ children }: { children: React.ReactNode
     return <>{children}</>
   }
 
+  if (pathname.startsWith('/cue')) {
+    return <>{children}</>
+  }
+
   return (
     <MobileContainer className="pb-nav-safe">
       {children}

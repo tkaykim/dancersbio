@@ -30,7 +30,7 @@ export default function ViralCTACard({ className }: { className?: string }) {
                     </p>
 
                     <Link
-                        href="/search"
+                        href="/crew"
                         className="inline-flex items-center gap-2 bg-primary text-black px-4 py-2.5 rounded-xl font-semibold text-sm hover:bg-primary/90 transition-colors"
                     >
                         무료로 시작하기
