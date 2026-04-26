@@ -85,7 +85,7 @@ export default function CastingDetailPage() {
     return (
         <MobileContainer>
             <div
-                className="min-h-screen pb-32"
+                className="min-h-screen pb-44"
                 style={{ background: 'var(--cue-bg)', color: 'var(--cue-ink)' }}
             >
                 <header
@@ -228,31 +228,31 @@ export default function CastingDetailPage() {
                 </div>
 
                 <div
-                    className="fixed bottom-0 left-0 right-0 px-4 pb-nav-safe pt-3"
+                    className="fixed left-1/2 -translate-x-1/2 w-full px-4 pt-3 pb-3"
                     style={{
+                        bottom: 'calc(56px + env(safe-area-inset-bottom, 0px))',
+                        maxWidth: 480,
                         background: 'color-mix(in srgb, var(--cue-bg) 94%, transparent)',
                         backdropFilter: 'blur(18px)',
                         WebkitBackdropFilter: 'blur(18px)',
                         borderTop: '1px solid var(--cue-hairline)',
-                        zIndex: 20,
+                        zIndex: 40,
                     }}
                 >
-                    <div className="mx-auto" style={{ maxWidth: 520 }}>
-                        <button
-                            type="button"
-                            onClick={() => setOpenApply(true)}
-                            className="w-full py-4 rounded-full font-semibold flex items-center justify-center gap-2"
-                            style={{
-                                background: 'var(--cue-accent)',
-                                color: 'var(--cue-accent-ink)',
-                                fontSize: 14,
-                                letterSpacing: 0.4,
-                                border: 'none',
-                            }}
-                        >
-                            지원하기 {Ico.arrow('var(--cue-accent-ink)', 16)}
-                        </button>
-                    </div>
+                    <button
+                        type="button"
+                        onClick={() => setOpenApply(true)}
+                        className="w-full py-4 rounded-full font-semibold flex items-center justify-center gap-2"
+                        style={{
+                            background: 'var(--cue-accent)',
+                            color: 'var(--cue-accent-ink)',
+                            fontSize: 14,
+                            letterSpacing: 0.4,
+                            border: 'none',
+                        }}
+                    >
+                        지원하기 {Ico.arrow('var(--cue-accent-ink)', 16)}
+                    </button>
                 </div>
             </div>
 

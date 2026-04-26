@@ -53,7 +53,7 @@ export default function ApplyCastingSheet({ open, onClose, casting }: Props) {
                 onClick={(e) => e.stopPropagation()}
                 style={{
                     width: '100%',
-                    maxWidth: 520,
+                    maxWidth: 480,
                     background: 'var(--cue-bg)',
                     borderTopLeftRadius: 24,
                     borderTopRightRadius: 24,
