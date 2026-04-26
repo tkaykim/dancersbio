@@ -19,22 +19,35 @@ function makeKey(kind: BookmarkKind, id: string) {
     return `${kind}:${id}`
 }
 
+let cachedRaw: string | null = null
+let cachedMap: BookmarkMap = {}
+
 function readStorage(): BookmarkMap {
-    if (typeof window === 'undefined') return {}
+    if (typeof window === 'undefined') return cachedMap
     try {
         const raw = window.localStorage.getItem(STORAGE_KEY)
-        if (!raw) return {}
+        if (raw === cachedRaw) return cachedMap
+        cachedRaw = raw
+        if (!raw) {
+            cachedMap = {}
+            return cachedMap
+        }
         const parsed = JSON.parse(raw)
-        return parsed && typeof parsed === 'object' ? (parsed as BookmarkMap) : {}
+        cachedMap = parsed && typeof parsed === 'object' ? (parsed as BookmarkMap) : {}
+        return cachedMap
     } catch {
-        return {}
+        cachedMap = {}
+        return cachedMap
     }
 }
 
 function writeStorage(map: BookmarkMap) {
     if (typeof window === 'undefined') return
     try {
-        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(map))
+        const next = JSON.stringify(map)
+        window.localStorage.setItem(STORAGE_KEY, next)
+        cachedRaw = next
+        cachedMap = map
         window.dispatchEvent(new Event(EVENT_NAME))
     } catch {
         // 용량 초과 등은 무시 — 북마크는 best-effort
