@@ -24,14 +24,14 @@ function OAuthCallbackContent() {
             supabase.auth.exchangeCodeForSession(code)
                 .then(() => {
                     setStatus('done')
-                    router.replace('/dashboard')
+                    router.replace('/my')
                 })
                 .catch(() => {
                     setStatus('error')
                     setTimeout(() => router.replace('/auth/signin'), 2000)
                 })
         } else {
-            router.replace('/dashboard')
+            router.replace('/my')
         }
     }, [searchParams, router])
 

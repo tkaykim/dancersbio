@@ -58,6 +58,7 @@ export default function PageHeader({ title, backHref, subtitle, rightContent }: 
             }}
           >
             {title}
+            <span style={{ color: 'var(--cue-accent)' }}>.</span>
           </h1>
           {rightContent}
         </div>
