@@ -3,10 +3,11 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '@/lib/auth-context'
 import { useRouter } from 'next/navigation'
-import { Loader2, User as UserIcon, Users, Inbox, Send, Wallet, Settings, LogOut, Briefcase, Bell } from 'lucide-react'
+import { Loader2, User as UserIcon, Users, Inbox, Send, Wallet, Settings, LogOut, Briefcase, Bell, Bookmark } from 'lucide-react'
 import { useMyProfiles } from '@/hooks/useMyProfiles'
 import { useProposals } from '@/hooks/useProposals'
 import { useProjects } from '@/hooks/useProjects'
+import { useBookmarkCount, useIsHydrated } from '@/hooks/useBookmarks'
 import { getProjectStatuses } from '@/lib/utils'
 import UserProfileCard from '@/components/my/UserProfileCard'
 import QuickStatCard from '@/components/my/QuickStatCard'
@@ -19,6 +20,8 @@ export default function MyPage() {
     const { ownedDancers, managedDancers, allProfiles, loading: profilesLoading } = useMyProfiles()
     const { proposals, getTotalUnreadCount } = useProposals(allProfiles, 'inbox', 'all')
     const { projects, loading: projectsLoading } = useProjects()
+    const bookmarkCount = useBookmarkCount()
+    const hydrated = useIsHydrated()
 
     useEffect(() => {
         if (!authLoading && !user) {
@@ -92,6 +95,12 @@ export default function MyPage() {
             label: '정산 관리',
             href: '/my/settlements',
             icon: Wallet,
+        },
+        {
+            label: '저장한 항목',
+            href: '/my/saved',
+            icon: Bookmark,
+            badge: hydrated && bookmarkCount > 0 ? `${bookmarkCount}건` : undefined,
         },
     ]
 
