@@ -1,6 +1,7 @@
 'use client'
 
 import { Ico } from '@/components/cue'
+import { isEmbargoActive } from '@/lib/utils'
 import type { ClientProject } from '@/hooks/useClientProjects'
 
 interface ClientProjectListProps {
@@ -63,6 +64,9 @@ export default function ClientProjectList({
           projects.map((project) => {
             const proposals = project.proposals || []
             const isSelected = selectedProjectId === project.id
+            const recruiting = project.progress_status === 'recruiting'
+            const embargoActive = isEmbargoActive(project.embargo_date)
+            const isPublic = project.visibility === 'public' && !embargoActive
             return (
               <button
                 key={project.id}
@@ -82,18 +86,46 @@ export default function ClientProjectList({
                   fontSize: 13,
                 }}
               >
-                <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {project.title}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
+                  <span
+                    aria-hidden
+                    title={recruiting ? '모집중' : '모집 마감'}
+                    style={{
+                      width: 6,
+                      height: 6,
+                      borderRadius: '50%',
+                      background: recruiting ? 'var(--cue-accent)' : 'var(--cue-ink-4)',
+                      flexShrink: 0,
+                    }}
+                  />
+                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
+                    {project.title}
+                  </span>
                 </div>
                 <div
                   style={{
                     fontSize: 11,
                     color: 'var(--cue-ink-3)',
                     marginTop: 2,
-                    fontFamily: 'var(--font-cue-mono), ui-monospace, monospace',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    fontVariantNumeric: 'tabular-nums',
                   }}
                 >
-                  제안 {proposals.length}건
+                  <span>제안 {proposals.length}건</span>
+                  <span style={{ color: 'var(--cue-ink-4)' }}>·</span>
+                  <span
+                    style={{
+                      color: embargoActive
+                        ? 'var(--cue-warn)'
+                        : isPublic
+                          ? 'var(--cue-accent)'
+                          : 'var(--cue-ink-3)',
+                    }}
+                  >
+                    {embargoActive ? '엠바고' : isPublic ? '공개' : '비공개'}
+                  </span>
                 </div>
               </button>
             )

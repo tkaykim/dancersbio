@@ -1,10 +1,16 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import MobileContainer from '@/components/layout/MobileContainer'
 import { Ico } from '@/components/cue'
-import { CASTING_MOCKS, type CastingCategory } from '@/lib/castingMockData'
+import { supabase } from '@/lib/supabase'
+import { CASTING_MOCKS, type CastingCategory, type CastingMock } from '@/lib/castingMockData'
+import {
+    projectToCastingMock,
+    isCastableProject,
+    type CastingProjectRow,
+} from '@/lib/castingFromProjects'
 import CastingCard from './_components/CastingCard'
 import PostCastingSheet from './_components/PostCastingSheet'
 
@@ -23,11 +29,49 @@ const FILTER_CHIPS: { value: FilterValue; label: string }[] = [
 export default function CastingPage() {
     const [filter, setFilter] = useState<FilterValue>('foryou')
     const [openPost, setOpenPost] = useState(false)
+    const [liveProjects, setLiveProjects] = useState<CastingMock[]>([])
+
+    useEffect(() => {
+        let cancelled = false
+        const load = async () => {
+            const { data, error } = await supabase
+                .from('projects')
+                .select(`
+                    id, title, category, visibility, progress_status,
+                    embargo_date, budget, start_date, end_date, due_date, created_at,
+                    clients (company_name),
+                    owner:users!owner_id (name),
+                    event_dates:project_event_dates (event_date, event_time, label, sort_order)
+                `)
+                .eq('visibility', 'public')
+                .eq('progress_status', 'recruiting')
+                .is('deleted_at', null)
+                .is('parent_project_id', null)
+                .order('created_at', { ascending: false })
+                .limit(40)
+            if (cancelled) return
+            if (error) {
+                console.error('Casting projects fetch error:', error)
+                return
+            }
+            const rows = (data || []) as unknown as CastingProjectRow[]
+            const visible = rows
+                .filter(isCastableProject)
+                .map(projectToCastingMock)
+            setLiveProjects(visible)
+        }
+        load()
+        return () => {
+            cancelled = true
+        }
+    }, [])
+
+    const merged = useMemo(() => [...liveProjects, ...CASTING_MOCKS], [liveProjects])
 
     const visible = useMemo(() => {
-        if (filter === 'foryou') return CASTING_MOCKS
-        return CASTING_MOCKS.filter((c) => c.category === filter)
-    }, [filter])
+        if (filter === 'foryou') return merged
+        return merged.filter((c) => c.category === filter)
+    }, [merged, filter])
 
     return (
         <MobileContainer>

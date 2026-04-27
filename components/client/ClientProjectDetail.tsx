@@ -7,6 +7,7 @@ import { Ico, CueButton, CueEyebrow, CueSerif, CueTag } from '@/components/cue'
 import ClientFilterBar from './ClientFilterBar'
 import ClientProposalTable, { type ProposalRow } from './ClientProposalTable'
 import DrawerAddSubProject from '@/components/projects/DrawerAddSubProject'
+import ProjectStatusChips from './ProjectStatusChips'
 import type { ClientProject } from '@/hooks/useClientProjects'
 
 interface ClientProjectDetailProps {
@@ -76,10 +77,20 @@ export default function ClientProjectDetail({
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16, flex: 1, minWidth: 0 }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 }}>
-        <div>
+        <div style={{ minWidth: 0, flex: 1 }}>
           <CueEyebrow>{categoryLabel} · 제안 {proposals.length}건</CueEyebrow>
           <div style={{ marginTop: 4 }}>
             <CueSerif size={26}>{project.title}</CueSerif>
+          </div>
+          <div style={{ marginTop: 8 }}>
+            <ProjectStatusChips
+              projectId={project.id}
+              progressStatus={project.progress_status}
+              visibility={project.visibility}
+              embargoDate={project.embargo_date}
+              size="md"
+              onUpdated={refetch}
+            />
           </div>
           {(project.event_dates?.length ? (
             <p

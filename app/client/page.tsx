@@ -13,10 +13,19 @@ import ClientProjectDetail from '@/components/client/ClientProjectDetail'
 import ModalNewProject from '@/components/client/ModalNewProject'
 import DrawerAddProposal from '@/components/client/DrawerAddProposal'
 import ProposalDetailModal from '@/components/proposals/ProposalDetailModal'
+import ProjectStatusChips from '@/components/client/ProjectStatusChips'
 import type { Proposal } from '@/lib/types'
 import type { ProposalRow } from '@/components/client/ClientProposalTable'
 
-function ProjectCard({ project, onSelect }: { project: ClientProject; onSelect: () => void }) {
+function ProjectCard({
+  project,
+  onSelect,
+  onUpdated,
+}: {
+  project: ClientProject
+  onSelect: () => void
+  onUpdated?: () => void
+}) {
   const proposals = project.proposals || []
   const pending = proposals.filter((p) => p.status === 'pending').length
   const accepted = proposals.filter((p) => p.status === 'accepted').length
@@ -24,9 +33,16 @@ function ProjectCard({ project, onSelect }: { project: ClientProject; onSelect: 
   const negotiating = proposals.filter((p) => p.status === 'negotiating').length
 
   return (
-    <button
-      type="button"
+    <div
+      role="button"
+      tabIndex={0}
       onClick={onSelect}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          onSelect()
+        }
+      }}
       style={{
         width: '100%',
         textAlign: 'left',
@@ -45,16 +61,28 @@ function ProjectCard({ project, onSelect }: { project: ClientProject; onSelect: 
           <div style={{ fontSize: 12, color: 'var(--cue-ink-3)', marginTop: 2 }}>
             {project.category ?? '—'} · 제안 {proposals.length}건
           </div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 10 }}>
-            {accepted > 0 && <CueTag tone="ok">수락 {accepted}</CueTag>}
-            {pending > 0 && <CueTag tone="warn">대기 {pending}</CueTag>}
-            {negotiating > 0 && <CueTag tone="info">협상 {negotiating}</CueTag>}
-            {declined > 0 && <CueTag tone="ghost">거절 {declined}</CueTag>}
+          <div style={{ marginTop: 10 }}>
+            <ProjectStatusChips
+              projectId={project.id}
+              progressStatus={project.progress_status}
+              visibility={project.visibility}
+              embargoDate={project.embargo_date}
+              onUpdated={onUpdated}
+              stopPropagation
+            />
           </div>
+          {(accepted > 0 || pending > 0 || negotiating > 0 || declined > 0) && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
+              {accepted > 0 && <CueTag tone="ok">수락 {accepted}</CueTag>}
+              {pending > 0 && <CueTag tone="warn">대기 {pending}</CueTag>}
+              {negotiating > 0 && <CueTag tone="info">협상 {negotiating}</CueTag>}
+              {declined > 0 && <CueTag tone="ghost">거절 {declined}</CueTag>}
+            </div>
+          )}
         </div>
         <div style={{ color: 'var(--cue-ink-3)', flexShrink: 0 }}>{Ico.chev('currentColor', 16)}</div>
       </div>
-    </button>
+    </div>
   )
 }
 
@@ -338,7 +366,12 @@ function ClientDashboardPage() {
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                   {filteredProjectsForList.map((project) => (
-                    <ProjectCard key={project.id} project={project} onSelect={() => setSelectedProjectId(project.id)} />
+                    <ProjectCard
+                      key={project.id}
+                      project={project}
+                      onSelect={() => setSelectedProjectId(project.id)}
+                      onUpdated={refetch}
+                    />
                   ))}
                 </div>
               )}

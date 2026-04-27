@@ -4,7 +4,13 @@ import { useEffect, useState } from 'react'
 import { useParams, useSearchParams } from 'next/navigation'
 import MobileContainer from '@/components/layout/MobileContainer'
 import { Ico, BookmarkButton } from '@/components/cue'
+import { supabase } from '@/lib/supabase'
 import { CASTING_MOCKS, formatPay, type CastingMock } from '@/lib/castingMockData'
+import {
+    projectToCastingMock,
+    isCastableProject,
+    type CastingProjectRow,
+} from '@/lib/castingFromProjects'
 import { useBackWithFallback } from '@/lib/useBackWithFallback'
 import ApplyCastingSheet from '../_components/ApplyCastingSheet'
 
@@ -37,12 +43,73 @@ export default function CastingDetailPage() {
     const goBack = useBackWithFallback('/casting')
     const id = typeof params?.id === 'string' ? params.id : Array.isArray(params?.id) ? params.id[0] : ''
 
-    const item = CASTING_MOCKS.find((m) => m.id === id)
+    const isProjectId = id.startsWith('proj-')
+    const projectUuid = isProjectId ? id.slice('proj-'.length) : null
+
+    const mockItem = isProjectId ? null : CASTING_MOCKS.find((m) => m.id === id) ?? null
+    const [liveItem, setLiveItem] = useState<CastingMock | null>(null)
+    const [liveBrief, setLiveBrief] = useState<string | null>(null)
+    const [liveLoading, setLiveLoading] = useState<boolean>(isProjectId)
     const [openApply, setOpenApply] = useState(false)
 
     useEffect(() => {
         if (search?.get('apply') === '1') setOpenApply(true)
     }, [search])
+
+    useEffect(() => {
+        if (!projectUuid) return
+        let cancelled = false
+        const load = async () => {
+            setLiveLoading(true)
+            const { data, error } = await supabase
+                .from('projects')
+                .select(`
+                    id, title, category, visibility, progress_status,
+                    embargo_date, budget, start_date, end_date, due_date, created_at,
+                    description,
+                    clients (company_name),
+                    owner:users!owner_id (name),
+                    event_dates:project_event_dates (event_date, event_time, label, sort_order)
+                `)
+                .eq('id', projectUuid)
+                .is('deleted_at', null)
+                .maybeSingle()
+            if (cancelled) return
+            if (error || !data) {
+                setLiveItem(null)
+                setLiveLoading(false)
+                return
+            }
+            const row = data as unknown as CastingProjectRow & { description: string | null }
+            if (!isCastableProject(row)) {
+                setLiveItem(null)
+                setLiveLoading(false)
+                return
+            }
+            setLiveItem(projectToCastingMock(row))
+            setLiveBrief(row.description ?? null)
+            setLiveLoading(false)
+        }
+        load()
+        return () => {
+            cancelled = true
+        }
+    }, [projectUuid])
+
+    const item = liveItem ?? mockItem
+
+    if (liveLoading && !item) {
+        return (
+            <MobileContainer>
+                <div
+                    className="min-h-screen flex flex-col items-center justify-center px-6"
+                    style={{ background: 'var(--cue-bg)', color: 'var(--cue-ink-3)', fontSize: 13 }}
+                >
+                    공고를 불러오는 중...
+                </div>
+            </MobileContainer>
+        )
+    }
 
     if (!item) {
         return (
@@ -79,6 +146,7 @@ export default function CastingDetailPage() {
     }
 
     const brief =
+        liveBrief ||
         BRIEF_BY_ID[item.id] ||
         '상세 설명은 백엔드 연동 후 제공됩니다. 현재는 캐스팅 상세 UI 스캐폴드입니다.'
 
