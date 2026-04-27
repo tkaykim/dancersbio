@@ -13,7 +13,7 @@ export function MobileProfile() {
             position: 'absolute',
             inset: 0,
             background: `
-              radial-gradient(ellipse at 30% 30%, rgba(217,255,60,0.12), transparent 60%),
+              radial-gradient(ellipse at 30% 30%, rgba(34,197,94,0.12), transparent 60%),
               repeating-linear-gradient(135deg, rgba(255,250,235,0.04) 0 12px, rgba(255,250,235,0.08) 12px 24px)
             `,
           }}

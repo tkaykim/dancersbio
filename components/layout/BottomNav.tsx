@@ -24,6 +24,18 @@ const NAV: NavItem[] = [
     { label: 'Me',      href: '/me',      key: 'me',      icon: 'home',      aliases: ['/my'] },
 ]
 
+const ALL_ALIASES: string[] = NAV.flatMap((n) => n.aliases ?? [])
+
+function hasMoreSpecificAliasMatch(pathname: string, alias: string): boolean {
+    for (const other of ALL_ALIASES) {
+        if (other === alias) continue
+        if (other.length <= alias.length) continue
+        if (!other.startsWith(alias)) continue
+        if (pathname === other || pathname.startsWith(other + '/')) return true
+    }
+    return false
+}
+
 function isActive(item: NavItem, pathname: string): boolean {
     if (pathname === item.href) return true
     if (item.href !== '/' && pathname.startsWith(item.href + '/')) return true
@@ -31,7 +43,10 @@ function isActive(item: NavItem, pathname: string): boolean {
         for (const alias of item.aliases) {
             if (alias === '/') {
                 if (pathname === '/') return true
-            } else if (pathname === alias || pathname.startsWith(alias + '/')) {
+            } else if (pathname === alias) {
+                return true
+            } else if (pathname.startsWith(alias + '/')) {
+                if (hasMoreSpecificAliasMatch(pathname, alias)) continue
                 return true
             }
         }

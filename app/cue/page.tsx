@@ -23,7 +23,7 @@ export default function CueDesignShowcase() {
         <header className="cue-canvas-header">
           <div className="eyebrow">Design Handoff · Cue</div>
           <h1>
-            Cue<span style={{ color: '#D9FF3C' }}>.</span> Dancers Platform
+            Cue<span style={{ color: '#22C55E' }}>.</span> Dancers Platform
           </h1>
           <p className="sub">
             K-pop dance industry — casting, crew &amp; project flow. Mobile (dark) for dancers and

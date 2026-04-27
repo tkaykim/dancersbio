@@ -14,16 +14,16 @@ export const CUE = {
   ink3:      'rgba(244,240,230,0.48)',
   ink4:      'rgba(244,240,230,0.28)',
 
-  accent:    '#D9FF3C',
+  accent:    '#22C55E',
   accentInk: '#0E0E0C',
-  accentDim: 'rgba(217,255,60,0.18)',
+  accentDim: 'rgba(34,197,94,0.18)',
 
   ok:        '#7DE2A0',
   warn:      '#FFC061',
   bad:       '#FF7A6E',
   info:      '#9BC8FF',
 
-  roleDancer:      '#D9FF3C',
+  roleDancer:      '#22C55E',
   roleChoreo:      '#FFC061',
   roleClient:      '#9BC8FF',
 

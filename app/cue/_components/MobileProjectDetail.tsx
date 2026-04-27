@@ -13,7 +13,7 @@ export function MobileProjectDetail() {
             height: 220,
             position: 'relative',
             overflow: 'hidden',
-            background: `repeating-linear-gradient(120deg, rgba(217,255,60,0.08) 0 16px, rgba(217,255,60,0.18) 16px 32px)`,
+            background: `repeating-linear-gradient(120deg, rgba(34,197,94,0.08) 0 16px, rgba(34,197,94,0.18) 16px 32px)`,
           }}
         >
           <div
