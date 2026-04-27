@@ -10,14 +10,13 @@ function StatusShell({ icon, title, message, hint }: { icon: React.ReactNode; ti
             <div className="mb-4 flex items-center justify-center">{icon}</div>
             <h1
                 style={{
-                    fontFamily: 'var(--font-cue-serif), serif',
-                    fontStyle: 'italic',
-                    fontSize: 28,
-                    letterSpacing: -0.6,
+                    fontSize: 26,
+                    fontWeight: 700,
+                    letterSpacing: '-0.02em',
                     color: 'var(--cue-ink)',
                 }}
             >
-                {title}<span style={{ color: 'var(--cue-accent)' }}>.</span>
+                {title}
             </h1>
             {message && (
                 <p style={{ fontSize: 14, color: 'var(--cue-ink-2)', marginTop: 12 }}>{message}</p>
@@ -25,12 +24,10 @@ function StatusShell({ icon, title, message, hint }: { icon: React.ReactNode; ti
             {hint && (
                 <p
                     style={{
-                        fontSize: 11,
+                        fontSize: 12,
+                        fontWeight: 500,
                         color: 'var(--cue-ink-3)',
                         marginTop: 16,
-                        fontFamily: 'var(--font-cue-mono), ui-monospace, monospace',
-                        letterSpacing: 0.4,
-                        textTransform: 'uppercase',
                     }}
                 >
                     {hint}
@@ -69,24 +66,24 @@ function AuthCallbackContent() {
             {status === 'loading' && (
                 <StatusShell
                     icon={<Loader2 className="w-12 h-12 animate-spin" style={{ color: 'var(--cue-accent)' }} />}
-                    title="Processing"
+                    title="처리 중"
                     message="잠시만 기다려주세요"
                 />
             )}
             {status === 'success' && (
                 <StatusShell
                     icon={<CheckCircle2 className="w-12 h-12" style={{ color: 'var(--cue-ok)' }} />}
-                    title="Verified"
+                    title="인증 완료"
                     message={message}
-                    hint="REDIRECTING TO MY PAGE…"
+                    hint="마이페이지로 이동합니다…"
                 />
             )}
             {status === 'error' && (
                 <StatusShell
                     icon={<XCircle className="w-12 h-12" style={{ color: 'var(--cue-bad)' }} />}
-                    title="Failed"
+                    title="인증 실패"
                     message={message}
-                    hint="REDIRECTING TO SIGN IN…"
+                    hint="로그인 화면으로 이동합니다…"
                 />
             )}
         </div>

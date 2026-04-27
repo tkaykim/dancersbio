@@ -13,11 +13,9 @@ const inputStyle: React.CSSProperties = {
 }
 
 const labelStyle: React.CSSProperties = {
-    fontSize: 11,
-    letterSpacing: 1.2,
-    textTransform: 'uppercase',
-    color: 'var(--cue-ink-3)',
-    fontFamily: 'var(--font-cue-mono), ui-monospace, monospace',
+    fontSize: 12,
+    fontWeight: 500,
+    color: 'var(--cue-ink-2)',
 }
 
 function SignInContent() {
@@ -99,29 +97,16 @@ function SignInContent() {
         >
             <div className="w-full max-w-md">
                 <div className="text-center mb-10">
-                    <div
-                        style={{
-                            fontSize: 11,
-                            letterSpacing: 1.4,
-                            textTransform: 'uppercase',
-                            color: 'var(--cue-ink-3)',
-                            fontFamily: 'var(--font-cue-mono), ui-monospace, monospace',
-                            marginBottom: 8,
-                        }}
-                    >
-                        DANCERS.BIO · SIGN IN
-                    </div>
                     <h1
                         style={{
-                            fontFamily: 'var(--font-cue-serif), serif',
-                            fontStyle: 'italic',
-                            fontSize: 40,
-                            lineHeight: 1.05,
-                            letterSpacing: -0.8,
+                            fontSize: 32,
+                            fontWeight: 700,
+                            lineHeight: 1.1,
+                            letterSpacing: '-0.03em',
                             color: 'var(--cue-ink)',
                         }}
                     >
-                        Welcome back<span style={{ color: 'var(--cue-accent)' }}>.</span>
+                        다시 오신 걸 환영해요
                     </h1>
                     <p style={{ fontSize: 13, color: 'var(--cue-ink-3)', marginTop: 8 }}>
                         댄서스바이오에 오신 것을 환영합니다
@@ -167,14 +152,12 @@ function SignInContent() {
                     <div className="flex-1 h-px" style={{ background: 'var(--cue-hairline)' }} />
                     <span
                         style={{
-                            fontSize: 10,
-                            letterSpacing: 1.2,
+                            fontSize: 12,
+                            fontWeight: 500,
                             color: 'var(--cue-ink-3)',
-                            fontFamily: 'var(--font-cue-mono), ui-monospace, monospace',
-                            textTransform: 'uppercase',
                         }}
                     >
-                        OR
+                        또는
                     </span>
                     <div className="flex-1 h-px" style={{ background: 'var(--cue-hairline)' }} />
                 </div>
@@ -207,7 +190,7 @@ function SignInContent() {
 
                     <div>
                         <label htmlFor="email" className="block mb-2" style={labelStyle}>
-                            EMAIL
+                            이메일
                         </label>
                         <input
                             id="email"
@@ -224,7 +207,7 @@ function SignInContent() {
                     <div>
                         <div className="flex items-center justify-between mb-2">
                             <label htmlFor="password" style={labelStyle}>
-                                PASSWORD
+                                비밀번호
                             </label>
                             <button
                                 type="button"

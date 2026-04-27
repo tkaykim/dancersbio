@@ -90,24 +90,23 @@ export default function PostCastingSheet({ open, onClose }: Props) {
                     <div>
                         <div
                             style={{
-                                fontSize: 10,
-                                letterSpacing: 1.2,
+                                fontSize: 12,
+                                fontWeight: 500,
                                 color: 'var(--cue-ink-3)',
-                                fontFamily: 'var(--font-cue-mono), ui-monospace, monospace',
                             }}
                         >
-                            ↳ NEW POSTING
+                            새 공고
                         </div>
                         <h2
                             style={{
-                                fontFamily: 'var(--font-cue-serif), serif',
-                                fontStyle: 'italic',
                                 fontSize: 20,
+                                fontWeight: 700,
+                                letterSpacing: '-0.02em',
                                 color: 'var(--cue-ink)',
                                 marginTop: 2,
                             }}
                         >
-                            공고 올리기<span style={{ color: 'var(--cue-accent)' }}>.</span>
+                            공고 올리기
                         </h2>
                     </div>
                     <button
@@ -249,7 +248,7 @@ export default function PostCastingSheet({ open, onClose }: Props) {
                                 lineHeight: 1.55,
                             }}
                         >
-                            ↳ 현재는 UI 스캐폴드입니다. 백엔드 연동 후 실제 게시·다이렉트 발송이 동작합니다.
+                            현재는 UI 스캐폴드입니다. 백엔드 연동 후 실제 게시·다이렉트 발송이 동작합니다.
                         </div>
 
                         <button
@@ -295,13 +294,13 @@ function SuccessBlock({ onClose }: { onClose: () => void }) {
             </div>
             <h3
                 style={{
-                    fontFamily: 'var(--font-cue-serif), serif',
-                    fontStyle: 'italic',
-                    fontSize: 22,
+                    fontSize: 20,
+                    fontWeight: 700,
+                    letterSpacing: '-0.02em',
                     color: 'var(--cue-ink)',
                 }}
             >
-                게시 준비 완료<span style={{ color: 'var(--cue-accent)' }}>.</span>
+                게시 준비 완료
             </h3>
             <p style={{ fontSize: 13, color: 'var(--cue-ink-3)', marginTop: 8, lineHeight: 1.6 }}>
                 백엔드 연동이 완료되면 이 작성 내용이
@@ -332,11 +331,9 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
         <div>
             <div
                 style={{
-                    fontSize: 10,
-                    letterSpacing: 1.2,
-                    fontFamily: 'var(--font-cue-mono), ui-monospace, monospace',
-                    color: 'var(--cue-ink-3)',
-                    textTransform: 'uppercase',
+                    fontSize: 12,
+                    fontWeight: 500,
+                    color: 'var(--cue-ink-2)',
                     marginBottom: 8,
                 }}
             >

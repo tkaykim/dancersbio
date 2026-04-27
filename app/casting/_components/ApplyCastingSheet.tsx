@@ -79,24 +79,23 @@ export default function ApplyCastingSheet({ open, onClose, casting }: Props) {
                     <div>
                         <div
                             style={{
-                                fontSize: 10,
-                                letterSpacing: 1.2,
+                                fontSize: 12,
+                                fontWeight: 500,
                                 color: 'var(--cue-ink-3)',
-                                fontFamily: 'var(--font-cue-mono), ui-monospace, monospace',
                             }}
                         >
-                            ↳ APPLY · {casting.category}
+                            지원 · {casting.category}
                         </div>
                         <h2
                             style={{
-                                fontFamily: 'var(--font-cue-serif), serif',
-                                fontStyle: 'italic',
                                 fontSize: 20,
+                                fontWeight: 700,
+                                letterSpacing: '-0.02em',
                                 color: 'var(--cue-ink)',
                                 marginTop: 2,
                             }}
                         >
-                            지원하기<span style={{ color: 'var(--cue-accent)' }}>.</span>
+                            지원하기
                         </h2>
                     </div>
                     <button
@@ -129,11 +128,9 @@ export default function ApplyCastingSheet({ open, onClose, casting }: Props) {
                         >
                             <div
                                 style={{
-                                    fontSize: 10,
-                                    letterSpacing: 1.2,
-                                    fontFamily: 'var(--font-cue-mono), ui-monospace, monospace',
+                                    fontSize: 12,
+                                    fontWeight: 500,
                                     color: 'var(--cue-ink-3)',
-                                    textTransform: 'uppercase',
                                     marginBottom: 6,
                                 }}
                             >
@@ -147,7 +144,7 @@ export default function ApplyCastingSheet({ open, onClose, casting }: Props) {
                                     fontSize: 12,
                                     color: 'var(--cue-ink-3)',
                                     marginTop: 6,
-                                    fontFamily: 'var(--font-cue-mono), ui-monospace, monospace',
+                                    fontVariantNumeric: 'tabular-nums',
                                 }}
                             >
                                 {casting.poster} · {formatPay(casting.pay)}
@@ -186,7 +183,7 @@ export default function ApplyCastingSheet({ open, onClose, casting }: Props) {
                                 lineHeight: 1.55,
                             }}
                         >
-                            ↳ 현재는 UI 스캐폴드입니다. 백엔드 연동 후 클라이언트의 받은 제안함으로 발송됩니다.
+                            현재는 UI 스캐폴드입니다. 백엔드 연동 후 클라이언트의 받은 제안함으로 발송됩니다.
                         </div>
 
                         <button
@@ -232,13 +229,13 @@ function SuccessBlock({ onClose, casting }: { onClose: () => void; casting: Cast
             </div>
             <h3
                 style={{
-                    fontFamily: 'var(--font-cue-serif), serif',
-                    fontStyle: 'italic',
-                    fontSize: 22,
+                    fontSize: 20,
+                    fontWeight: 700,
+                    letterSpacing: '-0.02em',
                     color: 'var(--cue-ink)',
                 }}
             >
-                지원 준비 완료<span style={{ color: 'var(--cue-accent)' }}>.</span>
+                지원 준비 완료
             </h3>
             <p style={{ fontSize: 13, color: 'var(--cue-ink-3)', marginTop: 8, lineHeight: 1.6 }}>
                 백엔드 연동 후 &quot;{casting.poster}&quot;에게
@@ -269,11 +266,9 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
         <div>
             <div
                 style={{
-                    fontSize: 10,
-                    letterSpacing: 1.2,
-                    fontFamily: 'var(--font-cue-mono), ui-monospace, monospace',
-                    color: 'var(--cue-ink-3)',
-                    textTransform: 'uppercase',
+                    fontSize: 12,
+                    fontWeight: 500,
+                    color: 'var(--cue-ink-2)',
                     marginBottom: 8,
                 }}
             >

@@ -44,31 +44,27 @@ export default function CastingPage() {
                         borderBottom: '1px solid var(--cue-hairline)',
                     }}
                 >
-                    <div className="px-6 py-4 flex items-start justify-between">
+                    <div className="px-6 py-4 flex items-end justify-between">
                         <div>
-                            <div
-                                style={{
-                                    fontSize: 11,
-                                    letterSpacing: 1.4,
-                                    textTransform: 'uppercase',
-                                    color: 'var(--cue-ink-3)',
-                                    fontFamily: 'var(--font-cue-mono), ui-monospace, monospace',
-                                    marginBottom: 4,
-                                }}
-                            >
-                                CASTING · {visible.length} OPEN
-                            </div>
                             <h1
                                 style={{
-                                    fontFamily: 'var(--font-cue-serif), serif',
-                                    fontStyle: 'italic',
-                                    fontSize: 28,
-                                    letterSpacing: -0.6,
+                                    fontSize: 26,
+                                    fontWeight: 700,
+                                    letterSpacing: '-0.02em',
                                     color: 'var(--cue-ink)',
                                 }}
                             >
-                                Casting<span style={{ color: 'var(--cue-accent)' }}>.</span>
+                                캐스팅
                             </h1>
+                            <p
+                                style={{
+                                    fontSize: 13,
+                                    color: 'var(--cue-ink-3)',
+                                    marginTop: 2,
+                                }}
+                            >
+                                진행 중인 공고 {visible.length}건
+                            </p>
                         </div>
                         <button
                             type="button"

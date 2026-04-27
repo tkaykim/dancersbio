@@ -61,10 +61,10 @@ export default function MenuSection({ items }: MenuSectionProps) {
                             <span
                                 className="px-2 py-0.5 rounded-full"
                                 style={{
-                                    fontSize: 10,
-                                    fontWeight: 700,
-                                    fontFamily: 'var(--font-cue-mono), ui-monospace, monospace',
-                                    letterSpacing: 0.4,
+                                    fontSize: 11,
+                                    fontWeight: 600,
+                                    letterSpacing: 0.1,
+                                    fontVariantNumeric: 'tabular-nums',
                                     ...resolveBadgeStyle(item.badgeColor),
                                 }}
                             >

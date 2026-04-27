@@ -12,11 +12,9 @@ const inputStyle: React.CSSProperties = {
 }
 
 const labelStyle: React.CSSProperties = {
-    fontSize: 11,
-    letterSpacing: 1.2,
-    textTransform: 'uppercase',
-    color: 'var(--cue-ink-3)',
-    fontFamily: 'var(--font-cue-mono), ui-monospace, monospace',
+    fontSize: 12,
+    fontWeight: 500,
+    color: 'var(--cue-ink-2)',
 }
 
 export default function SignUpPage() {
@@ -63,29 +61,16 @@ export default function SignUpPage() {
         >
             <div className="w-full max-w-md">
                 <div className="text-center mb-10">
-                    <div
-                        style={{
-                            fontSize: 11,
-                            letterSpacing: 1.4,
-                            textTransform: 'uppercase',
-                            color: 'var(--cue-ink-3)',
-                            fontFamily: 'var(--font-cue-mono), ui-monospace, monospace',
-                            marginBottom: 8,
-                        }}
-                    >
-                        DANCERS.BIO · SIGN UP
-                    </div>
                     <h1
                         style={{
-                            fontFamily: 'var(--font-cue-serif), serif',
-                            fontStyle: 'italic',
-                            fontSize: 40,
-                            lineHeight: 1.05,
-                            letterSpacing: -0.8,
+                            fontSize: 32,
+                            fontWeight: 700,
+                            lineHeight: 1.1,
+                            letterSpacing: '-0.03em',
                             color: 'var(--cue-ink)',
                         }}
                     >
-                        Join the stage<span style={{ color: 'var(--cue-accent)' }}>.</span>
+                        지금 시작하세요
                     </h1>
                     <p style={{ fontSize: 13, color: 'var(--cue-ink-3)', marginTop: 8 }}>
                         댄서스바이오와 함께 시작하세요
@@ -108,7 +93,7 @@ export default function SignUpPage() {
 
                     <div>
                         <label htmlFor="name" className="block mb-2" style={labelStyle}>
-                            NAME
+                            이름
                         </label>
                         <input
                             id="name"
@@ -124,7 +109,7 @@ export default function SignUpPage() {
 
                     <div>
                         <label htmlFor="email" className="block mb-2" style={labelStyle}>
-                            EMAIL
+                            이메일
                         </label>
                         <input
                             id="email"
@@ -140,7 +125,7 @@ export default function SignUpPage() {
 
                     <div>
                         <label htmlFor="password" className="block mb-2" style={labelStyle}>
-                            PASSWORD
+                            비밀번호
                         </label>
                         <input
                             id="password"
@@ -156,7 +141,7 @@ export default function SignUpPage() {
 
                     <div>
                         <label htmlFor="confirmPassword" className="block mb-2" style={labelStyle}>
-                            CONFIRM PASSWORD
+                            비밀번호 확인
                         </label>
                         <input
                             id="confirmPassword"

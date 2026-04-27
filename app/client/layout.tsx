@@ -88,10 +88,9 @@ export default function ClientPortalLayout({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontFamily: 'var(--font-cue-serif)',
-              fontStyle: 'italic',
-              fontSize: 18,
+              fontSize: 16,
               fontWeight: 700,
+              letterSpacing: '-0.03em',
             }}
           >
             d

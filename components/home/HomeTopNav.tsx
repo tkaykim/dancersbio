@@ -9,7 +9,7 @@ export default function HomeTopNav() {
             className="sticky top-0 z-50 flex items-center justify-between pt-header-safe"
             style={{
                 padding: '14px 20px',
-                background: 'rgba(14,14,12,0.78)',
+                background: 'rgba(11,11,13,0.78)',
                 backdropFilter: 'blur(18px)',
                 WebkitBackdropFilter: 'blur(18px)',
             }}
@@ -35,11 +35,10 @@ export default function HomeTopNav() {
             <Link href="/" style={{ display: 'flex', alignItems: 'baseline', gap: 0, textDecoration: 'none' }}>
                 <span
                     style={{
-                        fontFamily: 'var(--font-cue-serif), serif',
-                        fontStyle: 'italic',
-                        fontSize: 26,
+                        fontSize: 18,
+                        fontWeight: 700,
                         color: 'var(--cue-ink)',
-                        letterSpacing: -0.4,
+                        letterSpacing: '-0.03em',
                         lineHeight: 1,
                     }}
                 >
@@ -47,20 +46,19 @@ export default function HomeTopNav() {
                 </span>
                 <span
                     style={{
-                        width: 6,
-                        height: 6,
+                        width: 5,
+                        height: 5,
                         borderRadius: '50%',
                         background: 'var(--cue-accent)',
-                        margin: '0 1px 4px',
+                        margin: '0 2px 2px',
                     }}
                 />
                 <span
                     style={{
-                        fontFamily: 'var(--font-cue-serif), serif',
-                        fontStyle: 'italic',
-                        fontSize: 26,
+                        fontSize: 18,
+                        fontWeight: 700,
                         color: 'var(--cue-ink)',
-                        letterSpacing: -0.4,
+                        letterSpacing: '-0.03em',
                         lineHeight: 1,
                     }}
                 >

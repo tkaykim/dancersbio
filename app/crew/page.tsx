@@ -52,7 +52,7 @@ export default function CrewPage() {
                         .select('id, stage_name, korean_name, profile_img, bio, specialties, genres, location, is_verified, slug')
                         .eq('is_verified', true)
                         .order('created_at', { ascending: false })
-                        .limit(10),
+                        .limit(12),
                     supabase
                         .from('teams')
                         .select('id, name, slug, profile_img, is_verified, team_members(id)')
@@ -135,18 +135,6 @@ export default function CrewPage() {
         }
     }
 
-    const getSimilarityTone = (score: number) => {
-        if (score >= 0.7) return 'var(--cue-ok)'
-        if (score >= 0.4) return 'var(--cue-warn)'
-        return 'var(--cue-info)'
-    }
-
-    const getSimilarityLabel = (score: number) => {
-        if (score >= 0.7) return '정확히 일치'
-        if (score >= 0.4) return '유사함'
-        return '부분 일치'
-    }
-
     return (
         <MobileContainer>
             <div className="min-h-screen pb-24" style={{ background: 'var(--cue-bg)', color: 'var(--cue-ink)' }}>
@@ -160,39 +148,25 @@ export default function CrewPage() {
                         borderBottom: '1px solid var(--cue-hairline)',
                     }}
                 >
-                    <div className="px-6 pb-5">
-                        <div
-                            style={{
-                                fontSize: 11,
-                                letterSpacing: 1.4,
-                                textTransform: 'uppercase',
-                                color: 'var(--cue-ink-3)',
-                                fontFamily: 'var(--font-cue-mono), ui-monospace, monospace',
-                                marginBottom: 4,
-                            }}
-                        >
-                            CREW · 댄서·팀 발견
-                        </div>
+                    <div className="px-6 pb-4 pt-2">
                         <h1
                             style={{
-                                fontFamily: 'var(--font-cue-serif), serif',
-                                fontStyle: 'italic',
-                                fontSize: 28,
-                                lineHeight: 1.05,
-                                letterSpacing: -0.6,
+                                fontSize: 24,
+                                fontWeight: 700,
+                                letterSpacing: '-0.02em',
                                 color: 'var(--cue-ink)',
                             }}
                         >
-                            Find your crew<span style={{ color: 'var(--cue-accent)' }}>.</span>
+                            크루
                         </h1>
-                        <p style={{ fontSize: 12, color: 'var(--cue-ink-3)', marginTop: 6 }}>
+                        <p style={{ fontSize: 13, color: 'var(--cue-ink-3)', marginTop: 2 }}>
                             활동명으로 댄서·팀을 찾거나 새 프로필을 만드세요
                         </p>
                     </div>
                 </div>
 
                 {/* Search Input */}
-                <div className="px-6 pt-6">
+                <div className="px-4 pt-4">
                     <div className="relative">
                         <Search
                             className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5"
@@ -220,7 +194,7 @@ export default function CrewPage() {
                 </div>
 
                 {/* Results */}
-                <div className="px-6 pt-6 pb-10">
+                <div className="px-4 pt-5 pb-10">
                     {loading ? (
                         <div className="text-center py-12" style={{ color: 'var(--cue-ink-3)', fontSize: 13 }}>
                             검색 중...
@@ -230,9 +204,9 @@ export default function CrewPage() {
                             <User className="w-16 h-16 mx-auto mb-4" style={{ color: 'var(--cue-ink-4)' }} />
                             <h3
                                 style={{
-                                    fontFamily: 'var(--font-cue-serif), serif',
-                                    fontStyle: 'italic',
-                                    fontSize: 20,
+                                    fontSize: 18,
+                                    fontWeight: 700,
+                                    letterSpacing: '-0.02em',
                                     color: 'var(--cue-ink)',
                                     marginBottom: 8,
                                 }}
@@ -262,198 +236,25 @@ export default function CrewPage() {
                             dancers={recDancers}
                             teams={recTeams}
                         />
-                    ) : searched ? (
-                        <div className="space-y-6">
+                    ) : (
+                        <div className="space-y-7">
                             {teamResults.length > 0 && (
-                                <div>
-                                    <div
-                                        style={{
-                                            fontSize: 11,
-                                            letterSpacing: 1.4,
-                                            textTransform: 'uppercase',
-                                            color: 'var(--cue-ink-3)',
-                                            fontFamily: 'var(--font-cue-mono), ui-monospace, monospace',
-                                            marginBottom: 10,
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: 6,
-                                        }}
-                                    >
-                                        <Users className="w-3 h-3" />
-                                        TEAMS · 팀
-                                    </div>
-                                    <div className="space-y-2">
-                                        {teamResults.map((team) => (
-                                            <Link
-                                                key={team.id}
-                                                href={`/team/${team.slug || team.id}`}
-                                                className="block rounded-xl p-4 transition-colors"
-                                                style={{
-                                                    background: 'var(--cue-surface)',
-                                                    border: '1px solid var(--cue-hairline)',
-                                                }}
-                                            >
-                                                <div className="flex items-center gap-4">
-                                                    <div
-                                                        className="w-14 h-14 rounded-lg flex-shrink-0 overflow-hidden relative"
-                                                        style={{
-                                                            background: 'var(--cue-surface-2)',
-                                                            border: '1px solid var(--cue-hairline)',
-                                                        }}
-                                                    >
-                                                        {team.profile_img ? (
-                                                            <Image src={team.profile_img} alt={team.name} fill className="object-cover" />
-                                                        ) : (
-                                                            <div className="w-full h-full flex items-center justify-center">
-                                                                <Users className="w-6 h-6" style={{ color: 'var(--cue-ink-4)' }} />
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                    <div className="flex-1 min-w-0">
-                                                        <div className="flex items-center gap-2">
-                                                            <h3
-                                                                className="truncate"
-                                                                style={{ color: 'var(--cue-ink)', fontSize: 14, fontWeight: 600 }}
-                                                            >
-                                                                {team.name}
-                                                            </h3>
-                                                            {team.is_verified && (
-                                                                <CheckCircle2 className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--cue-accent)' }} />
-                                                            )}
-                                                            <span
-                                                                style={{
-                                                                    padding: '2px 6px',
-                                                                    fontSize: 10,
-                                                                    borderRadius: 4,
-                                                                    background: 'var(--cue-surface-2)',
-                                                                    color: 'var(--cue-ink-3)',
-                                                                    fontFamily: 'var(--font-cue-mono), ui-monospace, monospace',
-                                                                    letterSpacing: 0.4,
-                                                                    textTransform: 'uppercase',
-                                                                }}
-                                                            >
-                                                                팀
-                                                            </span>
-                                                        </div>
-                                                        <p style={{ fontSize: 11, color: 'var(--cue-ink-3)', marginTop: 4 }}>
-                                                            멤버 {team.member_count}명
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            </Link>
-                                        ))}
-                                    </div>
-                                </div>
+                                <Section title="팀" count={teamResults.length}>
+                                    <TeamGrid teams={teamResults} />
+                                </Section>
                             )}
 
                             {results.length > 0 && (
-                                <div>
-                                    <div
-                                        style={{
-                                            fontSize: 11,
-                                            letterSpacing: 1.4,
-                                            textTransform: 'uppercase',
-                                            color: 'var(--cue-ink-3)',
-                                            fontFamily: 'var(--font-cue-mono), ui-monospace, monospace',
-                                            marginBottom: 10,
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: 6,
-                                        }}
-                                    >
-                                        <User className="w-3 h-3" />
-                                        DANCERS · 댄서
-                                    </div>
-                                    <div className="space-y-2">
-                                        {results.map((dancer) => {
-                                            const tone = getSimilarityTone(dancer.similarity_score)
-                                            const label = getSimilarityLabel(dancer.similarity_score)
-                                            return (
-                                                <Link
-                                                    key={dancer.id}
-                                                    href={`/profile/${dancer.slug || dancer.id}`}
-                                                    className="block rounded-xl p-4"
-                                                    style={{
-                                                        background: 'var(--cue-surface)',
-                                                        border: '1px solid var(--cue-hairline)',
-                                                    }}
-                                                >
-                                                    <div className="flex items-start gap-4">
-                                                        <div
-                                                            className="w-14 h-14 rounded-lg flex-shrink-0 flex items-center justify-center overflow-hidden"
-                                                            style={{
-                                                                background: 'var(--cue-surface-2)',
-                                                                border: '1px solid var(--cue-hairline)',
-                                                            }}
-                                                        >
-                                                            {dancer.profile_img ? (
-                                                                <img
-                                                                    src={dancer.profile_img}
-                                                                    alt={dancer.stage_name}
-                                                                    className="w-full h-full object-cover"
-                                                                />
-                                                            ) : (
-                                                                <User className="w-7 h-7" style={{ color: 'var(--cue-ink-4)' }} />
-                                                            )}
-                                                        </div>
-                                                        <div className="flex-1 min-w-0">
-                                                            <div className="flex items-center gap-2 mb-1">
-                                                                <h3
-                                                                    className="truncate"
-                                                                    style={{ color: 'var(--cue-ink)', fontSize: 14, fontWeight: 600 }}
-                                                                >
-                                                                    {dancer.stage_name}
-                                                                    {dancer.korean_name && (
-                                                                        <span style={{ color: 'var(--cue-ink-3)', marginLeft: 8, fontSize: 12, fontWeight: 400 }}>
-                                                                            {dancer.korean_name}
-                                                                        </span>
-                                                                    )}
-                                                                </h3>
-                                                                {dancer.is_verified && (
-                                                                    <CheckCircle2 className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--cue-accent)' }} />
-                                                                )}
-                                                            </div>
-                                                            <div className="flex items-center gap-2 mb-2" style={{ fontFamily: 'var(--font-cue-mono), ui-monospace, monospace' }}>
-                                                                <span style={{ fontSize: 10, color: tone, letterSpacing: 0.4, textTransform: 'uppercase' }}>
-                                                                    {label}
-                                                                </span>
-                                                                <span style={{ fontSize: 10, color: 'var(--cue-ink-3)' }}>
-                                                                    · {Math.round(dancer.similarity_score * 100)}%
-                                                                </span>
-                                                            </div>
-                                                            {dancer.genres && dancer.genres.length > 0 && (
-                                                                <div className="flex flex-wrap gap-1">
-                                                                    {dancer.genres.slice(0, 3).map((genre) => (
-                                                                        <span
-                                                                            key={genre}
-                                                                            style={{
-                                                                                padding: '2px 8px',
-                                                                                background: 'var(--cue-surface-2)',
-                                                                                color: 'var(--cue-ink-2)',
-                                                                                fontSize: 10,
-                                                                                borderRadius: 999,
-                                                                                border: '1px solid var(--cue-hairline)',
-                                                                            }}
-                                                                        >
-                                                                            {genre}
-                                                                        </span>
-                                                                    ))}
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                </Link>
-                                            )
-                                        })}
-                                    </div>
-                                </div>
+                                <Section title="댄서" count={results.length}>
+                                    <DancerGrid dancers={results} />
+                                </Section>
                             )}
                         </div>
-                    ) : null}
+                    )}
 
                     {searched && (results.length > 0 || teamResults.length > 0) && (
                         <div
-                            className="mt-8 p-4 rounded-xl"
+                            className="mt-8 p-4 rounded-2xl"
                             style={{
                                 background: 'var(--cue-surface)',
                                 border: '1px solid var(--cue-hairline)',
@@ -483,6 +284,206 @@ export default function CrewPage() {
     )
 }
 
+function Section({
+    title,
+    count,
+    children,
+}: {
+    title: string
+    count?: number
+    children: React.ReactNode
+}) {
+    return (
+        <section>
+            <div
+                className="px-2 mb-3 flex items-baseline gap-2"
+            >
+                <h2
+                    style={{
+                        fontSize: 16,
+                        fontWeight: 700,
+                        letterSpacing: '-0.02em',
+                        color: 'var(--cue-ink)',
+                    }}
+                >
+                    {title}
+                </h2>
+                {typeof count === 'number' && (
+                    <span
+                        style={{
+                            fontSize: 12,
+                            fontWeight: 500,
+                            color: 'var(--cue-ink-3)',
+                            fontVariantNumeric: 'tabular-nums',
+                        }}
+                    >
+                        {count}
+                    </span>
+                )}
+            </div>
+            {children}
+        </section>
+    )
+}
+
+function DancerGrid({ dancers }: { dancers: DancerSearchResult[] }) {
+    return (
+        <div className="grid grid-cols-2 gap-3">
+            {dancers.map((dancer) => (
+                <DancerCard key={dancer.id} dancer={dancer} />
+            ))}
+        </div>
+    )
+}
+
+function DancerCard({ dancer }: { dancer: DancerSearchResult }) {
+    return (
+        <Link
+            href={`/profile/${dancer.slug || dancer.id}`}
+            className="block relative rounded-2xl overflow-hidden"
+            style={{
+                aspectRatio: '3 / 4',
+                background: 'var(--cue-surface-2)',
+                border: '1px solid var(--cue-hairline)',
+            }}
+        >
+            {dancer.profile_img ? (
+                <img
+                    src={dancer.profile_img}
+                    alt={dancer.stage_name}
+                    className="absolute inset-0 w-full h-full object-cover"
+                    loading="lazy"
+                />
+            ) : (
+                <div className="absolute inset-0 flex items-center justify-center">
+                    <User className="w-10 h-10" style={{ color: 'var(--cue-ink-4)' }} />
+                </div>
+            )}
+
+            {/* Bottom gradient + name */}
+            <div
+                className="absolute inset-x-0 bottom-0 px-3 pt-8 pb-3"
+                style={{
+                    background:
+                        'linear-gradient(to top, rgba(0,0,0,0.78), rgba(0,0,0,0.35) 60%, transparent)',
+                }}
+            >
+                <div className="flex items-center gap-1">
+                    <span
+                        className="truncate"
+                        style={{
+                            color: '#fff',
+                            fontSize: 14,
+                            fontWeight: 700,
+                            letterSpacing: '-0.01em',
+                            textShadow: '0 1px 4px rgba(0,0,0,0.4)',
+                        }}
+                    >
+                        {dancer.stage_name}
+                    </span>
+                    {dancer.is_verified && (
+                        <CheckCircle2
+                            className="w-3.5 h-3.5 flex-shrink-0"
+                            style={{ color: 'var(--cue-accent)' }}
+                        />
+                    )}
+                </div>
+                {dancer.korean_name && (
+                    <div
+                        className="truncate"
+                        style={{
+                            color: 'rgba(255,255,255,0.65)',
+                            fontSize: 11,
+                            fontWeight: 500,
+                            marginTop: 1,
+                        }}
+                    >
+                        {dancer.korean_name}
+                    </div>
+                )}
+            </div>
+        </Link>
+    )
+}
+
+function TeamGrid({ teams }: { teams: TeamSearchResult[] }) {
+    return (
+        <div className="grid grid-cols-2 gap-3">
+            {teams.map((team) => (
+                <TeamCard key={team.id} team={team} />
+            ))}
+        </div>
+    )
+}
+
+function TeamCard({ team }: { team: TeamSearchResult }) {
+    return (
+        <Link
+            href={`/team/${team.slug || team.id}`}
+            className="block relative rounded-2xl overflow-hidden"
+            style={{
+                aspectRatio: '3 / 4',
+                background: 'var(--cue-surface-2)',
+                border: '1px solid var(--cue-hairline)',
+            }}
+        >
+            {team.profile_img ? (
+                <Image
+                    src={team.profile_img}
+                    alt={team.name}
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 480px) 50vw, 240px"
+                />
+            ) : (
+                <div className="absolute inset-0 flex items-center justify-center">
+                    <Users className="w-10 h-10" style={{ color: 'var(--cue-ink-4)' }} />
+                </div>
+            )}
+
+            <div
+                className="absolute inset-x-0 bottom-0 px-3 pt-8 pb-3"
+                style={{
+                    background:
+                        'linear-gradient(to top, rgba(0,0,0,0.78), rgba(0,0,0,0.35) 60%, transparent)',
+                }}
+            >
+                <div className="flex items-center gap-1">
+                    <span
+                        className="truncate"
+                        style={{
+                            color: '#fff',
+                            fontSize: 14,
+                            fontWeight: 700,
+                            letterSpacing: '-0.01em',
+                            textShadow: '0 1px 4px rgba(0,0,0,0.4)',
+                        }}
+                    >
+                        {team.name}
+                    </span>
+                    {team.is_verified && (
+                        <CheckCircle2
+                            className="w-3.5 h-3.5 flex-shrink-0"
+                            style={{ color: 'var(--cue-accent)' }}
+                        />
+                    )}
+                </div>
+                <div
+                    style={{
+                        color: 'rgba(255,255,255,0.65)',
+                        fontSize: 11,
+                        fontWeight: 500,
+                        marginTop: 1,
+                        fontVariantNumeric: 'tabular-nums',
+                    }}
+                >
+                    멤버 {team.member_count}명
+                </div>
+            </div>
+        </Link>
+    )
+}
+
 function RecommendationsBlock({
     loading,
     dancers,
@@ -502,7 +503,7 @@ function RecommendationsBlock({
     if (dancers.length === 0 && teams.length === 0) {
         return (
             <div
-                className="rounded-xl p-6 text-center"
+                className="rounded-2xl p-6 text-center"
                 style={{
                     background: 'var(--cue-surface)',
                     border: '1px dashed var(--cue-hairline)',
@@ -517,182 +518,17 @@ function RecommendationsBlock({
         )
     }
     return (
-        <div className="space-y-6">
-            <div>
-                <div
-                    style={{
-                        fontSize: 11,
-                        letterSpacing: 1.4,
-                        textTransform: 'uppercase',
-                        color: 'var(--cue-ink-3)',
-                        fontFamily: 'var(--font-cue-mono), ui-monospace, monospace',
-                        marginBottom: 10,
-                    }}
-                >
-                    ↳ FOR YOU · 추천
-                </div>
-                <p style={{ fontSize: 12, color: 'var(--cue-ink-3)', marginBottom: 16, lineHeight: 1.55 }}>
-                    검증된 댄서·팀을 먼저 살펴보세요. 활동명을 입력하면 정확한 검색이 가능합니다.
-                </p>
-            </div>
-
+        <div className="space-y-7">
             {teams.length > 0 && (
-                <div>
-                    <div
-                        style={{
-                            fontSize: 11,
-                            letterSpacing: 1.4,
-                            textTransform: 'uppercase',
-                            color: 'var(--cue-ink-3)',
-                            fontFamily: 'var(--font-cue-mono), ui-monospace, monospace',
-                            marginBottom: 10,
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 6,
-                        }}
-                    >
-                        <Users className="w-3 h-3" />
-                        TEAMS · 팀
-                    </div>
-                    <div className="space-y-2">
-                        {teams.map((team) => (
-                            <Link
-                                key={team.id}
-                                href={`/team/${team.slug || team.id}`}
-                                className="block rounded-xl p-4 transition-colors"
-                                style={{
-                                    background: 'var(--cue-surface)',
-                                    border: '1px solid var(--cue-hairline)',
-                                }}
-                            >
-                                <div className="flex items-center gap-4">
-                                    <div
-                                        className="w-14 h-14 rounded-lg flex-shrink-0 overflow-hidden relative"
-                                        style={{
-                                            background: 'var(--cue-surface-2)',
-                                            border: '1px solid var(--cue-hairline)',
-                                        }}
-                                    >
-                                        {team.profile_img ? (
-                                            <Image src={team.profile_img} alt={team.name} fill className="object-cover" />
-                                        ) : (
-                                            <div className="w-full h-full flex items-center justify-center">
-                                                <Users className="w-6 h-6" style={{ color: 'var(--cue-ink-4)' }} />
-                                            </div>
-                                        )}
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <div className="flex items-center gap-2">
-                                            <h3
-                                                className="truncate"
-                                                style={{ color: 'var(--cue-ink)', fontSize: 14, fontWeight: 600 }}
-                                            >
-                                                {team.name}
-                                            </h3>
-                                            {team.is_verified && (
-                                                <CheckCircle2 className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--cue-accent)' }} />
-                                            )}
-                                        </div>
-                                        <p style={{ fontSize: 11, color: 'var(--cue-ink-3)', marginTop: 4 }}>
-                                            멤버 {team.member_count}명
-                                        </p>
-                                    </div>
-                                </div>
-                            </Link>
-                        ))}
-                    </div>
-                </div>
+                <Section title="팀">
+                    <TeamGrid teams={teams} />
+                </Section>
             )}
 
             {dancers.length > 0 && (
-                <div>
-                    <div
-                        style={{
-                            fontSize: 11,
-                            letterSpacing: 1.4,
-                            textTransform: 'uppercase',
-                            color: 'var(--cue-ink-3)',
-                            fontFamily: 'var(--font-cue-mono), ui-monospace, monospace',
-                            marginBottom: 10,
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 6,
-                        }}
-                    >
-                        <User className="w-3 h-3" />
-                        DANCERS · 댄서
-                    </div>
-                    <div className="space-y-2">
-                        {dancers.map((dancer) => (
-                            <Link
-                                key={dancer.id}
-                                href={`/profile/${dancer.slug || dancer.id}`}
-                                className="block rounded-xl p-4"
-                                style={{
-                                    background: 'var(--cue-surface)',
-                                    border: '1px solid var(--cue-hairline)',
-                                }}
-                            >
-                                <div className="flex items-start gap-4">
-                                    <div
-                                        className="w-14 h-14 rounded-lg flex-shrink-0 flex items-center justify-center overflow-hidden"
-                                        style={{
-                                            background: 'var(--cue-surface-2)',
-                                            border: '1px solid var(--cue-hairline)',
-                                        }}
-                                    >
-                                        {dancer.profile_img ? (
-                                            <img
-                                                src={dancer.profile_img}
-                                                alt={dancer.stage_name}
-                                                className="w-full h-full object-cover"
-                                            />
-                                        ) : (
-                                            <User className="w-7 h-7" style={{ color: 'var(--cue-ink-4)' }} />
-                                        )}
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <div className="flex items-center gap-2 mb-1">
-                                            <h3
-                                                className="truncate"
-                                                style={{ color: 'var(--cue-ink)', fontSize: 14, fontWeight: 600 }}
-                                            >
-                                                {dancer.stage_name}
-                                                {dancer.korean_name && (
-                                                    <span style={{ color: 'var(--cue-ink-3)', marginLeft: 8, fontSize: 12, fontWeight: 400 }}>
-                                                        {dancer.korean_name}
-                                                    </span>
-                                                )}
-                                            </h3>
-                                            {dancer.is_verified && (
-                                                <CheckCircle2 className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--cue-accent)' }} />
-                                            )}
-                                        </div>
-                                        {dancer.genres && dancer.genres.length > 0 && (
-                                            <div className="flex flex-wrap gap-1 mt-1">
-                                                {dancer.genres.slice(0, 3).map((genre) => (
-                                                    <span
-                                                        key={genre}
-                                                        style={{
-                                                            padding: '2px 8px',
-                                                            background: 'var(--cue-surface-2)',
-                                                            color: 'var(--cue-ink-2)',
-                                                            fontSize: 10,
-                                                            borderRadius: 999,
-                                                            border: '1px solid var(--cue-hairline)',
-                                                        }}
-                                                    >
-                                                        {genre}
-                                                    </span>
-                                                ))}
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            </Link>
-                        ))}
-                    </div>
-                </div>
+                <Section title="댄서">
+                    <DancerGrid dancers={dancers} />
+                </Section>
             )}
         </div>
     )

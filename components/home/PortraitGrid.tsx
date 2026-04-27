@@ -127,16 +127,14 @@ export default function PortraitGrid({ category = "all" }: PortraitGridProps) {
                                         <span
                                             style={{
                                                 padding: '3px 8px',
-                                                background: 'rgba(14,14,12,0.7)',
+                                                background: 'rgba(11,11,13,0.7)',
                                                 backdropFilter: 'blur(8px)',
                                                 color: 'var(--cue-ink-2)',
-                                                fontSize: 10,
+                                                fontSize: 11,
                                                 fontWeight: 500,
                                                 borderRadius: 999,
                                                 border: '1px solid var(--cue-hairline)',
-                                                fontFamily: 'var(--font-cue-mono), ui-monospace, monospace',
-                                                letterSpacing: 0.4,
-                                                textTransform: 'uppercase',
+                                                letterSpacing: 0.1,
                                             }}
                                         >
                                             {SPECIALTY_LABELS[primarySpecialty] || primarySpecialty}

@@ -118,27 +118,15 @@ function ProposalsPage() {
                             <ArrowLeft className="w-6 h-6" />
                         </button>
                         <div>
-                            <div
-                                style={{
-                                    fontSize: 10,
-                                    letterSpacing: 1.4,
-                                    textTransform: 'uppercase',
-                                    color: 'var(--cue-ink-3)',
-                                    fontFamily: 'var(--font-cue-mono), ui-monospace, monospace',
-                                }}
-                            >
-                                INBOX · 제안
-                            </div>
                             <h1
                                 style={{
-                                    fontFamily: 'var(--font-cue-serif), serif',
-                                    fontStyle: 'italic',
                                     fontSize: 22,
-                                    letterSpacing: -0.4,
+                                    fontWeight: 700,
+                                    letterSpacing: '-0.02em',
                                     color: 'var(--cue-ink)',
                                 }}
                             >
-                                Proposals<span style={{ color: 'var(--cue-accent)' }}>.</span>
+                                제안함
                             </h1>
                         </div>
                     </div>

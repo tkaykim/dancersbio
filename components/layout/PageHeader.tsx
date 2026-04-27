@@ -48,17 +48,15 @@ export default function PageHeader({ title, backHref, subtitle, rightContent }: 
             <ArrowLeft className="w-6 h-6" />
           </button>
           <h1
-            className="flex-1 min-w-0"
+            className="flex-1 min-w-0 truncate"
             style={{
-              fontFamily: 'var(--font-cue-serif), serif',
-              fontStyle: 'italic',
               fontSize: 22,
-              letterSpacing: -0.4,
+              fontWeight: 700,
+              letterSpacing: '-0.02em',
               color: 'var(--cue-ink)',
             }}
           >
             {title}
-            <span style={{ color: 'var(--cue-accent)' }}>.</span>
           </h1>
           {rightContent}
         </div>

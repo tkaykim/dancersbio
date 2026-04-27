@@ -44,14 +44,13 @@ function OAuthCallbackContent() {
                 <Loader2 className="w-12 h-12 mx-auto mb-4 animate-spin" style={{ color: 'var(--cue-accent)' }} />
                 <h1
                     style={{
-                        fontFamily: 'var(--font-cue-serif), serif',
-                        fontStyle: 'italic',
-                        fontSize: 24,
-                        letterSpacing: -0.4,
+                        fontSize: 22,
+                        fontWeight: 700,
+                        letterSpacing: '-0.02em',
                         color: 'var(--cue-ink)',
                     }}
                 >
-                    Signing you in<span style={{ color: 'var(--cue-accent)' }}>.</span>
+                    로그인 중
                 </h1>
                 <p style={{ fontSize: 13, color: 'var(--cue-ink-3)', marginTop: 8 }}>
                     {status === 'error' ? '로그인에 실패했습니다. 로그인 페이지로 이동합니다.' : '잠시만 기다려주세요'}

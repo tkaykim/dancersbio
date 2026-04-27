@@ -25,24 +25,22 @@ export default function QuickStatCard({ label, value, accent }: QuickStatCardPro
         >
             <p
                 style={{
-                    fontFamily: 'var(--font-cue-serif), serif',
-                    fontStyle: 'italic',
-                    fontSize: 26,
-                    lineHeight: 1.05,
-                    letterSpacing: -0.4,
+                    fontSize: 24,
+                    lineHeight: 1.1,
+                    fontWeight: 700,
+                    letterSpacing: '-0.02em',
+                    fontVariantNumeric: 'tabular-nums',
                     color,
                 }}
             >
                 {value}
             </p>
             <p
-                className="truncate mt-2"
+                className="truncate mt-1"
                 style={{
-                    fontSize: 10,
+                    fontSize: 12,
+                    fontWeight: 500,
                     color: 'var(--cue-ink-3)',
-                    fontFamily: 'var(--font-cue-mono), ui-monospace, monospace',
-                    letterSpacing: 0.6,
-                    textTransform: 'uppercase',
                 }}
             >
                 {label}

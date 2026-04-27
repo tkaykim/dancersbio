@@ -132,29 +132,16 @@ export default function MyPage() {
                     borderBottom: '1px solid var(--cue-hairline)',
                 }}
             >
-                <div className="px-6 pb-4">
-                    <div
-                        style={{
-                            fontSize: 11,
-                            letterSpacing: 1.4,
-                            textTransform: 'uppercase',
-                            color: 'var(--cue-ink-3)',
-                            fontFamily: 'var(--font-cue-mono), ui-monospace, monospace',
-                            marginBottom: 2,
-                        }}
-                    >
-                        ME · 마이페이지
-                    </div>
+                <div className="px-6 pb-4 pt-2">
                     <h1
                         style={{
-                            fontFamily: 'var(--font-cue-serif), serif',
-                            fontStyle: 'italic',
-                            fontSize: 28,
-                            letterSpacing: -0.6,
+                            fontSize: 24,
+                            fontWeight: 700,
+                            letterSpacing: '-0.02em',
                             color: 'var(--cue-ink)',
                         }}
                     >
-                        Your stage<span style={{ color: 'var(--cue-accent)' }}>.</span>
+                        마이페이지
                     </h1>
                 </div>
             </div>
@@ -191,10 +178,11 @@ export default function MyPage() {
                 <p
                     className="text-center"
                     style={{
-                        fontSize: 10,
+                        fontSize: 11,
+                        fontWeight: 500,
                         color: 'var(--cue-ink-4)',
-                        fontFamily: 'var(--font-cue-mono), ui-monospace, monospace',
-                        letterSpacing: 0.6,
+                        fontVariantNumeric: 'tabular-nums',
+                        letterSpacing: 0.2,
                     }}
                 >
                     dancers.bio v2.2.0

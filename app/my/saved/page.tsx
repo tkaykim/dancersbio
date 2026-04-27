@@ -49,29 +49,25 @@ export default function SavedPage() {
                             {Ico.chevLeft('currentColor', 16)}
                         </button>
                         <div>
-                            <div
-                                style={{
-                                    fontSize: 11,
-                                    letterSpacing: 1.4,
-                                    textTransform: 'uppercase',
-                                    color: 'var(--cue-ink-3)',
-                                    fontFamily: 'var(--font-cue-mono), ui-monospace, monospace',
-                                    marginBottom: 4,
-                                }}
-                            >
-                                ME · 저장한 항목 {hydrated ? `(${savedCastings.length})` : ''}
-                            </div>
                             <h1
                                 style={{
-                                    fontFamily: 'var(--font-cue-serif), serif',
-                                    fontStyle: 'italic',
-                                    fontSize: 24,
-                                    letterSpacing: -0.6,
+                                    fontSize: 22,
+                                    fontWeight: 700,
+                                    letterSpacing: '-0.02em',
                                     color: 'var(--cue-ink)',
                                 }}
                             >
-                                Saved<span style={{ color: 'var(--cue-accent)' }}>.</span>
+                                저장한 항목
                             </h1>
+                            <p
+                                style={{
+                                    fontSize: 12,
+                                    color: 'var(--cue-ink-3)',
+                                    marginTop: 2,
+                                }}
+                            >
+                                {hydrated ? `${savedCastings.length}건` : ''}
+                            </p>
                         </div>
                     </div>
                 </header>

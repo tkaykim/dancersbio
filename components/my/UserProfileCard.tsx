@@ -35,22 +35,19 @@ export default function UserProfileCard({ user, primaryDancer }: UserProfileCard
                     <h2
                         className="truncate"
                         style={{
-                            fontFamily: 'var(--font-cue-serif), serif',
-                            fontStyle: 'italic',
-                            fontSize: 22,
-                            letterSpacing: -0.4,
+                            fontSize: 20,
+                            fontWeight: 700,
+                            letterSpacing: '-0.02em',
                             color: 'var(--cue-ink)',
                         }}
                     >
                         {primaryDancer?.stage_name || user.user_metadata?.name || '사용자'}
-                        <span style={{ color: 'var(--cue-accent)' }}>.</span>
                     </h2>
                     <p
                         className="flex items-center gap-2 mt-1"
                         style={{
-                            fontSize: 12,
+                            fontSize: 13,
                             color: 'var(--cue-ink-3)',
-                            fontFamily: 'var(--font-cue-mono), ui-monospace, monospace',
                         }}
                     >
                         <Mail className="w-3.5 h-3.5 flex-shrink-0" />

@@ -115,26 +115,23 @@ export default function CastingDetailPage() {
                             <div className="min-w-0">
                                 <div
                                     style={{
-                                        fontSize: 11,
-                                        letterSpacing: 1.4,
-                                        textTransform: 'uppercase',
+                                        fontSize: 12,
+                                        fontWeight: 500,
                                         color: 'var(--cue-ink-3)',
-                                        fontFamily: 'var(--font-cue-mono), ui-monospace, monospace',
                                     }}
                                 >
-                                    CASTING · {item.category}
+                                    캐스팅 · {item.category}
                                 </div>
                                 <div
                                     style={{
-                                        fontFamily: 'var(--font-cue-serif), serif',
-                                        fontStyle: 'italic',
-                                        fontSize: 18,
-                                        letterSpacing: -0.4,
+                                        fontSize: 17,
+                                        fontWeight: 700,
+                                        letterSpacing: '-0.02em',
                                         color: 'var(--cue-ink)',
                                     }}
                                     className="truncate"
                                 >
-                                    Detail<span style={{ color: 'var(--cue-accent)' }}>.</span>
+                                    상세
                                 </div>
                             </div>
                         </div>
@@ -153,16 +150,14 @@ export default function CastingDetailPage() {
                         </div>
                         <h1
                             style={{
-                                fontFamily: 'var(--font-cue-serif), serif',
-                                fontStyle: 'italic',
-                                fontSize: 28,
-                                lineHeight: 1.15,
-                                letterSpacing: -0.4,
+                                fontSize: 26,
+                                fontWeight: 700,
+                                lineHeight: 1.2,
+                                letterSpacing: '-0.02em',
                                 color: 'var(--cue-ink)',
                             }}
                         >
                             {item.title}
-                            <span style={{ color: 'var(--cue-accent)' }}>.</span>
                         </h1>
                         <p style={{ fontSize: 13, color: 'var(--cue-ink-3)', marginTop: 8 }}>
                             {item.poster} · {item.posterRole}
@@ -191,15 +186,13 @@ export default function CastingDetailPage() {
                     <section>
                         <div
                             style={{
-                                fontSize: 10,
-                                letterSpacing: 1.2,
-                                fontFamily: 'var(--font-cue-mono), ui-monospace, monospace',
-                                color: 'var(--cue-ink-3)',
-                                textTransform: 'uppercase',
+                                fontSize: 12,
+                                fontWeight: 600,
+                                color: 'var(--cue-ink-2)',
                                 marginBottom: 8,
                             }}
                         >
-                            ↳ BRIEF
+                            공고 내용
                         </div>
                         <p
                             style={{
@@ -223,7 +216,7 @@ export default function CastingDetailPage() {
                             lineHeight: 1.55,
                         }}
                     >
-                        ↳ 현재는 UI 스캐폴드입니다. 실제 지원 접수와 메시지 발송은 백엔드 연동 후 동작합니다.
+                        현재는 UI 스캐폴드입니다. 실제 지원 접수와 메시지 발송은 백엔드 연동 후 동작합니다.
                     </div>
                 </div>
 
@@ -280,22 +273,19 @@ function Row({
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
             <span
                 style={{
-                    fontSize: 11,
-                    letterSpacing: 1.2,
-                    fontFamily: 'var(--font-cue-mono), ui-monospace, monospace',
+                    fontSize: 12,
+                    fontWeight: 500,
                     color: 'var(--cue-ink-3)',
-                    textTransform: 'uppercase',
                 }}
             >
                 {label}
             </span>
             <span
                 style={{
-                    fontSize: mono ? 13 : 13,
-                    fontFamily: mono
-                        ? 'var(--font-cue-mono), ui-monospace, monospace'
-                        : 'inherit',
-                    fontWeight: mono ? 600 : 500,
+                    fontSize: 13,
+                    fontWeight: mono ? 700 : 500,
+                    fontVariantNumeric: mono ? 'tabular-nums' : 'normal',
+                    letterSpacing: mono ? '-0.01em' : 0,
                     color: accent ? 'var(--cue-accent)' : 'var(--cue-ink)',
                     textAlign: 'right',
                 }}
@@ -316,15 +306,14 @@ function Chip({
     return (
         <span
             style={{
-                fontSize: 10,
+                fontSize: 11,
+                fontWeight: 500,
                 padding: '3px 8px',
                 borderRadius: 999,
                 background: tone === 'accent' ? 'var(--cue-accent-dim)' : 'var(--cue-surface-2)',
                 color: tone === 'accent' ? 'var(--cue-accent)' : 'var(--cue-ink-2)',
                 border: '1px solid var(--cue-hairline)',
-                fontFamily: 'var(--font-cue-mono), ui-monospace, monospace',
-                letterSpacing: 0.4,
-                textTransform: 'uppercase',
+                letterSpacing: 0.1,
             }}
         >
             {children}

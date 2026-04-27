@@ -55,7 +55,7 @@ function DefaultCard({ item }: Props) {
                                 style={{
                                     fontSize: 11,
                                     color: 'var(--cue-ink-3)',
-                                    fontFamily: 'var(--font-cue-mono), ui-monospace, monospace',
+                                    fontVariantNumeric: 'tabular-nums',
                                 }}
                             >
                                 {item.deadlineLabel}
@@ -70,7 +70,7 @@ function DefaultCard({ item }: Props) {
                         fontSize: 16,
                         fontWeight: 600,
                         lineHeight: 1.3,
-                        letterSpacing: -0.2,
+                        letterSpacing: '-0.02em',
                         color: 'var(--cue-ink)',
                     }}
                 >
@@ -93,9 +93,10 @@ function DefaultCard({ item }: Props) {
                     <div>
                         <div
                             style={{
-                                fontFamily: 'var(--font-cue-mono), ui-monospace, monospace',
-                                fontSize: 13,
-                                fontWeight: 600,
+                                fontSize: 14,
+                                fontWeight: 700,
+                                letterSpacing: '-0.01em',
+                                fontVariantNumeric: 'tabular-nums',
                                 color: 'var(--cue-ink)',
                             }}
                         >
@@ -140,13 +141,16 @@ function FeaturedCard({ item }: Props) {
                 >
                     <span
                         style={{
-                            fontSize: 10,
-                            fontWeight: 700,
-                            letterSpacing: 1.2,
-                            fontFamily: 'var(--font-cue-mono), ui-monospace, monospace',
+                            fontSize: 11,
+                            fontWeight: 600,
+                            letterSpacing: 0.2,
+                            padding: '3px 8px',
+                            borderRadius: 999,
+                            background: 'var(--cue-accent-ink)',
+                            color: 'var(--cue-accent)',
                         }}
                     >
-                        ↳ FEATURED · {item.category.toUpperCase()}
+                        Featured · {item.category}
                     </span>
                     {item.deadlineLabel && (
                         <span
@@ -166,12 +170,11 @@ function FeaturedCard({ item }: Props) {
 
                 <h3
                     style={{
-                        fontFamily: 'var(--font-cue-serif), serif',
-                        fontStyle: 'italic',
-                        fontSize: 24,
-                        lineHeight: 1.1,
+                        fontSize: 22,
+                        fontWeight: 700,
+                        lineHeight: 1.2,
                         marginTop: 14,
-                        letterSpacing: -0.3,
+                        letterSpacing: '-0.02em',
                     }}
                 >
                     {item.title}
@@ -185,7 +188,7 @@ function FeaturedCard({ item }: Props) {
                     style={{
                         marginTop: 14,
                         padding: '12px 0 0',
-                        borderTop: '1px solid rgba(14,14,12,0.18)',
+                        borderTop: '1px solid rgba(11,11,13,0.18)',
                         display: 'flex',
                         justifyContent: 'space-between',
                         alignItems: 'center',
@@ -194,9 +197,10 @@ function FeaturedCard({ item }: Props) {
                     <div>
                         <div
                             style={{
-                                fontFamily: 'var(--font-cue-mono), ui-monospace, monospace',
-                                fontSize: 14,
+                                fontSize: 16,
                                 fontWeight: 700,
+                                letterSpacing: '-0.01em',
+                                fontVariantNumeric: 'tabular-nums',
                             }}
                         >
                             {formatPay(item.pay)}
@@ -248,15 +252,14 @@ function Chip({
     return (
         <span
             style={{
-                fontSize: 10,
+                fontSize: 11,
+                fontWeight: 500,
                 padding: '3px 8px',
                 borderRadius: 999,
                 background: tone === 'accent' ? 'var(--cue-accent-dim)' : 'var(--cue-surface-2)',
                 color: tone === 'accent' ? 'var(--cue-accent)' : 'var(--cue-ink-2)',
                 border: '1px solid var(--cue-hairline)',
-                fontFamily: 'var(--font-cue-mono), ui-monospace, monospace',
-                letterSpacing: 0.4,
-                textTransform: 'uppercase',
+                letterSpacing: 0.1,
             }}
         >
             {children}

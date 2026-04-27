@@ -97,17 +97,15 @@ export default function TeamProfileHeader({ team, memberCount, agencies }: TeamP
                     <h1
                         className="flex items-center gap-2 mb-1"
                         style={{
-                            fontFamily: 'var(--font-cue-serif), serif',
-                            fontStyle: 'italic',
-                            fontSize: 'clamp(34px, 7vw, 56px)',
-                            lineHeight: 1,
-                            letterSpacing: -1,
+                            fontSize: 'clamp(30px, 6.5vw, 48px)',
+                            fontWeight: 700,
+                            lineHeight: 1.05,
+                            letterSpacing: '-0.03em',
                             color: 'var(--cue-ink)',
                             textShadow: '0 2px 16px rgba(0,0,0,0.5)',
                         }}
                     >
                         {team.name}
-                        <span style={{ color: 'var(--cue-accent)' }}>.</span>
                         {team.is_verified && (
                             <CheckCircle2 className="w-5 h-5 md:w-7 md:h-7" style={{ color: 'var(--cue-accent)' }} />
                         )}

@@ -109,7 +109,7 @@ export function CueAvatar({
         fontSize: size * 0.4,
         fontWeight: 600,
         letterSpacing: 0.2,
-        color: '#0E0E0C',
+        color: '#0B0B0D',
         background: `linear-gradient(135deg, oklch(0.78 0.12 ${h}), oklch(0.62 0.14 ${(h + 40) % 360}))`,
       }}
     >
@@ -228,11 +228,9 @@ export function CueEyebrow({ children, className = '' }: { children: React.React
     <div
       className={className}
       style={{
-        fontSize: 11,
-        letterSpacing: 1.4,
-        textTransform: 'uppercase',
+        fontSize: 12,
+        fontWeight: 500,
         color: 'var(--cue-ink-3)',
-        fontFamily: 'var(--font-cue-mono), ui-monospace, monospace',
       }}
     >
       {children}
@@ -240,6 +238,10 @@ export function CueEyebrow({ children, className = '' }: { children: React.React
   )
 }
 
+/**
+ * Modern heading replacement (formerly italic serif). Now sans bold with tight tracking.
+ * Component name kept for backwards-compat — visual is no longer serif.
+ */
 export function CueSerif({
   children,
   size = 28,
@@ -255,11 +257,10 @@ export function CueSerif({
     <span
       className={className}
       style={{
-        fontFamily: 'var(--font-cue-serif), "Times New Roman", serif',
-        fontStyle: 'italic',
         fontSize: size,
-        lineHeight: 1.05,
-        letterSpacing: -0.6,
+        fontWeight: 700,
+        lineHeight: 1.1,
+        letterSpacing: '-0.02em',
         color: 'var(--cue-ink)',
         ...style,
       }}
@@ -269,6 +270,7 @@ export function CueSerif({
   )
 }
 
+/** Reserved for tabular numerals (prices, D-day). Avoid using on Korean labels. */
 export function CueMono({
   children,
   className = '',
@@ -283,6 +285,7 @@ export function CueMono({
       className={className}
       style={{
         fontFamily: 'var(--font-cue-mono), ui-monospace, monospace',
+        fontVariantNumeric: 'tabular-nums',
         ...style,
       }}
     >

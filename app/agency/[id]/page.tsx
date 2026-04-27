@@ -54,27 +54,24 @@ export default async function AgencyProfilePage({ params }: PageProps) {
                     <div className="flex-1 min-w-0">
                         <div
                             style={{
-                                fontSize: 11,
-                                letterSpacing: 1.4,
-                                textTransform: 'uppercase',
+                                fontSize: 12,
+                                fontWeight: 500,
                                 color: 'var(--cue-ink-3)',
-                                fontFamily: 'var(--font-cue-mono), ui-monospace, monospace',
                                 marginBottom: 4,
                             }}
                         >
-                            AGENCY · 소속사
+                            소속사
                         </div>
                         <h1
                             style={{
-                                fontFamily: 'var(--font-cue-serif), serif',
-                                fontStyle: 'italic',
-                                fontSize: 32,
-                                lineHeight: 1.05,
-                                letterSpacing: -0.6,
+                                fontSize: 28,
+                                fontWeight: 700,
+                                lineHeight: 1.1,
+                                letterSpacing: '-0.02em',
                                 color: 'var(--cue-ink)',
                             }}
                         >
-                            {agencyName}<span style={{ color: 'var(--cue-accent)' }}>.</span>
+                            {agencyName}
                         </h1>
                         {agency.description && (
                             <p style={{ fontSize: 13, color: 'var(--cue-ink-2)', marginTop: 8, lineHeight: 1.5 }} className="line-clamp-3">
@@ -87,9 +84,10 @@ export default async function AgencyProfilePage({ params }: PageProps) {
                                 alignItems: 'center',
                                 gap: 12,
                                 marginTop: 8,
-                                fontSize: 11,
+                                fontSize: 12,
+                                fontWeight: 500,
                                 color: 'var(--cue-ink-3)',
-                                fontFamily: 'var(--font-cue-mono), ui-monospace, monospace',
+                                fontVariantNumeric: 'tabular-nums',
                             }}
                         >
                             <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
@@ -104,15 +102,13 @@ export default async function AgencyProfilePage({ params }: PageProps) {
                 <div>
                     <div
                         style={{
-                            fontSize: 11,
-                            letterSpacing: 1.4,
-                            textTransform: 'uppercase',
-                            color: 'var(--cue-ink-3)',
-                            fontFamily: 'var(--font-cue-mono), ui-monospace, monospace',
-                            marginBottom: 8,
+                            fontSize: 13,
+                            fontWeight: 600,
+                            color: 'var(--cue-ink)',
+                            marginBottom: 12,
                         }}
                     >
-                        ROSTER · 소속 댄서
+                        소속 댄서
                     </div>
                     {dancers.length === 0 ? (
                         <p style={{ fontSize: 13, color: 'var(--cue-ink-3)', textAlign: 'center', padding: '40px 0' }}>
