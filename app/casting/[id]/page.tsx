@@ -49,6 +49,7 @@ export default function CastingDetailPage() {
     const mockItem = isProjectId ? null : CASTING_MOCKS.find((m) => m.id === id) ?? null
     const [liveItem, setLiveItem] = useState<CastingMock | null>(null)
     const [liveBrief, setLiveBrief] = useState<string | null>(null)
+    const [liveOwnerId, setLiveOwnerId] = useState<string | null>(null)
     const [liveLoading, setLiveLoading] = useState<boolean>(isProjectId)
     const [openApply, setOpenApply] = useState(false)
 
@@ -66,7 +67,7 @@ export default function CastingDetailPage() {
                 .select(`
                     id, title, category, visibility, progress_status,
                     embargo_date, budget, start_date, end_date, due_date, created_at,
-                    description,
+                    description, owner_id,
                     clients (company_name),
                     owner:users!owner_id (name),
                     event_dates:project_event_dates (event_date, event_time, label, sort_order)
@@ -80,7 +81,10 @@ export default function CastingDetailPage() {
                 setLiveLoading(false)
                 return
             }
-            const row = data as unknown as CastingProjectRow & { description: string | null }
+            const row = data as unknown as CastingProjectRow & {
+                description: string | null
+                owner_id: string | null
+            }
             if (!isCastableProject(row)) {
                 setLiveItem(null)
                 setLiveLoading(false)
@@ -88,6 +92,7 @@ export default function CastingDetailPage() {
             }
             setLiveItem(projectToCastingMock(row))
             setLiveBrief(row.description ?? null)
+            setLiveOwnerId(row.owner_id ?? null)
             setLiveLoading(false)
         }
         load()
@@ -145,10 +150,11 @@ export default function CastingDetailPage() {
         )
     }
 
-    const brief =
-        liveBrief ||
-        BRIEF_BY_ID[item.id] ||
-        '상세 설명은 백엔드 연동 후 제공됩니다. 현재는 캐스팅 상세 UI 스캐폴드입니다.'
+    const isLiveProject = !!liveItem
+    const brief = isLiveProject
+        ? liveBrief?.trim() || '공고자가 아직 상세 설명을 작성하지 않았습니다.'
+        : BRIEF_BY_ID[item.id] ||
+          '상세 설명은 백엔드 연동 후 제공됩니다. 현재는 캐스팅 상세 UI 스캐폴드입니다.'
 
     return (
         <MobileContainer>
@@ -273,19 +279,21 @@ export default function CastingDetailPage() {
                         </p>
                     </section>
 
-                    <div
-                        style={{
-                            padding: 12,
-                            borderRadius: 12,
-                            background: 'var(--cue-surface)',
-                            border: '1px dashed var(--cue-hairline)',
-                            fontSize: 11,
-                            color: 'var(--cue-ink-3)',
-                            lineHeight: 1.55,
-                        }}
-                    >
-                        현재는 UI 스캐폴드입니다. 실제 지원 접수와 메시지 발송은 백엔드 연동 후 동작합니다.
-                    </div>
+                    {!isLiveProject && (
+                        <div
+                            style={{
+                                padding: 12,
+                                borderRadius: 12,
+                                background: 'var(--cue-surface)',
+                                border: '1px dashed var(--cue-hairline)',
+                                fontSize: 11,
+                                color: 'var(--cue-ink-3)',
+                                lineHeight: 1.55,
+                            }}
+                        >
+                            샘플 공고입니다. 실제 지원 접수는 백엔드와 연결된 공고에서 동작합니다.
+                        </div>
+                    )}
                 </div>
 
                 <div
@@ -321,6 +329,8 @@ export default function CastingDetailPage() {
                 open={openApply}
                 onClose={() => setOpenApply(false)}
                 casting={item}
+                realProjectId={isLiveProject ? projectUuid : null}
+                realProjectOwnerId={isLiveProject ? liveOwnerId : null}
             />
         </MobileContainer>
     )

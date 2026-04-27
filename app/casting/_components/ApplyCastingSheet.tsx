@@ -1,23 +1,80 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import Link from 'next/link'
 import { Ico } from '@/components/cue'
+import { supabase } from '@/lib/supabase'
+import { useAuth } from '@/lib/auth-context'
+import { useMyProfiles } from '@/hooks/useMyProfiles'
 import { formatPay, type CastingMock } from '@/lib/castingMockData'
 
 interface Props {
     open: boolean
     onClose: () => void
     casting: CastingMock
+    /** 실제 supabase project UUID. 주어지면 실 지원 플로우로 동작 */
+    realProjectId?: string | null
+    /** 실 프로젝트의 owner_id — 자기 프로젝트엔 지원 못 막기 위해 사용 */
+    realProjectOwnerId?: string | null
 }
 
-export default function ApplyCastingSheet({ open, onClose, casting }: Props) {
+export default function ApplyCastingSheet({
+    open,
+    onClose,
+    casting,
+    realProjectId = null,
+    realProjectOwnerId = null,
+}: Props) {
+    const { user } = useAuth()
+    const { ownedDancers, managedDancers, loading: profilesLoading } = useMyProfiles()
+    const profiles = useMemo(
+        () => [...ownedDancers, ...managedDancers],
+        [ownedDancers, managedDancers]
+    )
+
     const [message, setMessage] = useState('')
     const [reel, setReel] = useState('')
+    const [selectedDancerId, setSelectedDancerId] = useState<string>('')
+    const [submitting, setSubmitting] = useState(false)
+    const [submitError, setSubmitError] = useState('')
+    const [alreadyApplied, setAlreadyApplied] = useState(false)
     const [submitted, setSubmitted] = useState(false)
+
+    const isReal = !!realProjectId
+
+    // Auto-pick first profile when sheet opens
+    useEffect(() => {
+        if (!selectedDancerId && profiles.length > 0) {
+            setSelectedDancerId(profiles[0].id)
+        }
+    }, [profiles, selectedDancerId])
+
+    // Pre-check: 이미 지원했는지 확인
+    useEffect(() => {
+        if (!open || !isReal || !realProjectId || !selectedDancerId) {
+            setAlreadyApplied(false)
+            return
+        }
+        let cancelled = false
+        supabase
+            .from('proposals')
+            .select('id')
+            .eq('project_id', realProjectId)
+            .eq('dancer_id', selectedDancerId)
+            .limit(1)
+            .maybeSingle()
+            .then(({ data }) => {
+                if (!cancelled) setAlreadyApplied(!!data)
+            })
+        return () => {
+            cancelled = true
+        }
+    }, [open, isReal, realProjectId, selectedDancerId])
 
     useEffect(() => {
         if (!open) {
             setSubmitted(false)
+            setSubmitError('')
             return
         }
         const orig = document.body.style.overflow
@@ -29,9 +86,83 @@ export default function ApplyCastingSheet({ open, onClose, casting }: Props) {
 
     if (!open) return null
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const isOwnProject = !!(
+        isReal && user && realProjectOwnerId && user.id === realProjectOwnerId
+    )
+
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
-        setSubmitted(true)
+        setSubmitError('')
+
+        // 비실제(mock) 캐스팅: 기존 스캐폴드 동작 유지
+        if (!isReal) {
+            setSubmitted(true)
+            return
+        }
+
+        if (!user) {
+            setSubmitError('로그인이 필요합니다.')
+            return
+        }
+        if (isOwnProject) {
+            setSubmitError('내가 만든 프로젝트에는 지원할 수 없습니다.')
+            return
+        }
+        if (!selectedDancerId) {
+            setSubmitError('지원할 댄서 프로필을 선택해주세요.')
+            return
+        }
+        if (!message.trim()) {
+            setSubmitError('지원 메시지를 입력해주세요.')
+            return
+        }
+
+        setSubmitting(true)
+        try {
+            const detailsBody = reel.trim()
+                ? `${message.trim()}\n\n📎 ${reel.trim()}`
+                : message.trim()
+
+            const { data: inserted, error: insertErr } = await supabase
+                .from('proposals')
+                .insert({
+                    project_id: realProjectId,
+                    dancer_id: selectedDancerId,
+                    sender_id: user.id,
+                    role: '캐스팅 지원',
+                    fee: null,
+                    details: detailsBody,
+                    status: 'pending',
+                })
+                .select('id')
+                .single()
+
+            if (insertErr) {
+                // 23505 = unique_violation
+                if (insertErr.code === '23505') {
+                    setAlreadyApplied(true)
+                    setSubmitError('이미 이 프로필로 지원한 공고입니다.')
+                } else {
+                    throw insertErr
+                }
+                return
+            }
+
+            if (inserted?.id) {
+                try {
+                    const { triggerPushEvent } = await import('@/lib/trigger-push-event')
+                    triggerPushEvent('proposal_created', { proposal_id: inserted.id })
+                } catch {
+                    // 푸시 트리거 실패는 지원 자체엔 영향 없음
+                }
+            }
+
+            setSubmitted(true)
+        } catch (err: any) {
+            setSubmitError(err?.message || '지원에 실패했습니다.')
+        } finally {
+            setSubmitting(false)
+        }
     }
 
     return (
@@ -115,7 +246,16 @@ export default function ApplyCastingSheet({ open, onClose, casting }: Props) {
                 </div>
 
                 {submitted ? (
-                    <SuccessBlock onClose={onClose} casting={casting} />
+                    <SuccessBlock onClose={onClose} casting={casting} isReal={isReal} />
+                ) : isReal && !user ? (
+                    <NeedsLoginBlock />
+                ) : isReal && isOwnProject ? (
+                    <CannotApplyBlock
+                        onClose={onClose}
+                        message="내가 만든 프로젝트에는 지원할 수 없습니다."
+                    />
+                ) : isReal && !profilesLoading && profiles.length === 0 ? (
+                    <NeedsProfileBlock onClose={onClose} />
                 ) : (
                     <form onSubmit={handleSubmit} style={{ padding: 20, display: 'grid', gap: 18 }}>
                         <div
@@ -151,6 +291,23 @@ export default function ApplyCastingSheet({ open, onClose, casting }: Props) {
                             </div>
                         </div>
 
+                        {isReal && profiles.length > 0 && (
+                            <Field label="지원에 사용할 프로필">
+                                <select
+                                    value={selectedDancerId}
+                                    onChange={(e) => setSelectedDancerId(e.target.value)}
+                                    style={inputStyle}
+                                    required
+                                >
+                                    {profiles.map((p) => (
+                                        <option key={p.id} value={p.id}>
+                                            {p.stage_name}
+                                        </option>
+                                    ))}
+                                </select>
+                            </Field>
+                        )}
+
                         <Field label="간단한 자기소개 / 메시지">
                             <textarea
                                 value={message}
@@ -172,35 +329,82 @@ export default function ApplyCastingSheet({ open, onClose, casting }: Props) {
                             />
                         </Field>
 
-                        <div
-                            style={{
-                                padding: 12,
-                                borderRadius: 12,
-                                background: 'var(--cue-surface)',
-                                border: '1px dashed var(--cue-hairline)',
-                                fontSize: 11,
-                                color: 'var(--cue-ink-3)',
-                                lineHeight: 1.55,
-                            }}
-                        >
-                            현재는 UI 스캐폴드입니다. 백엔드 연동 후 클라이언트의 받은 제안함으로 발송됩니다.
-                        </div>
+                        {isReal && alreadyApplied && (
+                            <div
+                                style={{
+                                    padding: 12,
+                                    borderRadius: 12,
+                                    background: 'var(--cue-warn, rgba(255,192,97,0.08))',
+                                    border: '1px solid rgba(255,192,97,0.32)',
+                                    fontSize: 12,
+                                    color: 'var(--cue-warn)',
+                                    lineHeight: 1.55,
+                                }}
+                            >
+                                이미 이 프로필로 지원한 공고입니다. 기존 지원서는 마이페이지 &gt; 보낸 제안에서 확인하실 수 있어요.
+                            </div>
+                        )}
+
+                        {submitError && (
+                            <div
+                                style={{
+                                    padding: 12,
+                                    borderRadius: 12,
+                                    background: 'rgba(255, 122, 110, 0.08)',
+                                    border: '1px solid rgba(255, 122, 110, 0.32)',
+                                    fontSize: 12,
+                                    color: 'var(--cue-bad)',
+                                    lineHeight: 1.55,
+                                }}
+                            >
+                                {submitError}
+                            </div>
+                        )}
+
+                        {!isReal && (
+                            <div
+                                style={{
+                                    padding: 12,
+                                    borderRadius: 12,
+                                    background: 'var(--cue-surface)',
+                                    border: '1px dashed var(--cue-hairline)',
+                                    fontSize: 11,
+                                    color: 'var(--cue-ink-3)',
+                                    lineHeight: 1.55,
+                                }}
+                            >
+                                샘플 공고입니다. 백엔드 연동 후 클라이언트의 받은 제안함으로 발송됩니다.
+                            </div>
+                        )}
 
                         <button
                             type="submit"
-                            disabled={!message}
+                            disabled={
+                                !message.trim() ||
+                                submitting ||
+                                (isReal && (alreadyApplied || !selectedDancerId))
+                            }
                             style={{
                                 padding: '14px 18px',
                                 borderRadius: 999,
-                                background: message ? 'var(--cue-accent)' : 'var(--cue-surface-2)',
-                                color: message ? 'var(--cue-accent-ink)' : 'var(--cue-ink-3)',
+                                background:
+                                    !message.trim() || submitting || (isReal && (alreadyApplied || !selectedDancerId))
+                                        ? 'var(--cue-surface-2)'
+                                        : 'var(--cue-accent)',
+                                color:
+                                    !message.trim() || submitting || (isReal && (alreadyApplied || !selectedDancerId))
+                                        ? 'var(--cue-ink-3)'
+                                        : 'var(--cue-accent-ink)',
                                 fontWeight: 700,
                                 fontSize: 14,
                                 border: 'none',
-                                cursor: message ? 'pointer' : 'not-allowed',
+                                cursor:
+                                    !message.trim() || submitting || (isReal && (alreadyApplied || !selectedDancerId))
+                                        ? 'not-allowed'
+                                        : 'pointer',
                             }}
                         >
-                            지원서 보내기
+                            {submitting ? '보내는 중...' : '지원서 보내기'}
                         </button>
                     </form>
                 )}
@@ -209,7 +413,15 @@ export default function ApplyCastingSheet({ open, onClose, casting }: Props) {
     )
 }
 
-function SuccessBlock({ onClose, casting }: { onClose: () => void; casting: CastingMock }) {
+function SuccessBlock({
+    onClose,
+    casting,
+    isReal,
+}: {
+    onClose: () => void
+    casting: CastingMock
+    isReal: boolean
+}) {
     return (
         <div style={{ padding: 32, textAlign: 'center' }}>
             <div
@@ -235,19 +447,218 @@ function SuccessBlock({ onClose, casting }: { onClose: () => void; casting: Cast
                     color: 'var(--cue-ink)',
                 }}
             >
-                지원 준비 완료
+                {isReal ? '지원서가 전송되었습니다' : '지원 준비 완료'}
             </h3>
             <p style={{ fontSize: 13, color: 'var(--cue-ink-3)', marginTop: 8, lineHeight: 1.6 }}>
-                백엔드 연동 후 &quot;{casting.poster}&quot;에게
-                <br />
-                실제 지원서가 발송됩니다.
+                {isReal ? (
+                    <>
+                        &quot;{casting.poster}&quot;님에게 지원서를 보냈습니다.
+                        <br />
+                        진행 상황은 마이페이지 &gt; 보낸 제안에서 확인할 수 있어요.
+                    </>
+                ) : (
+                    <>
+                        백엔드 연동 후 &quot;{casting.poster}&quot;에게
+                        <br />
+                        실제 지원서가 발송됩니다.
+                    </>
+                )}
+            </p>
+            <div
+                style={{
+                    marginTop: 24,
+                    display: 'flex',
+                    gap: 8,
+                    justifyContent: 'center',
+                    flexWrap: 'wrap',
+                }}
+            >
+                {isReal && (
+                    <Link
+                        href="/my/proposals?tab=outbox"
+                        onClick={onClose}
+                        style={{
+                            padding: '12px 20px',
+                            borderRadius: 999,
+                            background: 'var(--cue-accent)',
+                            color: 'var(--cue-accent-ink)',
+                            border: 'none',
+                            fontSize: 13,
+                            fontWeight: 600,
+                            textDecoration: 'none',
+                        }}
+                    >
+                        보낸 제안 보기
+                    </Link>
+                )}
+                <button
+                    type="button"
+                    onClick={onClose}
+                    style={{
+                        padding: '12px 20px',
+                        borderRadius: 999,
+                        background: 'var(--cue-surface-2)',
+                        color: 'var(--cue-ink)',
+                        border: '1px solid var(--cue-hairline)',
+                        fontSize: 13,
+                    }}
+                >
+                    닫기
+                </button>
+            </div>
+        </div>
+    )
+}
+
+function NeedsLoginBlock() {
+    return (
+        <div style={{ padding: 32, textAlign: 'center' }}>
+            <div
+                style={{
+                    width: 56,
+                    height: 56,
+                    borderRadius: 999,
+                    background: 'var(--cue-surface-2)',
+                    color: 'var(--cue-ink-3)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    margin: '0 auto 16px',
+                    border: '1px solid var(--cue-hairline)',
+                }}
+            >
+                {Ico.user('currentColor', 24)}
+            </div>
+            <h3
+                style={{
+                    fontSize: 18,
+                    fontWeight: 700,
+                    letterSpacing: '-0.02em',
+                    color: 'var(--cue-ink)',
+                }}
+            >
+                로그인이 필요해요
+            </h3>
+            <p style={{ fontSize: 13, color: 'var(--cue-ink-3)', marginTop: 8, lineHeight: 1.6 }}>
+                지원하려면 먼저 로그인해주세요.
+            </p>
+            <Link
+                href={`/auth/signin?redirect=${encodeURIComponent(typeof window !== 'undefined' ? window.location.pathname : '/casting')}`}
+                style={{
+                    display: 'inline-block',
+                    marginTop: 20,
+                    padding: '12px 22px',
+                    borderRadius: 999,
+                    background: 'var(--cue-accent)',
+                    color: 'var(--cue-accent-ink)',
+                    fontSize: 13,
+                    fontWeight: 600,
+                    textDecoration: 'none',
+                }}
+            >
+                로그인하기
+            </Link>
+        </div>
+    )
+}
+
+function NeedsProfileBlock({ onClose }: { onClose: () => void }) {
+    return (
+        <div style={{ padding: 32, textAlign: 'center' }}>
+            <div
+                style={{
+                    width: 56,
+                    height: 56,
+                    borderRadius: 999,
+                    background: 'var(--cue-surface-2)',
+                    color: 'var(--cue-ink-3)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    margin: '0 auto 16px',
+                    border: '1px solid var(--cue-hairline)',
+                }}
+            >
+                {Ico.user('currentColor', 24)}
+            </div>
+            <h3
+                style={{
+                    fontSize: 18,
+                    fontWeight: 700,
+                    letterSpacing: '-0.02em',
+                    color: 'var(--cue-ink)',
+                }}
+            >
+                먼저 댄서 프로필이 필요해요
+            </h3>
+            <p style={{ fontSize: 13, color: 'var(--cue-ink-3)', marginTop: 8, lineHeight: 1.6 }}>
+                내 프로필이 있어야 지원서를 보낼 수 있어요.
+            </p>
+            <div
+                style={{
+                    marginTop: 20,
+                    display: 'flex',
+                    gap: 8,
+                    justifyContent: 'center',
+                    flexWrap: 'wrap',
+                }}
+            >
+                <Link
+                    href="/onboarding/create"
+                    onClick={onClose}
+                    style={{
+                        padding: '12px 22px',
+                        borderRadius: 999,
+                        background: 'var(--cue-accent)',
+                        color: 'var(--cue-accent-ink)',
+                        fontSize: 13,
+                        fontWeight: 600,
+                        textDecoration: 'none',
+                    }}
+                >
+                    프로필 만들기
+                </Link>
+                <button
+                    type="button"
+                    onClick={onClose}
+                    style={{
+                        padding: '12px 22px',
+                        borderRadius: 999,
+                        background: 'var(--cue-surface-2)',
+                        color: 'var(--cue-ink)',
+                        border: '1px solid var(--cue-hairline)',
+                        fontSize: 13,
+                    }}
+                >
+                    나중에
+                </button>
+            </div>
+        </div>
+    )
+}
+
+function CannotApplyBlock({ onClose, message }: { onClose: () => void; message: string }) {
+    return (
+        <div style={{ padding: 32, textAlign: 'center' }}>
+            <h3
+                style={{
+                    fontSize: 16,
+                    fontWeight: 700,
+                    color: 'var(--cue-ink)',
+                    letterSpacing: '-0.02em',
+                }}
+            >
+                지원할 수 없는 공고입니다
+            </h3>
+            <p style={{ fontSize: 13, color: 'var(--cue-ink-3)', marginTop: 8, lineHeight: 1.6 }}>
+                {message}
             </p>
             <button
                 type="button"
                 onClick={onClose}
                 style={{
-                    marginTop: 24,
-                    padding: '12px 20px',
+                    marginTop: 20,
+                    padding: '12px 22px',
                     borderRadius: 999,
                     background: 'var(--cue-surface-2)',
                     color: 'var(--cue-ink)',
