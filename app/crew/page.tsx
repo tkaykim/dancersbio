@@ -31,6 +31,18 @@ interface TeamSearchResult {
     member_count: number
 }
 
+// Stable photo-first sort: profiles with profile_img stay before those without,
+// preserving incoming order within each group.
+function photoFirst<T extends { profile_img: string | null }>(items: T[]): T[] {
+    const withPhoto: T[] = []
+    const withoutPhoto: T[] = []
+    for (const item of items) {
+        if (item.profile_img) withPhoto.push(item)
+        else withoutPhoto.push(item)
+    }
+    return [...withPhoto, ...withoutPhoto]
+}
+
 export default function CrewPage() {
     const router = useRouter()
     const [searchQuery, setSearchQuery] = useState('')
@@ -63,15 +75,19 @@ export default function CrewPage() {
                 if (cancelled) return
                 if (dancersRes.data) {
                     setRecDancers(
-                        dancersRes.data.map((d: any) => ({ ...d, similarity_score: 1 })),
+                        photoFirst(
+                            dancersRes.data.map((d: any) => ({ ...d, similarity_score: 1 })),
+                        ),
                     )
                 }
                 if (teamsRes.data) {
                     setRecTeams(
-                        teamsRes.data.map((t: any) => ({
-                            ...t,
-                            member_count: t.team_members?.length || 0,
-                        })),
+                        photoFirst(
+                            teamsRes.data.map((t: any) => ({
+                                ...t,
+                                member_count: t.team_members?.length || 0,
+                            })),
+                        ),
                     )
                 }
             } catch (err) {
@@ -111,7 +127,7 @@ export default function CrewPage() {
 
             if (error) throw error
             const verified = (data || []).filter((d: any) => d.is_verified !== false)
-            setResults(verified)
+            setResults(photoFirst(verified))
 
             const { data: teams } = await supabase
                 .from('teams')
@@ -122,10 +138,14 @@ export default function CrewPage() {
                 .limit(20)
 
             if (teams) {
-                setTeamResults(teams.map((t: any) => ({
-                    ...t,
-                    member_count: t.team_members?.length || 0,
-                })))
+                setTeamResults(
+                    photoFirst(
+                        teams.map((t: any) => ({
+                            ...t,
+                            member_count: t.team_members?.length || 0,
+                        })),
+                    ),
+                )
             }
         } catch (err) {
             console.error('Search error:', err)

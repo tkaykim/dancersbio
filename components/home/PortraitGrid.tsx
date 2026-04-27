@@ -36,7 +36,11 @@ export default function PortraitGrid({ category = "all" }: PortraitGridProps) {
                 setDancers([]);
             } else {
                 const verified = ((data as Dancer[]) || []).filter((d: any) => d.is_verified !== false)
-                setDancers(verified);
+                // Photo-first: profiles with a profile_img come before those without,
+                // preserving the RPC's existing order within each group.
+                const withPhoto = verified.filter((d: any) => d.profile_img)
+                const withoutPhoto = verified.filter((d: any) => !d.profile_img)
+                setDancers([...withPhoto, ...withoutPhoto]);
             }
             setLoading(false);
         }
