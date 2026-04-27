@@ -1,6 +1,5 @@
 "use client";
 
-import { cn } from "@/lib/utils";
 import type { DancerCategory } from "@/app/page";
 
 interface CategoryTabsProps {
@@ -16,22 +15,31 @@ const TABS: { value: DancerCategory; label: string; description: string }[] = [
 
 export default function CategoryTabs({ selected, onChange }: CategoryTabsProps) {
     return (
-        <div className="px-5 py-3">
-            <div className="flex gap-2">
-                {TABS.map((tab) => (
-                    <button
-                        key={tab.value}
-                        onClick={() => onChange(tab.value)}
-                        className={cn(
-                            "px-4 py-2 rounded-full text-sm font-semibold transition-all",
-                            selected === tab.value
-                                ? "bg-primary text-black"
-                                : "bg-neutral-800/80 text-white/60 hover:bg-neutral-700 hover:text-white"
-                        )}
-                    >
-                        {tab.label}
-                    </button>
-                ))}
+        <div style={{ padding: '12px 20px 4px' }}>
+            <div style={{ display: 'flex', gap: 6 }}>
+                {TABS.map((tab) => {
+                    const on = selected === tab.value;
+                    return (
+                        <button
+                            key={tab.value}
+                            onClick={() => onChange(tab.value)}
+                            style={{
+                                padding: '7px 14px',
+                                borderRadius: 999,
+                                fontSize: 12,
+                                fontWeight: 600,
+                                background: on ? 'var(--cue-accent)' : 'transparent',
+                                color: on ? 'var(--cue-accent-ink)' : 'var(--cue-ink-2)',
+                                border: on ? 'none' : '1px solid var(--cue-hairline-2)',
+                                cursor: 'pointer',
+                                fontFamily: 'inherit',
+                                transition: 'background 120ms, color 120ms',
+                            }}
+                        >
+                            {tab.label}
+                        </button>
+                    );
+                })}
             </div>
         </div>
     );

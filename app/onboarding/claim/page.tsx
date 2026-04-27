@@ -331,7 +331,7 @@ function ClaimContent() {
                             내 프로필로 이동
                         </Link>
                         <Link
-                            href="/onboarding"
+                            href="/crew"
                             className="block w-full py-3 bg-neutral-800 text-white font-medium rounded-xl hover:bg-neutral-700 transition"
                         >
                             매니저 권한 요청하기

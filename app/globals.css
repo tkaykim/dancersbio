@@ -1,39 +1,126 @@
 @import "tailwindcss";
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  --color-border: var(--border);
+  /* Cue tokens — exposed to Tailwind */
+  --color-cue-bg: var(--cue-bg);
+  --color-cue-surface: var(--cue-surface);
+  --color-cue-surface-2: var(--cue-surface-2);
+  --color-cue-surface-3: var(--cue-surface-3);
+  --color-cue-ink: var(--cue-ink);
+  --color-cue-ink-2: var(--cue-ink-2);
+  --color-cue-ink-3: var(--cue-ink-3);
+  --color-cue-ink-4: var(--cue-ink-4);
+  --color-cue-accent: var(--cue-accent);
+  --color-cue-accent-ink: var(--cue-accent-ink);
+  --color-cue-ok: var(--cue-ok);
+  --color-cue-warn: var(--cue-warn);
+  --color-cue-bad: var(--cue-bad);
+  --color-cue-info: var(--cue-info);
 
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  /* Legacy aliases (mapped to Cue) */
+  --color-background: var(--cue-bg);
+  --color-foreground: var(--cue-ink);
+  --color-primary: var(--cue-accent);
+  --color-primary-foreground: var(--cue-accent-ink);
+  --color-muted: var(--cue-surface-2);
+  --color-muted-foreground: var(--cue-ink-3);
+  --color-card: var(--cue-surface);
+  --color-card-foreground: var(--cue-ink);
+  --color-border: var(--cue-hairline);
+
+  --font-sans: var(--font-cue-sans);
+  /* serif var is kept as alias to sans so any legacy reference renders cleanly without italic Times fallback */
+  --font-serif: var(--font-cue-sans);
+  --font-mono: var(--font-cue-mono);
+
+  --radius-cue-1: 8px;
+  --radius-cue-2: 12px;
+  --radius-cue-3: 18px;
+  --radius-cue-4: 24px;
+  --radius-cue-5: 32px;
 }
 
+/* Default theme = dark (modern mobile) */
 :root {
-  /* Dark theme as default */
-  --background: #09090b;
-  --foreground: #ededed;
-  --primary: #22C55E;
-  --primary-foreground: #000000;
-  --muted: #27272a;
-  --muted-foreground: #a1a1aa;
-  --card: #18181b;
-  --card-foreground: #ededed;
-  --border: #27272a;
+  --cue-bg:        #0B0B0D;
+  --cue-surface:   #15151A;
+  --cue-surface-2: #1E1E24;
+  --cue-surface-3: #28282F;
+  --cue-hairline:  rgba(255, 255, 255, 0.08);
+  --cue-hairline-2: rgba(255, 255, 255, 0.14);
+
+  --cue-ink:   #FAFAFA;
+  --cue-ink-2: rgba(250, 250, 250, 0.72);
+  --cue-ink-3: rgba(250, 250, 250, 0.48);
+  --cue-ink-4: rgba(250, 250, 250, 0.28);
+
+  --cue-accent:     #22C55E;
+  --cue-accent-ink: #0B0B0D;
+  --cue-accent-dim: rgba(34, 197, 94, 0.18);
+
+  --cue-ok:   #7DE2A0;
+  --cue-warn: #FFC061;
+  --cue-bad:  #FF7A6E;
+  --cue-info: #9BC8FF;
+
+  /* Legacy mapping */
+  --background: var(--cue-bg);
+  --foreground: var(--cue-ink);
+  --primary: var(--cue-accent);
+  --primary-foreground: var(--cue-accent-ink);
+  --muted: var(--cue-surface-2);
+  --muted-foreground: var(--cue-ink-3);
+  --card: var(--cue-surface);
+  --card-foreground: var(--cue-ink);
+  --border: var(--cue-hairline);
+}
+
+/* Light theme — modern web */
+[data-theme="light"] {
+  --cue-bg:        #FAFAFA;
+  --cue-surface:   #FFFFFF;
+  --cue-surface-2: #F2F2F4;
+  --cue-surface-3: #E8E8EC;
+  --cue-hairline:  rgba(11, 11, 13, 0.08);
+  --cue-hairline-2: rgba(11, 11, 13, 0.14);
+
+  --cue-ink:   #0B0B0D;
+  --cue-ink-2: rgba(11, 11, 13, 0.72);
+  --cue-ink-3: rgba(11, 11, 13, 0.50);
+  --cue-ink-4: rgba(11, 11, 13, 0.28);
+
+  --cue-accent:     #16A34A;
+  --cue-accent-ink: #FFFFFF;
+  --cue-accent-dim: rgba(22, 163, 74, 0.14);
+
+  --cue-ok:   #2E9D5C;
+  --cue-warn: #C77A12;
+  --cue-bad:  #D64A3D;
+  --cue-info: #3878C8;
+
+  --background: var(--cue-bg);
+  --foreground: var(--cue-ink);
+  --card: var(--cue-surface);
+  --card-foreground: var(--cue-ink);
+  --border: var(--cue-hairline);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-sans), sans-serif;
+  background: var(--cue-bg);
+  color: var(--cue-ink);
+  font-family: var(--font-cue-sans), "Pretendard", -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
+  letter-spacing: -0.01em;
 }
+
+/* Modern typography helpers
+ * Legacy `.cue-serif` is now a heading helper (sans bold, no italic, tight tracking).
+ * Legacy `.cue-mono` is reserved for tabular numerals (prices, D-day) — not labels.
+ * Legacy `.cue-eyebrow` is now a sans medium small-caps replacement.
+ */
+.cue-serif { font-family: var(--font-cue-sans), "Pretendard", system-ui, sans-serif; font-style: normal; font-weight: 700; letter-spacing: -0.02em; }
+.cue-mono  { font-family: var(--font-cue-mono), ui-monospace, "SF Mono", Menlo, monospace; font-variant-numeric: tabular-nums; }
+.cue-eyebrow { font-size: 12px; letter-spacing: 0; text-transform: none; color: var(--cue-ink-3); font-family: var(--font-cue-sans), "Pretendard", system-ui, sans-serif; font-weight: 500; }
 
 /* Safe Area Insets for mobile (notch, home indicator) */
 .safe-area-inset-top {
