@@ -74,6 +74,15 @@ export default function NewProjectPage() {
         return null
     }, [budgetPerPerson, recruitCount, budgetUndefined])
 
+    /** 입력 값에서 숫자만 추출 (콤마·공백 제거) */
+    const sanitizeNumber = (raw: string) => raw.replace(/[^\d]/g, '')
+    /** state(숫자만)를 콤마 포함 형식으로 표시 */
+    const displayWithCommas = (v: string) => {
+        if (!v) return ''
+        const n = parseInt(v, 10)
+        return Number.isFinite(n) ? n.toLocaleString('ko-KR') : ''
+    }
+
     const updateEvent = (idx: number, patch: Partial<EventRow>) => {
         setEvents((prev) => prev.map((r, i) => (i === idx ? { ...r, ...patch } : r)))
     }
@@ -233,9 +242,9 @@ export default function NewProjectPage() {
                     <div className="grid grid-cols-2 gap-3">
                         <div>
                             <input
-                                type="number" inputMode="numeric"
-                                value={budgetPerPerson}
-                                onChange={(e) => setBudgetPerPerson(e.target.value)}
+                                type="text" inputMode="numeric"
+                                value={displayWithCommas(budgetPerPerson)}
+                                onChange={(e) => setBudgetPerPerson(sanitizeNumber(e.target.value))}
                                 disabled={budgetUndefined}
                                 placeholder="1인당 예산 (원)"
                                 className={`${inputClass} disabled:opacity-50`}
