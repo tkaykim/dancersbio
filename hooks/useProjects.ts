@@ -22,19 +22,34 @@ export function useProjects() {
                 .eq('user_id', user.id)
             setArchivedProjectIds(new Set((archived || []).map((r: { project_id: string }) => r.project_id)))
 
-            // 1. Projects I own (삭제된 것 제외, 서브프로젝트는 부모 상세에서 표시)
-            const { data: owned } = await supabase
-                .from('projects')
-                .select(`
-                    *,
-                    clients (company_name, contact_person),
-                    owner:users!owner_id (name),
-                    proposals (id, dancer_id, sender_id, fee, status, role, created_at, dancers (id, stage_name, profile_img, genres))
-                `)
-                .eq('owner_id', user.id)
-                .is('deleted_at', null)
-                .is('parent_project_id', null)
-                .order('created_at', { ascending: false })
+            // 1. Projects I'm a member of (owner / manager / viewer)
+            const { data: memberships } = await supabase
+                .from('project_members')
+                .select('project_id, role')
+                .eq('user_id', user.id)
+            const memberRoleMap = new Map<string, string>()
+            ;(memberships || []).forEach((m: { project_id: string; role: string }) => memberRoleMap.set(m.project_id, m.role))
+            const memberProjectIds = Array.from(memberRoleMap.keys())
+
+            let owned: Project[] = []
+            if (memberProjectIds.length > 0) {
+                const { data: ownedRows } = await supabase
+                    .from('projects')
+                    .select(`
+                        *,
+                        clients (company_name, contact_person),
+                        owner:users!owner_id (name),
+                        proposals (id, dancer_id, sender_id, fee, status, role, created_at, dancers (id, stage_name, profile_img, genres))
+                    `)
+                    .in('id', memberProjectIds)
+                    .is('deleted_at', null)
+                    .is('parent_project_id', null)
+                    .order('created_at', { ascending: false })
+                owned = ((ownedRows as Project[]) || []).map((p) => ({
+                    ...p,
+                    my_role: (memberRoleMap.get(p.id) as Project['my_role']) ?? null,
+                }))
+            }
 
             // 2. Projects where I have an accepted proposal (as a dancer)
             const { data: myDancers } = await supabase
@@ -53,7 +68,7 @@ export function useProjects() {
 
                 if (acceptedProposals && acceptedProposals.length > 0) {
                     const projectIds = [...new Set(acceptedProposals.map(p => p.project_id))]
-                    const ownedIds = (owned || []).map(p => p.id)
+                    const ownedIds = owned.map(p => p.id)
                     const uniqueIds = projectIds.filter(id => !ownedIds.includes(id))
 
                     if (uniqueIds.length > 0) {
@@ -74,7 +89,7 @@ export function useProjects() {
                 }
             }
 
-            const all = [...((owned as any) || []), ...participatingProjects]
+            const all = [...owned, ...participatingProjects]
             setProjects(all)
         } catch (err) {
             console.error('Error fetching projects:', err)

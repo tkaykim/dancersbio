@@ -10,6 +10,7 @@ export interface Proposal {
     receiver_last_read_at: string | null
     negotiation_history: NegotiationHistoryItem[] | null
     details: string | null
+    unavailable_event_ids?: string[]
     created_at: string
     projects: {
         title: string
@@ -56,13 +57,56 @@ export type ProgressStatus = 'idle' | 'recruiting' | 'in_progress' | 'completed'
 
 export type ProjectVisibility = 'private' | 'public'
 
+export type EventType = 'rehearsal' | 'main' | 'shoot' | 'fitting' | 'meeting' | 'other'
+
+export const EVENT_TYPE_LABELS: Record<EventType, string> = {
+    rehearsal: '연습',
+    main: '본행사',
+    shoot: '촬영',
+    fitting: '의상/리허설',
+    meeting: '회의',
+    other: '기타',
+}
+
 export interface ProjectEventDate {
     id: string
     project_id: string
     event_date: string
     event_time: string | null
     label: string | null
+    event_type: EventType
     sort_order: number
+}
+
+export type ProjectMemberRole = 'owner' | 'manager' | 'viewer'
+
+export const PROJECT_MEMBER_ROLE_LABELS: Record<ProjectMemberRole, string> = {
+    owner: '책임자',
+    manager: '운영자',
+    viewer: '열람자',
+}
+
+export interface ProjectMember {
+    id: string
+    project_id: string
+    user_id: string
+    role: ProjectMemberRole
+    added_by: string | null
+    created_at: string
+    user?: {
+        id: string
+        name: string | null
+        email: string | null
+    } | null
+}
+
+export type ModerationStatus = 'draft' | 'pending' | 'approved' | 'rejected'
+
+export const MODERATION_STATUS_LABELS: Record<ModerationStatus, string> = {
+    draft: '비공개',
+    pending: '공개 검토 중',
+    approved: '공개 중',
+    rejected: '공개 반려',
 }
 
 export interface Project {
@@ -80,6 +124,11 @@ export interface Project {
     confirmation_status?: ConfirmationStatus
     progress_status?: ProgressStatus
     visibility: ProjectVisibility
+    moderation_status?: ModerationStatus
+    moderation_note?: string | null
+    moderation_reviewed_at?: string | null
+    moderation_reviewed_by?: string | null
+    published_at?: string | null
     embargo_date: string | null
     budget: number | null
     start_date: string | null
@@ -89,6 +138,9 @@ export interface Project {
     created_at: string
     deleted_at: string | null
     archived_at: string | null
+    /** 현재 사용자가 이 프로젝트에서 갖는 역할 (목록/상세 쿼리에서 join 시 채움) */
+    my_role?: ProjectMemberRole | null
+    members?: ProjectMember[]
     clients?: {
         company_name: string | null
         contact_person: string | null

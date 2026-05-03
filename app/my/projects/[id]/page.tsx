@@ -8,15 +8,17 @@ import {
     ArrowLeft, Loader2, Users, Calendar, Edit3, Plus,
     CheckCircle, Clock, XCircle, User as UserIcon, Save, Handshake, Play,
     Eye, EyeOff, ChevronDown, ChevronUp, ChevronRight, ShieldAlert, Target, Ban,
-    Archive, ArchiveRestore,
+    Archive, ArchiveRestore, UserCog,
 } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useBackWithFallback } from '@/lib/useBackWithFallback'
 import { getRelativeTime, getProjectStatuses, isEmbargoActive, formatEmbargoDate, getKSTDateString, isProjectPublic } from '@/lib/utils'
-import type { Project, ConfirmationStatus, ProgressStatus } from '@/lib/types'
+import type { Project, ConfirmationStatus, ProgressStatus, ProjectMemberRole } from '@/lib/types'
 import TaskManager from '@/components/projects/TaskManager'
 import DrawerAddSubProject from '@/components/projects/DrawerAddSubProject'
+import PublishRequestPanel from '@/components/projects/PublishRequestPanel'
+import { fetchMyProjectRole } from '@/lib/project-members'
 import { ensurePmCareer } from '@/lib/ensure-pm-career'
 import { syncProjectStatusIfNoActiveProposals } from '@/lib/sync-project-status-on-proposal'
 import { triggerPushEvent } from '@/lib/trigger-push-event'
@@ -54,6 +56,7 @@ export default function ProjectDetailPage() {
     const router = useRouter()
     const [project, setProject] = useState<Project | null>(null)
     const [loading, setLoading] = useState(true)
+    const [myRole, setMyRole] = useState<ProjectMemberRole | null>(null)
     const [notes, setNotes] = useState('')
     const [editingNotes, setEditingNotes] = useState(false)
     const [savingNotes, setSavingNotes] = useState(false)
@@ -86,13 +89,21 @@ export default function ProjectDetailPage() {
             const projectData = data as any
             const { data: eventDates } = await supabase
                 .from('project_event_dates')
-                .select('id, project_id, event_date, event_time, label, sort_order')
+                .select('id, project_id, event_date, event_time, label, event_type, sort_order')
                 .eq('project_id', id)
                 .order('sort_order', { ascending: true })
             if (eventDates?.length) projectData.event_dates = eventDates
             setProject(projectData)
             setNotes(data.notes || '')
             setBasicInfo({ description: data.description || '', due_date: data.due_date || '' })
+
+            // 현재 사용자의 멤버 역할
+            if (user) {
+                try {
+                    const role = await fetchMyProjectRole(id, user.id)
+                    setMyRole(role)
+                } catch { /* RLS 또는 멤버 아님 */ }
+            }
         } catch {
             router.replace('/my/projects')
         } finally {
@@ -522,6 +533,30 @@ export default function ProjectDetailPage() {
                         <Plus className="w-5 h-5" />
                         {project.parent_project_id == null ? '안무가에게 제안 보내기' : '댄서 초대하기'}
                     </Link>
+                )}
+
+                {/* ── 멤버 관리 (모든 멤버 노출, owner만 편집 가능) ── */}
+                {myRole && (
+                    <Link href={`/my/projects/${project.id}/members`}
+                        className="flex items-center justify-between gap-2 w-full px-4 py-3 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 transition">
+                        <span className="flex items-center gap-2">
+                            <UserCog className="w-4 h-4 text-primary" />
+                            <span className="text-sm font-semibold">프로젝트 멤버 관리</span>
+                        </span>
+                        <span className="text-[11px] text-white/40">내 역할: {myRole === 'owner' ? '책임자' : myRole === 'manager' ? '운영자' : '열람자'}</span>
+                    </Link>
+                )}
+
+                {/* ── 공개 신청 패널 (owner/manager만) ── */}
+                {(myRole === 'owner' || myRole === 'manager') && (
+                    <PublishRequestPanel
+                        projectId={project.id}
+                        moderationStatus={project.moderation_status}
+                        moderationNote={project.moderation_note}
+                        visibility={project.visibility}
+                        myRole={myRole}
+                        onChange={fetchProject}
+                    />
                 )}
 
                 {/* ── 할일 관리 (오너 또는 PM) ── */}
