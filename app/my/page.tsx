@@ -3,10 +3,11 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '@/lib/auth-context'
 import { useRouter } from 'next/navigation'
-import { Loader2, User as UserIcon, Users, Inbox, Send, Wallet, Settings, LogOut, Briefcase, Bell } from 'lucide-react'
+import { Loader2, User as UserIcon, Users, Inbox, Send, Wallet, Settings, LogOut, Briefcase, Bell, Bookmark } from 'lucide-react'
 import { useMyProfiles } from '@/hooks/useMyProfiles'
 import { useProposals } from '@/hooks/useProposals'
 import { useProjects } from '@/hooks/useProjects'
+import { useBookmarkCount, useIsHydrated } from '@/hooks/useBookmarks'
 import { getProjectStatuses } from '@/lib/utils'
 import UserProfileCard from '@/components/my/UserProfileCard'
 import QuickStatCard from '@/components/my/QuickStatCard'
@@ -19,6 +20,8 @@ export default function MyPage() {
     const { ownedDancers, managedDancers, allProfiles, loading: profilesLoading } = useMyProfiles()
     const { proposals, getTotalUnreadCount } = useProposals(allProfiles, 'inbox', 'all')
     const { projects, loading: projectsLoading } = useProjects()
+    const bookmarkCount = useBookmarkCount()
+    const hydrated = useIsHydrated()
 
     useEffect(() => {
         if (!authLoading && !user) {
@@ -35,8 +38,11 @@ export default function MyPage() {
 
     if (authLoading || profilesLoading || projectsLoading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-background">
-                <Loader2 className="w-8 h-8 text-primary animate-spin" />
+            <div
+                className="min-h-screen flex items-center justify-center"
+                style={{ background: 'var(--cue-bg)' }}
+            >
+                <Loader2 className="w-8 h-8 animate-spin" style={{ color: 'var(--cue-accent)' }} />
             </div>
         )
     }
@@ -90,6 +96,12 @@ export default function MyPage() {
             href: '/my/settlements',
             icon: Wallet,
         },
+        {
+            label: '저장한 항목',
+            href: '/my/saved',
+            icon: Bookmark,
+            badge: hydrated && bookmarkCount > 0 ? `${bookmarkCount}건` : undefined,
+        },
     ]
 
     const settingsMenuItems: MenuItem[] = [
@@ -106,43 +118,73 @@ export default function MyPage() {
     ]
 
     return (
-        <div className="min-h-screen bg-background pb-20">
+        <div
+            className="min-h-screen pb-20"
+            style={{ background: 'var(--cue-bg)', color: 'var(--cue-ink)' }}
+        >
             {/* Header */}
-            <div className="sticky top-0 bg-background border-b border-neutral-800 z-10 pt-header-safe">
-                <div className="px-6 pb-4">
-                    <h1 className="text-2xl font-bold text-white">MY</h1>
+            <div
+                className="sticky top-0 z-10 pt-header-safe"
+                style={{
+                    background: 'color-mix(in srgb, var(--cue-bg) 92%, transparent)',
+                    backdropFilter: 'blur(18px)',
+                    WebkitBackdropFilter: 'blur(18px)',
+                    borderBottom: '1px solid var(--cue-hairline)',
+                }}
+            >
+                <div className="px-6 pb-4 pt-2">
+                    <h1
+                        style={{
+                            fontSize: 24,
+                            fontWeight: 700,
+                            letterSpacing: '-0.02em',
+                            color: 'var(--cue-ink)',
+                        }}
+                    >
+                        마이페이지
+                    </h1>
                 </div>
             </div>
 
             {/* Content */}
             <div className="p-6 space-y-6">
-                {/* User Profile Card */}
                 <UserProfileCard user={user} primaryDancer={primaryDancer} />
 
-                {/* Quick Stats */}
                 <div className="grid grid-cols-4 gap-2.5">
                     <QuickStatCard label="활성 제안" value={activeProposals} />
-                    <QuickStatCard label="프로젝트" value={activeProjectCount} accent="text-primary" />
-                    <QuickStatCard label="프로필" value={totalProfiles} accent="text-white" />
-                    <QuickStatCard label="정산 대기" value="0원" accent="text-white/60" />
+                    <QuickStatCard label="프로젝트" value={activeProjectCount} />
+                    <QuickStatCard label="프로필" value={totalProfiles} accent="ink" />
+                    <QuickStatCard label="정산 대기" value="0원" accent="ink-3" />
                 </div>
 
-                {/* Main Menu */}
                 <MenuSection items={profileMenuItems} />
-
-                {/* Settings Menu */}
                 <MenuSection items={settingsMenuItems} />
 
-                {/* Sign Out */}
                 <button
                     onClick={handleSignOut}
-                    className="w-full py-4 bg-red-500/10 border border-red-500/30 rounded-2xl text-red-500 font-bold hover:bg-red-500/20 transition-colors flex items-center justify-center gap-2"
+                    className="w-full py-4 rounded-2xl font-semibold transition-opacity hover:opacity-90 flex items-center justify-center gap-2"
+                    style={{
+                        background: 'color-mix(in srgb, var(--cue-bad) 12%, transparent)',
+                        border: '1px solid color-mix(in srgb, var(--cue-bad) 35%, transparent)',
+                        color: 'var(--cue-bad)',
+                        fontSize: 13,
+                        letterSpacing: 0.4,
+                    }}
                 >
                     <LogOut className="w-5 h-5" />
                     로그아웃
                 </button>
 
-                <p className="text-center text-white/20 text-[10px]">
+                <p
+                    className="text-center"
+                    style={{
+                        fontSize: 11,
+                        fontWeight: 500,
+                        color: 'var(--cue-ink-4)',
+                        fontVariantNumeric: 'tabular-nums',
+                        letterSpacing: 0.2,
+                    }}
+                >
                     dancers.bio v2.2.0
                 </p>
             </div>

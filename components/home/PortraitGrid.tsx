@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { supabase, type Dancer } from "@/lib/supabase";
 import type { DancerCategory } from "@/app/page";
+import { CueEyebrow, CueSerif } from "@/components/cue";
 
 const SPECIALTY_LABELS: Record<string, string> = {
     choreo: "안무",
@@ -35,7 +36,11 @@ export default function PortraitGrid({ category = "all" }: PortraitGridProps) {
                 setDancers([]);
             } else {
                 const verified = ((data as Dancer[]) || []).filter((d: any) => d.is_verified !== false)
-                setDancers(verified);
+                // Photo-first: profiles with a profile_img come before those without,
+                // preserving the RPC's existing order within each group.
+                const withPhoto = verified.filter((d: any) => d.profile_img)
+                const withoutPhoto = verified.filter((d: any) => !d.profile_img)
+                setDancers([...withPhoto, ...withoutPhoto]);
             }
             setLoading(false);
         }
@@ -43,95 +48,134 @@ export default function PortraitGrid({ category = "all" }: PortraitGridProps) {
         fetchDancers();
     }, [category]);
 
-    const sectionTitle = category === "battler"
-        ? "Battle Dancers"
-        : category === "choreographer"
-            ? "Choreographers"
-            : "Discover Dancers";
-
-    if (loading) {
-        return (
-            <div className="px-6 pb-10">
-                <h2 className="text-lg font-bold mb-4">{sectionTitle}</h2>
-                <div className="grid grid-cols-2 gap-4">
-                    {[1, 2, 3, 4].map((i) => (
-                        <div key={i} className="aspect-[3/4] bg-neutral-800 rounded-xl animate-pulse" />
-                    ))}
-                </div>
-            </div>
-        );
-    }
-
-    if (dancers.length === 0) {
-        return (
-            <div className="px-6 pb-10">
-                <h2 className="text-lg font-bold mb-4">{sectionTitle}</h2>
-                <div className="flex flex-col items-center justify-center py-16 text-white/40">
-                    <p className="text-sm">해당 카테고리의 댄서가 아직 없습니다</p>
-                </div>
-            </div>
-        );
-    }
+    const sectionLabel = category === "battler" ? "01 · BATTLE" : category === "choreographer" ? "02 · CHOREO" : "00 · DISCOVER"
+    const sectionTitle = category === "battler" ? "Battle dancers" : category === "choreographer" ? "Choreographers" : "Discover dancers"
 
     return (
-        <div className="px-6 pb-10">
-            <h2 className="text-lg font-bold mb-4">{sectionTitle}</h2>
-            <div className="grid grid-cols-2 gap-4">
-                {dancers.map((dancer) => {
-                    const primarySpecialty = dancer.specialties?.[0];
-                    return (
-                        <Link
-                            key={dancer.id}
-                            href={`/profile/${dancer.slug || dancer.id}`}
-                            className="group relative aspect-[3/4] rounded-xl overflow-hidden bg-neutral-900"
-                        >
-                            {/* Image Rendering */}
-                            {dancer.profile_img ? (
-                                <Image
-                                    src={dancer.profile_img}
-                                    alt={dancer.stage_name}
-                                    fill
-                                    className="object-cover transition-transform duration-500 group-hover:scale-105"
-                                    sizes="(max-width: 768px) 50vw, 33vw"
-                                />
-                            ) : (
-                                <div className="absolute inset-0 bg-neutral-800 flex items-center justify-center">
-                                    <span className="text-6xl opacity-20 font-bold uppercase">{dancer.stage_name[0]}</span>
-                                </div>
-                            )}
-
-                            {/* Primary Specialty Badge */}
-                            {primarySpecialty && (
-                                <div className="absolute top-3 left-3 z-10">
-                                    <span className="px-2 py-0.5 bg-black/60 backdrop-blur-sm text-white/80 text-[10px] font-medium rounded-full border border-white/10">
-                                        {SPECIALTY_LABELS[primarySpecialty] || primarySpecialty}
-                                    </span>
-                                </div>
-                            )}
-
-                            {/* Gradient Overlay for Text Readability */}
-                            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/90" />
-
-                            {/* Text Overlay */}
-                            <div className="absolute bottom-0 left-0 right-0 p-4 z-10">
-                                <h3 className="text-white font-bold text-base mb-1 group-hover:text-primary transition-colors">
-                                    {dancer.stage_name}
-                                </h3>
-                                <div className="flex flex-wrap gap-1 mb-2">
-                                    {dancer.genres?.slice(0, 2).map((genre) => (
-                                        <span key={genre} className="text-[10px] text-white/60">
-                                            {genre}
-                                        </span>
-                                    ))}
-                                </div>
-                                {dancer.is_verified && (
-                                    <span className="text-[10px] text-primary">✓ Verified</span>
-                                )}
-                            </div>
-                        </Link>
-                    );
-                })}
+        <div style={{ padding: '16px 20px 28px' }}>
+            <div style={{ marginBottom: 16 }}>
+                <CueEyebrow>{sectionLabel}</CueEyebrow>
+                <div style={{ marginTop: 4 }}>
+                    <CueSerif size={26}>
+                        {sectionTitle}<span style={{ color: 'var(--cue-accent)' }}>.</span>
+                    </CueSerif>
+                </div>
             </div>
+
+            {loading ? (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12 }}>
+                    {[1, 2, 3, 4].map((i) => (
+                        <div
+                            key={i}
+                            style={{
+                                aspectRatio: '3/4',
+                                background: 'var(--cue-surface-2)',
+                                borderRadius: 14,
+                                animation: 'cue-pulse 1.4s ease-in-out infinite',
+                            }}
+                        />
+                    ))}
+                    <style>{`@keyframes cue-pulse { 0%,100%{ opacity:1 } 50%{ opacity:.4 } }`}</style>
+                </div>
+            ) : dancers.length === 0 ? (
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '64px 0', color: 'var(--cue-ink-3)' }}>
+                    <p style={{ fontSize: 13 }}>해당 카테고리의 댄서가 아직 없습니다</p>
+                </div>
+            ) : (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12 }}>
+                    {dancers.map((dancer) => {
+                        const primarySpecialty = dancer.specialties?.[0];
+                        return (
+                            <Link
+                                key={dancer.id}
+                                href={`/profile/${dancer.slug || dancer.id}`}
+                                style={{
+                                    position: 'relative',
+                                    aspectRatio: '3/4',
+                                    borderRadius: 14,
+                                    overflow: 'hidden',
+                                    background: 'var(--cue-surface-2)',
+                                    border: '1px solid var(--cue-hairline)',
+                                    display: 'block',
+                                    textDecoration: 'none',
+                                }}
+                            >
+                                {dancer.profile_img ? (
+                                    <Image
+                                        src={dancer.profile_img}
+                                        alt={dancer.stage_name}
+                                        fill
+                                        style={{ objectFit: 'cover' }}
+                                        sizes="(max-width: 768px) 50vw, 33vw"
+                                    />
+                                ) : (
+                                    <div
+                                        style={{
+                                            position: 'absolute',
+                                            inset: 0,
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            color: 'var(--cue-ink-4)',
+                                            fontSize: 64,
+                                            fontWeight: 700,
+                                            textTransform: 'uppercase',
+                                        }}
+                                    >
+                                        {dancer.stage_name[0]}
+                                    </div>
+                                )}
+
+                                {primarySpecialty && (
+                                    <div style={{ position: 'absolute', top: 10, left: 10, zIndex: 2 }}>
+                                        <span
+                                            style={{
+                                                padding: '3px 8px',
+                                                background: 'rgba(11,11,13,0.7)',
+                                                backdropFilter: 'blur(8px)',
+                                                color: 'var(--cue-ink-2)',
+                                                fontSize: 11,
+                                                fontWeight: 500,
+                                                borderRadius: 999,
+                                                border: '1px solid var(--cue-hairline)',
+                                                letterSpacing: 0.1,
+                                            }}
+                                        >
+                                            {SPECIALTY_LABELS[primarySpecialty] || primarySpecialty}
+                                        </span>
+                                    </div>
+                                )}
+
+                                <div
+                                    style={{
+                                        position: 'absolute',
+                                        inset: 0,
+                                        background: 'linear-gradient(to bottom, transparent 50%, rgba(14,14,12,0.92))',
+                                    }}
+                                />
+
+                                <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: 14, zIndex: 2 }}>
+                                    <div style={{ color: 'var(--cue-ink)', fontWeight: 700, fontSize: 14, marginBottom: 4 }}>
+                                        {dancer.stage_name}
+                                    </div>
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                                        {dancer.genres?.slice(0, 2).map((genre) => (
+                                            <span key={genre} style={{ fontSize: 10, color: 'var(--cue-ink-3)' }}>
+                                                {genre}
+                                            </span>
+                                        ))}
+                                    </div>
+                                    {dancer.is_verified && (
+                                        <span style={{ fontSize: 10, color: 'var(--cue-accent)', marginTop: 4, display: 'inline-block' }}>
+                                            ✓ Verified
+                                        </span>
+                                    )}
+                                </div>
+                            </Link>
+                        );
+                    })}
+                </div>
+            )}
         </div>
     );
 }

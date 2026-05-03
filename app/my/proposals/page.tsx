@@ -101,34 +101,62 @@ function ProposalsPage() {
     }
 
     return (
-        <div className="min-h-screen bg-background pb-20">
+        <div className="min-h-screen pb-20" style={{ background: 'var(--cue-bg)', color: 'var(--cue-ink)' }}>
             {/* Header */}
-            <div className="sticky top-0 bg-background border-b border-neutral-800 z-10 pt-header-safe">
+            <div
+                className="sticky top-0 z-10 pt-header-safe"
+                style={{
+                    background: 'color-mix(in srgb, var(--cue-bg) 92%, transparent)',
+                    backdropFilter: 'blur(18px)',
+                    WebkitBackdropFilter: 'blur(18px)',
+                    borderBottom: '1px solid var(--cue-hairline)',
+                }}
+            >
                 <div className="px-6 py-4 flex justify-between items-center">
                     <div className="flex items-center gap-4">
-                        <button type="button" onClick={handleBack} className="p-1 -ml-1 touch-manipulation" aria-label="뒤로 가기">
-                            <ArrowLeft className="w-6 h-6 text-white" />
+                        <button type="button" onClick={handleBack} className="p-1 -ml-1 touch-manipulation" aria-label="뒤로 가기" style={{ color: 'var(--cue-ink)' }}>
+                            <ArrowLeft className="w-6 h-6" />
                         </button>
-                        <h1 className="text-xl font-bold text-white">제안 관리</h1>
+                        <div>
+                            <h1
+                                style={{
+                                    fontSize: 22,
+                                    fontWeight: 700,
+                                    letterSpacing: '-0.02em',
+                                    color: 'var(--cue-ink)',
+                                }}
+                            >
+                                제안함
+                            </h1>
+                        </div>
                     </div>
                     {activeTab === 'outbox' && (
                         <Link
                             href="/my/proposals/new"
-                            className="p-2 bg-neutral-800 rounded-full text-primary hover:bg-neutral-700 transition"
+                            className="p-2 rounded-full transition"
+                            style={{
+                                background: 'var(--cue-surface-2)',
+                                color: 'var(--cue-accent)',
+                                border: '1px solid var(--cue-hairline)',
+                            }}
                         >
                             <Plus className="w-5 h-5" />
                         </Link>
                     )}
                 </div>
 
-                {/* Profile Filter — inbox 탭에서만 표시 (받은 제안은 댄서 프로필 기준 필터링) */}
                 {activeTab === 'inbox' && allProfiles.length > 0 && (
                     <div className="px-6 pb-2">
                         <div className="relative">
                             <select
                                 value={selectedProfileId}
                                 onChange={(e) => setSelectedProfileId(e.target.value)}
-                                className="w-full appearance-none bg-neutral-900 border border-neutral-800 text-white text-sm rounded-lg pl-10 pr-4 py-2.5 focus:outline-none focus:border-primary"
+                                className="w-full appearance-none text-sm rounded-lg pl-10 pr-4 py-2.5 focus:outline-none"
+                                style={{
+                                    background: 'var(--cue-surface)',
+                                    border: '1px solid var(--cue-hairline)',
+                                    color: 'var(--cue-ink)',
+                                }}
                             >
                                 <option value="all">모든 프로필 ({allProfiles.length})</option>
                                 {allProfiles.map(p => (
@@ -137,33 +165,34 @@ function ProposalsPage() {
                                     </option>
                                 ))}
                             </select>
-                            <Filter className="absolute left-3 top-2.5 w-4 h-4 text-white/50" />
-                            <ChevronDown className="absolute right-3 top-3 w-4 h-4 text-white/50 pointer-events-none" />
+                            <Filter className="absolute left-3 top-2.5 w-4 h-4" style={{ color: 'var(--cue-ink-3)' }} />
+                            <ChevronDown className="absolute right-3 top-3 w-4 h-4 pointer-events-none" style={{ color: 'var(--cue-ink-3)' }} />
                         </div>
                     </div>
                 )}
 
-                {/* Tabs */}
-                <div className="flex border-t border-neutral-800 mt-2">
+                <div className="flex mt-2" style={{ borderTop: '1px solid var(--cue-hairline)' }}>
                     <button
                         onClick={() => handleTabChange('inbox')}
-                        className={`flex-1 py-3 text-sm font-medium transition-colors relative ${activeTab === 'inbox' ? 'text-primary' : 'text-white/60 hover:text-white'}`}
+                        className="flex-1 py-3 text-sm font-medium transition-colors relative"
+                        style={{ color: activeTab === 'inbox' ? 'var(--cue-accent)' : 'var(--cue-ink-3)' }}
                     >
                         <div className="flex items-center justify-center gap-2">
                             <Inbox className="w-4 h-4" />
                             받은 제안
                         </div>
-                        {activeTab === 'inbox' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />}
+                        {activeTab === 'inbox' && <div className="absolute bottom-0 left-0 right-0 h-0.5" style={{ background: 'var(--cue-accent)' }} />}
                     </button>
                     <button
                         onClick={() => handleTabChange('outbox')}
-                        className={`flex-1 py-3 text-sm font-medium transition-colors relative ${activeTab === 'outbox' ? 'text-primary' : 'text-white/60 hover:text-white'}`}
+                        className="flex-1 py-3 text-sm font-medium transition-colors relative"
+                        style={{ color: activeTab === 'outbox' ? 'var(--cue-accent)' : 'var(--cue-ink-3)' }}
                     >
                         <div className="flex items-center justify-center gap-2">
                             <Send className="w-4 h-4" />
                             보낸 제안
                         </div>
-                        {activeTab === 'outbox' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />}
+                        {activeTab === 'outbox' && <div className="absolute bottom-0 left-0 right-0 h-0.5" style={{ background: 'var(--cue-accent)' }} />}
                     </button>
                 </div>
             </div>
@@ -187,8 +216,11 @@ function ProposalsPage() {
                     <div className="text-white/60 text-center py-12">로딩 중...</div>
                 ) : filteredProposals.length === 0 ? (
                     <div className="text-center py-12">
-                        <div className="w-16 h-16 bg-neutral-900 rounded-full flex items-center justify-center mx-auto mb-4">
-                            {activeTab === 'inbox' ? <Inbox className="w-8 h-8 text-white/20" /> : <Send className="w-8 h-8 text-white/20" />}
+                        <div
+                            className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
+                            style={{ background: 'var(--cue-surface)', border: '1px solid var(--cue-hairline)' }}
+                        >
+                            {activeTab === 'inbox' ? <Inbox className="w-8 h-8" style={{ color: 'var(--cue-ink-4)' }} /> : <Send className="w-8 h-8" style={{ color: 'var(--cue-ink-4)' }} />}
                         </div>
                         <p className="text-white/60">
                             {proposals.length > 0 && (searchQuery || statusFilter || categoryFilter)

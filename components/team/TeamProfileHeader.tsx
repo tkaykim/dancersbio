@@ -67,13 +67,14 @@ export default function TeamProfileHeader({ team, memberCount, agencies }: TeamP
                     </div>
                 )}
 
-                <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
+                <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, var(--cue-bg), color-mix(in srgb, var(--cue-bg) 40%, transparent), transparent)' }} />
                 <div className="absolute inset-0 bg-black/20" />
 
                 <div className="absolute top-0 left-4 flex gap-2 z-30 pt-header-safe">
                     <button
                         onClick={handleBack}
-                        className="p-2.5 bg-black/20 backdrop-blur-md rounded-full text-white hover:bg-white/10 transition border border-white/10"
+                        className="p-2.5 backdrop-blur-md rounded-full text-white hover:bg-white/10 transition"
+                        style={{ background: 'rgba(14,14,12,0.4)', border: '1px solid var(--cue-hairline-2)' }}
                         aria-label="뒤로 가기"
                     >
                         <ChevronLeft className="w-5 h-5" />
@@ -84,7 +85,8 @@ export default function TeamProfileHeader({ team, memberCount, agencies }: TeamP
                     <button
                         type="button"
                         onClick={handleShare}
-                        className="p-2.5 bg-black/20 backdrop-blur-md rounded-full text-white hover:bg-white/10 transition border border-white/10"
+                        className="p-2.5 backdrop-blur-md rounded-full text-white hover:bg-white/10 transition"
+                        style={{ background: 'rgba(14,14,12,0.4)', border: '1px solid var(--cue-hairline-2)' }}
                         aria-label="팀 프로필 링크 공유"
                     >
                         <Share2 className="w-5 h-5" />
@@ -92,10 +94,20 @@ export default function TeamProfileHeader({ team, memberCount, agencies }: TeamP
                 </div>
 
                 <div className="absolute bottom-0 left-0 right-0 px-6 pb-5 z-20 flex flex-col items-center text-center">
-                    <h1 className="text-3xl md:text-5xl font-extrabold text-white flex items-center gap-2 mb-1 tracking-tight drop-shadow-md">
+                    <h1
+                        className="flex items-center gap-2 mb-1"
+                        style={{
+                            fontSize: 'clamp(30px, 6.5vw, 48px)',
+                            fontWeight: 700,
+                            lineHeight: 1.05,
+                            letterSpacing: '-0.03em',
+                            color: 'var(--cue-ink)',
+                            textShadow: '0 2px 16px rgba(0,0,0,0.5)',
+                        }}
+                    >
                         {team.name}
                         {team.is_verified && (
-                            <CheckCircle2 className="w-5 h-5 md:w-7 md:h-7 text-blue-400 fill-blue-900/40" />
+                            <CheckCircle2 className="w-5 h-5 md:w-7 md:h-7" style={{ color: 'var(--cue-accent)' }} />
                         )}
                     </h1>
 

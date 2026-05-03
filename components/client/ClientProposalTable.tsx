@@ -1,14 +1,15 @@
 'use client'
 
 import Image from 'next/image'
+import { CueTag } from '@/components/cue'
 import type { ProjectProposal } from '@/lib/types'
 
-const STATUS_MAP: Record<string, { label: string; className: string }> = {
-  pending: { label: '대기', className: 'bg-amber-500/20 text-amber-400' },
-  accepted: { label: '수락', className: 'bg-green-500/20 text-green-500' },
-  declined: { label: '거절', className: 'bg-red-500/20 text-red-400' },
-  negotiating: { label: '협상중', className: 'bg-blue-500/20 text-blue-400' },
-  cancelled: { label: '취소', className: 'bg-neutral-600/50 text-white/50' },
+const STATUS_TONE: Record<string, { label: string; tone: 'warn' | 'ok' | 'bad' | 'info' | 'ghost' }> = {
+  pending: { label: '대기', tone: 'warn' },
+  accepted: { label: '수락', tone: 'ok' },
+  declined: { label: '거절', tone: 'bad' },
+  negotiating: { label: '협상중', tone: 'info' },
+  cancelled: { label: '취소', tone: 'ghost' },
 }
 
 export interface ProposalRow extends ProjectProposal {
@@ -21,52 +22,74 @@ interface ClientProposalTableProps {
   onSelectProposal?: (proposal: ProposalRow) => void
 }
 
-export default function ClientProposalTable({
-  proposals,
-  onCancel,
-  onSelectProposal,
-}: ClientProposalTableProps) {
+export default function ClientProposalTable({ proposals, onCancel, onSelectProposal }: ClientProposalTableProps) {
   return (
-    <div className="rounded-xl border border-neutral-800 overflow-hidden">
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
+    <div
+      style={{
+        borderRadius: 14,
+        border: '1px solid var(--cue-hairline)',
+        overflow: 'hidden',
+        background: 'var(--cue-surface)',
+      }}
+    >
+      <div style={{ overflowX: 'auto' }}>
+        <table style={{ width: '100%', fontSize: 13, borderCollapse: 'collapse' }}>
           <thead>
-            <tr className="border-b border-neutral-800 bg-neutral-900/50">
-              <th className="text-left py-3 px-4 font-medium text-white/80">댄서</th>
-              <th className="text-left py-3 px-4 font-medium text-white/80">역할</th>
-              <th className="text-left py-3 px-4 font-medium text-white/80">제안 일정</th>
-              <th className="text-right py-3 px-4 font-medium text-white/80">금액</th>
-              <th className="text-left py-3 px-4 font-medium text-white/80">상태</th>
-              <th className="text-left py-3 px-4 font-medium text-white/80">보낸 일시</th>
-              {onCancel && <th className="w-20" />}
+            <tr
+              style={{
+                borderBottom: '1px solid var(--cue-hairline)',
+                background: 'var(--cue-surface-2)',
+                fontSize: 11,
+                color: 'var(--cue-ink-3)',
+                letterSpacing: 0.4,
+                textTransform: 'uppercase',
+                fontFamily: 'var(--font-cue-mono), ui-monospace, monospace',
+              }}
+            >
+              <th style={{ textAlign: 'left', padding: '12px 16px', fontWeight: 500 }}>댄서</th>
+              <th style={{ textAlign: 'left', padding: '12px 16px', fontWeight: 500 }}>역할</th>
+              <th style={{ textAlign: 'left', padding: '12px 16px', fontWeight: 500 }}>제안 일정</th>
+              <th style={{ textAlign: 'right', padding: '12px 16px', fontWeight: 500 }}>금액</th>
+              <th style={{ textAlign: 'left', padding: '12px 16px', fontWeight: 500 }}>상태</th>
+              <th style={{ textAlign: 'left', padding: '12px 16px', fontWeight: 500 }}>보낸 일시</th>
+              {onCancel && <th style={{ width: 80 }} />}
             </tr>
           </thead>
           <tbody>
             {proposals.length === 0 ? (
               <tr>
-                <td colSpan={onCancel ? 7 : 6} className="py-8 text-center text-white/50">
+                <td colSpan={onCancel ? 7 : 6} style={{ padding: '32px 16px', textAlign: 'center', color: 'var(--cue-ink-3)' }}>
                   제안 내역이 없습니다.
                 </td>
               </tr>
             ) : (
-              proposals.map((p) => {
-                const statusInfo = STATUS_MAP[p.status] ?? {
-                  label: p.status,
-                  className: 'bg-neutral-600/50 text-white/60',
-                }
-                const canCancel =
-                  onCancel &&
-                  (p.status === 'pending' || p.status === 'negotiating')
+              proposals.map((p, i) => {
+                const statusInfo = STATUS_TONE[p.status] ?? { label: p.status, tone: 'ghost' as const }
+                const canCancel = onCancel && (p.status === 'pending' || p.status === 'negotiating')
                 return (
                   <tr
                     key={p.id}
-                    className="border-b border-neutral-800/50 hover:bg-neutral-800/30"
+                    style={{
+                      borderBottom: i < proposals.length - 1 ? '1px solid var(--cue-hairline)' : 'none',
+                    }}
                   >
-                    <td className="py-3 px-4">
+                    <td style={{ padding: '14px 16px' }}>
                       <button
                         type="button"
                         onClick={() => onSelectProposal?.(p)}
-                        className="flex items-center gap-2 text-left w-full"
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 10,
+                          textAlign: 'left',
+                          width: '100%',
+                          background: 'none',
+                          border: 'none',
+                          color: 'inherit',
+                          cursor: 'pointer',
+                          padding: 0,
+                          fontFamily: 'inherit',
+                        }}
                       >
                         {p.dancers?.profile_img ? (
                           <Image
@@ -74,29 +97,57 @@ export default function ClientProposalTable({
                             alt=""
                             width={32}
                             height={32}
-                            className="rounded-full object-cover shrink-0"
+                            style={{ borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}
                           />
                         ) : (
-                          <div className="w-8 h-8 rounded-full bg-neutral-700 shrink-0" />
+                          <div
+                            style={{
+                              width: 32,
+                              height: 32,
+                              borderRadius: '50%',
+                              background: 'var(--cue-surface-3)',
+                              flexShrink: 0,
+                            }}
+                          />
                         )}
-                        <span className="font-medium text-white">
+                        <span style={{ fontWeight: 500, color: 'var(--cue-ink)' }}>
                           {p.dancers?.stage_name ?? '—'}
                         </span>
                       </button>
                     </td>
-                    <td className="py-3 px-4 text-white/80">{p.role ?? '미정'}</td>
-                    <td className="py-3 px-4 text-white/80">{p.scheduled_date ?? '미정'}</td>
-                    <td className="py-3 px-4 text-right text-white/80">
-                      {p.fee != null ? `${(p.fee / 10000).toFixed(0)}만` : '미정'}
+                    <td style={{ padding: '14px 16px', color: 'var(--cue-ink-2)' }}>{p.role ?? '미정'}</td>
+                    <td
+                      style={{
+                        padding: '14px 16px',
+                        color: 'var(--cue-ink-2)',
+                        fontFamily: 'var(--font-cue-mono), ui-monospace, monospace',
+                        fontSize: 12,
+                      }}
+                    >
+                      {p.scheduled_date ?? '미정'}
                     </td>
-                    <td className="py-3 px-4">
-                      <span
-                        className={`inline-block px-2 py-0.5 rounded text-xs ${statusInfo.className}`}
-                      >
-                        {statusInfo.label}
-                      </span>
+                    <td
+                      style={{
+                        padding: '14px 16px',
+                        textAlign: 'right',
+                        color: 'var(--cue-ink)',
+                        fontFamily: 'var(--font-cue-mono), ui-monospace, monospace',
+                        fontWeight: 500,
+                      }}
+                    >
+                      {p.fee != null ? `${(p.fee / 10000).toFixed(0)}만` : '—'}
                     </td>
-                    <td className="py-3 px-4 text-white/50">
+                    <td style={{ padding: '14px 16px' }}>
+                      <CueTag tone={statusInfo.tone}>{statusInfo.label}</CueTag>
+                    </td>
+                    <td
+                      style={{
+                        padding: '14px 16px',
+                        color: 'var(--cue-ink-3)',
+                        fontFamily: 'var(--font-cue-mono), ui-monospace, monospace',
+                        fontSize: 11,
+                      }}
+                    >
                       {p.created_at
                         ? new Date(p.created_at).toLocaleDateString('ko-KR', {
                             year: 'numeric',
@@ -106,12 +157,19 @@ export default function ClientProposalTable({
                         : '—'}
                     </td>
                     {onCancel && (
-                      <td className="py-3 px-4">
+                      <td style={{ padding: '14px 16px' }}>
                         {canCancel ? (
                           <button
                             type="button"
                             onClick={() => onCancel(p.id)}
-                            className="text-xs text-red-400/80 hover:text-red-400"
+                            style={{
+                              fontSize: 12,
+                              color: 'var(--cue-bad)',
+                              background: 'none',
+                              border: 'none',
+                              cursor: 'pointer',
+                              fontFamily: 'inherit',
+                            }}
                           >
                             취소
                           </button>

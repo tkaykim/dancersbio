@@ -116,7 +116,7 @@ function ProfilesPage() {
                     <div className="bg-neutral-900/50 border border-dashed border-neutral-800 rounded-2xl p-8 text-center">
                         <p className="text-white/40 text-sm mb-4">등록된 댄서 프로필이 없습니다.</p>
                         <Link
-                            href="/onboarding"
+                            href="/crew"
                             className="inline-flex items-center gap-2 px-6 py-2 bg-primary text-black font-bold rounded-full text-sm"
                         >
                             프로필 만들기
@@ -151,7 +151,7 @@ function ProfilesPage() {
                         <p className="text-white/50 text-sm mb-2">내 프로필은 1개만 보유할 수 있습니다</p>
                         <p className="text-white/40 text-xs mb-3">다른 댄서 프로필을 매니저 권한으로 관리하려면</p>
                         <Link
-                            href="/onboarding"
+                            href="/crew"
                             className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-500/20 border border-blue-500/30 text-blue-300 rounded-xl text-sm font-medium hover:bg-blue-500/30 transition-colors"
                         >
                             <Shield className="w-4 h-4" />
@@ -160,7 +160,7 @@ function ProfilesPage() {
                     </div>
                 ) : (
                     <Link
-                        href="/onboarding"
+                        href="/crew"
                         className="flex items-center justify-center gap-2 w-full py-4 border border-dashed border-neutral-700 rounded-2xl text-white/60 hover:text-white hover:border-primary/50 transition-colors"
                     >
                         <Plus className="w-5 h-5" />
