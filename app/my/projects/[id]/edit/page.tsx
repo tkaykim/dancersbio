@@ -1,13 +1,14 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import { ArrowLeft } from 'lucide-react'
 import ProjectForm from '@/components/projects/ProjectForm'
 import { useBackWithFallback } from '@/lib/useBackWithFallback'
 
-export default function NewProjectPage() {
+export default function EditProjectPage() {
+    const { id } = useParams<{ id: string }>()
     const router = useRouter()
-    const handleBack = useBackWithFallback('/my/projects')
+    const handleBack = useBackWithFallback(`/my/projects/${id}`)
 
     return (
         <div className="min-h-screen bg-background pb-nav-safe">
@@ -17,13 +18,17 @@ export default function NewProjectPage() {
                         <ArrowLeft className="w-5 h-5 text-white/70" />
                     </button>
                     <div>
-                        <h1 className="text-lg font-bold text-white">새 프로젝트</h1>
-                        <p className="text-white/35 text-[11px]">필수 정보만 채우면 바로 등록됩니다</p>
+                        <h1 className="text-lg font-bold text-white">프로젝트 수정</h1>
+                        <p className="text-white/35 text-[11px]">변경 사항을 저장하면 즉시 반영됩니다</p>
                     </div>
                 </div>
             </div>
 
-            <ProjectForm onSuccess={(id) => router.push(`/my/projects/${id}`)} />
+            <ProjectForm
+                projectId={id}
+                onSuccess={(pid) => router.push(`/my/projects/${pid}`)}
+                onCancel={handleBack}
+            />
         </div>
     )
 }

@@ -8,7 +8,7 @@ import {
     ArrowLeft, Loader2, Users, Calendar, Edit3, Plus,
     CheckCircle, Clock, XCircle, User as UserIcon, Save, Handshake, Play,
     Eye, EyeOff, ChevronDown, ChevronUp, ChevronRight, ShieldAlert, Target, Ban,
-    Archive, ArchiveRestore, UserCog,
+    Archive, ArchiveRestore, UserCog, Pencil,
 } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -532,6 +532,18 @@ export default function ProjectDetailPage() {
                         className="flex items-center justify-center gap-2 w-full py-3 bg-primary text-black font-bold rounded-xl hover:bg-primary/90 transition">
                         <Plus className="w-5 h-5" />
                         {project.parent_project_id == null ? '안무가에게 제안 보내기' : '댄서 초대하기'}
+                    </Link>
+                )}
+
+                {/* ── 프로젝트 정보 수정 (owner/manager) ── */}
+                {(myRole === 'owner' || myRole === 'manager') && (
+                    <Link href={`/my/projects/${project.id}/edit`}
+                        className="flex items-center justify-between gap-2 w-full px-4 py-3 rounded-xl border border-primary/30 bg-primary/10 hover:bg-primary/20 transition">
+                        <span className="flex items-center gap-2">
+                            <Pencil className="w-4 h-4 text-primary" />
+                            <span className="text-sm font-semibold text-primary">프로젝트 정보 수정</span>
+                        </span>
+                        <ChevronRight className="w-4 h-4 text-primary/60" />
                     </Link>
                 )}
 
