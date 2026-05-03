@@ -5,7 +5,7 @@ import Link from 'next/link'
 import MobileContainer from '@/components/layout/MobileContainer'
 import { Ico } from '@/components/cue'
 import { supabase } from '@/lib/supabase'
-import { CASTING_MOCKS, type CastingCategory, type CastingMock } from '@/lib/castingMockData'
+import { type CastingCategory, type CastingMock } from '@/lib/castingMockData'
 import {
     projectToCastingMock,
     isCastableProject,
@@ -66,12 +66,10 @@ export default function CastingPage() {
         }
     }, [])
 
-    const merged = useMemo(() => [...liveProjects, ...CASTING_MOCKS], [liveProjects])
-
     const visible = useMemo(() => {
-        if (filter === 'foryou') return merged
-        return merged.filter((c) => c.category === filter)
-    }, [merged, filter])
+        if (filter === 'foryou') return liveProjects
+        return liveProjects.filter((c) => c.category === filter)
+    }, [liveProjects, filter])
 
     return (
         <MobileContainer>
