@@ -15,6 +15,7 @@ interface ClientProjectDetailProps {
   onAddProposal: () => void
   onCancelProposal: (proposalId: string) => void
   onSelectProposal?: (proposal: ProposalRow) => void
+  onEditProject?: (projectId: string) => void
   refetch?: () => void
 }
 
@@ -23,6 +24,7 @@ export default function ClientProjectDetail({
   onAddProposal,
   onCancelProposal,
   onSelectProposal,
+  onEditProject,
   refetch,
 }: ClientProjectDetailProps) {
   const [statusFilter, setStatusFilter] = useState('')
@@ -122,9 +124,28 @@ export default function ClientProjectDetail({
             )
           ))}
         </div>
-        <CueButton onClick={onAddProposal}>
-          {Ico.plus('currentColor', 14)} 제안 추가
-        </CueButton>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'flex-end' }}>
+          <CueButton onClick={onAddProposal}>
+            {Ico.plus('currentColor', 14)} 제안 추가
+          </CueButton>
+          {onEditProject && (
+            <button
+              type="button"
+              onClick={() => onEditProject(project.id)}
+              style={{
+                fontSize: 11,
+                color: 'var(--cue-ink-2)',
+                background: 'transparent',
+                border: '1px solid var(--cue-hairline)',
+                borderRadius: 8,
+                padding: '6px 10px',
+                cursor: 'pointer',
+              }}
+            >
+              프로젝트 수정
+            </button>
+          )}
+        </div>
       </div>
 
       <ClientFilterBar

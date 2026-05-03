@@ -11,6 +11,7 @@ import type { ClientProject } from '@/hooks/useClientProjects'
 import ClientProjectList from '@/components/client/ClientProjectList'
 import ClientProjectDetail from '@/components/client/ClientProjectDetail'
 import DrawerAddProposal from '@/components/client/DrawerAddProposal'
+import ProjectFormModal from '@/components/projects/ProjectFormModal'
 import ProposalDetailModal from '@/components/proposals/ProposalDetailModal'
 import ProjectStatusChips from '@/components/client/ProjectStatusChips'
 import type { Proposal } from '@/lib/types'
@@ -95,7 +96,9 @@ function ClientDashboardPage() {
 
   const [selectedProjectId, setSelectedProjectIdState] = useState<string | null>(null)
   const [drawerAddProposal, setDrawerAddProposal] = useState(false)
-  const goNewProject = useCallback(() => router.push('/my/projects/new'), [router])
+  const [projectFormModal, setProjectFormModal] = useState<{ open: boolean; projectId?: string }>({ open: false })
+  const openNewProject = useCallback(() => setProjectFormModal({ open: true }), [])
+  const openEditProject = useCallback((id: string) => setProjectFormModal({ open: true, projectId: id }), [])
   const [projectListSearch, setProjectListSearch] = useState('')
   const [selectedProposalForDetail, setSelectedProposalForDetail] = useState<Proposal | null>(null)
 
@@ -233,7 +236,7 @@ function ClientDashboardPage() {
             />
             <CueMono style={{ fontSize: 10, color: 'var(--cue-ink-3)' }}>⌘K</CueMono>
           </div>
-          <CueButton variant="primary" onClick={() => goNewProject()}>
+          <CueButton variant="primary" onClick={() => openNewProject()}>
             {Ico.plus('currentColor', 14)} 새 프로젝트
           </CueButton>
         </div>
@@ -280,7 +283,7 @@ function ClientDashboardPage() {
           projects={projects}
           selectedProjectId={selectedProjectId}
           onSelectProject={setSelectedProjectId}
-          onCreateProject={() => goNewProject()}
+          onCreateProject={() => openNewProject()}
           loading={loading}
         />
 
@@ -292,6 +295,7 @@ function ClientDashboardPage() {
                 onAddProposal={() => setDrawerAddProposal(true)}
                 onCancelProposal={handleCancelProposal}
                 onSelectProposal={handleSelectProposal}
+                onEditProject={openEditProject}
                 refetch={refetch}
               />
             ) : (
@@ -359,7 +363,7 @@ function ClientDashboardPage() {
                     새 프로젝트를 만들고 댄서에게 제안을 보내보세요.
                   </div>
                   <div style={{ marginTop: 16 }}>
-                    <CueButton onClick={() => goNewProject()}>새 프로젝트 만들기</CueButton>
+                    <CueButton onClick={() => openNewProject()}>새 프로젝트 만들기</CueButton>
                   </div>
                 </div>
               ) : (
@@ -378,6 +382,16 @@ function ClientDashboardPage() {
           )}
         </div>
       </div>
+
+      <ProjectFormModal
+        isOpen={projectFormModal.open}
+        projectId={projectFormModal.projectId}
+        onClose={() => setProjectFormModal({ open: false })}
+        onSuccess={(id) => {
+          refetch()
+          setSelectedProjectId(id)
+        }}
+      />
 
       {selectedProject && (
         <DrawerAddProposal
