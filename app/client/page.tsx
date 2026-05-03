@@ -10,7 +10,6 @@ import { Ico, CueTag, CueButton, CueEyebrow, CueSerif, CueMono } from '@/compone
 import type { ClientProject } from '@/hooks/useClientProjects'
 import ClientProjectList from '@/components/client/ClientProjectList'
 import ClientProjectDetail from '@/components/client/ClientProjectDetail'
-import ModalNewProject from '@/components/client/ModalNewProject'
 import DrawerAddProposal from '@/components/client/DrawerAddProposal'
 import ProposalDetailModal from '@/components/proposals/ProposalDetailModal'
 import ProjectStatusChips from '@/components/client/ProjectStatusChips'
@@ -95,8 +94,8 @@ function ClientDashboardPage() {
   const { clients } = useMyClients()
 
   const [selectedProjectId, setSelectedProjectIdState] = useState<string | null>(null)
-  const [modalNewProject, setModalNewProject] = useState(false)
   const [drawerAddProposal, setDrawerAddProposal] = useState(false)
+  const goNewProject = useCallback(() => router.push('/my/projects/new'), [router])
   const [projectListSearch, setProjectListSearch] = useState('')
   const [selectedProposalForDetail, setSelectedProposalForDetail] = useState<Proposal | null>(null)
 
@@ -234,7 +233,7 @@ function ClientDashboardPage() {
             />
             <CueMono style={{ fontSize: 10, color: 'var(--cue-ink-3)' }}>⌘K</CueMono>
           </div>
-          <CueButton variant="primary" onClick={() => setModalNewProject(true)}>
+          <CueButton variant="primary" onClick={() => goNewProject()}>
             {Ico.plus('currentColor', 14)} 새 프로젝트
           </CueButton>
         </div>
@@ -281,7 +280,7 @@ function ClientDashboardPage() {
           projects={projects}
           selectedProjectId={selectedProjectId}
           onSelectProject={setSelectedProjectId}
-          onCreateProject={() => setModalNewProject(true)}
+          onCreateProject={() => goNewProject()}
           loading={loading}
         />
 
@@ -360,7 +359,7 @@ function ClientDashboardPage() {
                     새 프로젝트를 만들고 댄서에게 제안을 보내보세요.
                   </div>
                   <div style={{ marginTop: 16 }}>
-                    <CueButton onClick={() => setModalNewProject(true)}>새 프로젝트 만들기</CueButton>
+                    <CueButton onClick={() => goNewProject()}>새 프로젝트 만들기</CueButton>
                   </div>
                 </div>
               ) : (
@@ -379,12 +378,6 @@ function ClientDashboardPage() {
           )}
         </div>
       </div>
-
-      <ModalNewProject
-        isOpen={modalNewProject}
-        onClose={() => setModalNewProject(false)}
-        onCreated={handleProjectCreated}
-      />
 
       {selectedProject && (
         <DrawerAddProposal
