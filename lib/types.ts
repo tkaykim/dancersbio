@@ -130,9 +130,23 @@ export interface Project {
     moderation_reviewed_by?: string | null
     published_at?: string | null
     embargo_date: string | null
+    /** @deprecated 기존 호환용 — 새 폼은 recruit_budget_per_person 사용 */
     budget: number | null
+    /** 섭외 1인당 예산 (NULL=미정) */
+    recruit_budget_per_person?: number | null
+    /** 섭외 인원 수 (NULL=미정) */
+    recruit_count?: number | null
+    /** 모집 시작일 */
+    recruit_start_date?: string | null
+    /** 모집 마감일 */
+    recruit_end_date?: string | null
+    /** 등록자 정보 비공개 */
+    owner_anonymous?: boolean
+    /** @deprecated */
     start_date: string | null
+    /** @deprecated */
     end_date: string | null
+    /** @deprecated */
     due_date: string | null
     notes: string | null
     created_at: string
