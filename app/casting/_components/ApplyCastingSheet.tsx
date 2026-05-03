@@ -40,6 +40,29 @@ export default function ApplyCastingSheet({
     const [alreadyApplied, setAlreadyApplied] = useState(false)
     const [submitted, setSubmitted] = useState(false)
 
+    // 팀 신청
+    const [applyMode, setApplyMode] = useState<'individual' | 'team'>('individual')
+    const [myTeams, setMyTeams] = useState<{ id: string; name: string }[]>([])
+    const [selectedTeamId, setSelectedTeamId] = useState<string>('')
+
+    // 사용자가 leader 인 팀 목록
+    useEffect(() => {
+        if (!user) { setMyTeams([]); return }
+        let cancelled = false
+        supabase
+            .from('teams')
+            .select('id, name')
+            .eq('leader_id', user.id)
+            .then(({ data }) => {
+                if (cancelled) return
+                const list = (data ?? []) as { id: string; name: string }[]
+                setMyTeams(list)
+                if (list.length > 0 && !selectedTeamId) setSelectedTeamId(list[0].id)
+            })
+        return () => { cancelled = true }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [user])
+
     const isReal = !!realProjectId
 
     // Auto-pick first profile when sheet opens
@@ -123,16 +146,24 @@ export default function ApplyCastingSheet({
                 ? `${message.trim()}\n\n📎 ${reel.trim()}`
                 : message.trim()
 
+            if (applyMode === 'team' && !selectedTeamId) {
+                setSubmitError('신청할 팀을 선택해주세요.')
+                setSubmitting(false)
+                return
+            }
+
             const { data: inserted, error: insertErr } = await supabase
                 .from('proposals')
                 .insert({
                     project_id: realProjectId,
                     dancer_id: selectedDancerId,
                     sender_id: user.id,
-                    role: '캐스팅 지원',
+                    role: applyMode === 'team' ? '캐스팅 지원 (팀)' : '캐스팅 지원',
                     fee: null,
                     details: detailsBody,
                     status: 'pending',
+                    team_id: applyMode === 'team' ? selectedTeamId : null,
+                    applies_as: applyMode,
                 })
                 .select('id')
                 .single()
@@ -291,7 +322,53 @@ export default function ApplyCastingSheet({
                             </div>
                         </div>
 
-                        {isReal && profiles.length > 0 && (
+                        {isReal && (profiles.length > 0 || myTeams.length > 0) && (
+                            <Field label="신청 방식">
+                                <div style={{ display: 'flex', gap: 6 }}>
+                                    <button
+                                        type="button"
+                                        onClick={() => setApplyMode('individual')}
+                                        disabled={profiles.length === 0}
+                                        style={{
+                                            flex: 1,
+                                            padding: '10px 12px',
+                                            borderRadius: 10,
+                                            fontSize: 13,
+                                            fontWeight: 600,
+                                            background: applyMode === 'individual' ? 'var(--cue-accent)' : 'var(--cue-surface-2)',
+                                            color: applyMode === 'individual' ? 'var(--cue-accent-ink)' : 'var(--cue-ink-2)',
+                                            border: applyMode === 'individual' ? 'none' : '1px solid var(--cue-hairline)',
+                                            opacity: profiles.length === 0 ? 0.4 : 1,
+                                            cursor: profiles.length === 0 ? 'not-allowed' : 'pointer',
+                                        }}
+                                    >개인으로 신청</button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setApplyMode('team')}
+                                        disabled={myTeams.length === 0}
+                                        style={{
+                                            flex: 1,
+                                            padding: '10px 12px',
+                                            borderRadius: 10,
+                                            fontSize: 13,
+                                            fontWeight: 600,
+                                            background: applyMode === 'team' ? 'var(--cue-accent)' : 'var(--cue-surface-2)',
+                                            color: applyMode === 'team' ? 'var(--cue-accent-ink)' : 'var(--cue-ink-2)',
+                                            border: applyMode === 'team' ? 'none' : '1px solid var(--cue-hairline)',
+                                            opacity: myTeams.length === 0 ? 0.4 : 1,
+                                            cursor: myTeams.length === 0 ? 'not-allowed' : 'pointer',
+                                        }}
+                                    >팀으로 신청</button>
+                                </div>
+                                {myTeams.length === 0 && (
+                                    <div style={{ marginTop: 8, fontSize: 11, color: 'var(--cue-ink-3)' }}>
+                                        팀 신청은 본인이 리더인 팀이 있을 때 가능합니다.
+                                    </div>
+                                )}
+                            </Field>
+                        )}
+
+                        {isReal && applyMode === 'individual' && profiles.length > 0 && (
                             <Field label="지원에 사용할 프로필">
                                 <select
                                     value={selectedDancerId}
@@ -303,6 +380,21 @@ export default function ApplyCastingSheet({
                                         <option key={p.id} value={p.id}>
                                             {p.stage_name}
                                         </option>
+                                    ))}
+                                </select>
+                            </Field>
+                        )}
+
+                        {isReal && applyMode === 'team' && myTeams.length > 0 && (
+                            <Field label="신청할 팀">
+                                <select
+                                    value={selectedTeamId}
+                                    onChange={(e) => setSelectedTeamId(e.target.value)}
+                                    style={inputStyle}
+                                    required
+                                >
+                                    {myTeams.map((t) => (
+                                        <option key={t.id} value={t.id}>{t.name}</option>
                                     ))}
                                 </select>
                             </Field>

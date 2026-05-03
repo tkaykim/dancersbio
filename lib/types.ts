@@ -11,6 +11,10 @@ export interface Proposal {
     negotiation_history: NegotiationHistoryItem[] | null
     details: string | null
     unavailable_event_ids?: string[]
+    /** 팀 단위 신청 시 팀 ID (NULL=개인 신청) */
+    team_id?: string | null
+    /** individual(개인) | team(팀) */
+    applies_as?: ProposalAppliesAs
     created_at: string
     projects: {
         title: string
@@ -100,6 +104,16 @@ export interface ProjectMember {
     } | null
 }
 
+export type RecruitGender = 'any' | 'male' | 'female'
+
+export const RECRUIT_GENDER_LABELS: Record<RecruitGender, string> = {
+    any: '성별 무관',
+    male: '남자만',
+    female: '여자만',
+}
+
+export type ProposalAppliesAs = 'individual' | 'team'
+
 export type ModerationStatus = 'draft' | 'pending' | 'approved' | 'rejected'
 
 export const MODERATION_STATUS_LABELS: Record<ModerationStatus, string> = {
@@ -142,6 +156,8 @@ export interface Project {
     recruit_end_date?: string | null
     /** 등록자 정보 비공개 */
     owner_anonymous?: boolean
+    /** 성별 모집 조건 */
+    recruit_gender?: RecruitGender
     /** @deprecated */
     start_date: string | null
     /** @deprecated */

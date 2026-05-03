@@ -8,8 +8,8 @@ import { ArrowLeft, Loader2, Plus, Trash2, Globe, Lock, Calendar } from 'lucide-
 import { useBackWithFallback } from '@/lib/useBackWithFallback'
 import { findOrCreateClient } from '@/lib/create-client'
 import { formatEmbargoDate, getKSTDateString } from '@/lib/utils'
-import type { EventType } from '@/lib/types'
-import { EVENT_TYPE_LABELS } from '@/lib/types'
+import type { EventType, RecruitGender } from '@/lib/types'
+import { EVENT_TYPE_LABELS, RECRUIT_GENDER_LABELS } from '@/lib/types'
 
 const CATEGORY_OPTIONS = [
     { value: 'choreo', label: '안무제작/댄서참여' },
@@ -46,6 +46,7 @@ export default function NewProjectPage() {
     const [budgetUndefined, setBudgetUndefined] = useState(false)
     const [budgetPerPerson, setBudgetPerPerson] = useState('')
     const [recruitCount, setRecruitCount] = useState('')
+    const [recruitGender, setRecruitGender] = useState<RecruitGender>('any')
     const [recruitStart, setRecruitStart] = useState('')
     const [recruitEnd, setRecruitEnd] = useState('')
     const [embargoDate, setEmbargoDate] = useState('')
@@ -115,6 +116,7 @@ export default function NewProjectPage() {
                     ? null
                     : (budgetPerPerson ? parseInt(budgetPerPerson, 10) : null),
                 recruit_count: recruitCount ? parseInt(recruitCount, 10) : null,
+                recruit_gender: recruitGender,
                 recruit_start_date: recruitStart || null,
                 recruit_end_date: recruitEnd || null,
                 embargo_date: embargoDate || null,
@@ -228,12 +230,22 @@ export default function NewProjectPage() {
                     />
                 </div>
 
-                {/* 카테고리 */}
-                <div>
-                    <label className={labelClass}>카테고리 *</label>
-                    <select value={category} onChange={(e) => setCategory(e.target.value)} className={inputClass}>
-                        {CATEGORY_OPTIONS.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
-                    </select>
+                {/* 카테고리 + 성별 */}
+                <div className="grid grid-cols-2 gap-3">
+                    <div>
+                        <label className={labelClass}>카테고리 *</label>
+                        <select value={category} onChange={(e) => setCategory(e.target.value)} className={inputClass}>
+                            {CATEGORY_OPTIONS.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+                        </select>
+                    </div>
+                    <div>
+                        <label className={labelClass}>모집 성별</label>
+                        <select value={recruitGender} onChange={(e) => setRecruitGender(e.target.value as RecruitGender)} className={inputClass}>
+                            <option value="any">{RECRUIT_GENDER_LABELS.any}</option>
+                            <option value="male">{RECRUIT_GENDER_LABELS.male}</option>
+                            <option value="female">{RECRUIT_GENDER_LABELS.female}</option>
+                        </select>
+                    </div>
                 </div>
 
                 {/* 섭외 예산 + 인원 */}
