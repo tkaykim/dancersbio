@@ -12,7 +12,6 @@ import {
     type CastingProjectRow,
 } from '@/lib/castingFromProjects'
 import CastingCard from './_components/CastingCard'
-import PostCastingSheet from './_components/PostCastingSheet'
 
 type FilterValue = 'foryou' | CastingCategory
 
@@ -28,7 +27,6 @@ const FILTER_CHIPS: { value: FilterValue; label: string }[] = [
 
 export default function CastingPage() {
     const [filter, setFilter] = useState<FilterValue>('foryou')
-    const [openPost, setOpenPost] = useState(false)
     const [liveProjects, setLiveProjects] = useState<CastingMock[]>([])
 
     useEffect(() => {
@@ -108,11 +106,10 @@ export default function CastingPage() {
                                 진행 중인 공고 {visible.length}건
                             </p>
                         </div>
-                        <button
-                            type="button"
+                        <Link
+                            href="/my/projects/new"
                             aria-label="공고 올리기"
-                            onClick={() => setOpenPost(true)}
-                            className="p-2 rounded-full"
+                            className="p-2 rounded-full inline-flex items-center justify-center"
                             style={{
                                 background: 'var(--cue-surface-2)',
                                 color: 'var(--cue-accent)',
@@ -120,7 +117,7 @@ export default function CastingPage() {
                             }}
                         >
                             {Ico.plus('currentColor', 20)}
-                        </button>
+                        </Link>
                     </div>
 
                     <div
@@ -178,7 +175,6 @@ export default function CastingPage() {
                 </div>
             </div>
 
-            <PostCastingSheet open={openPost} onClose={() => setOpenPost(false)} />
         </MobileContainer>
     )
 }
