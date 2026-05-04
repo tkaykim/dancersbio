@@ -185,8 +185,12 @@ export function useProjectForm({ projectId, onSuccess }: UseProjectFormOpts) {
                 const { error: updErr } = await supabase.from('projects').update(corePayload).eq('id', projectId)
                 if (updErr) throw updErr
             } else {
+                const { data: { session } } = await supabase.auth.getSession()
+                if (!session?.user?.id) {
+                    throw new Error('로그인 세션이 만료되었습니다. 다시 로그인해 주세요.')
+                }
                 const insertPayload = {
-                    ...corePayload, owner_id: user.id,
+                    ...corePayload, owner_id: session.user.id,
                     status: 'active', confirmation_status: 'confirmed', progress_status: 'recruiting',
                 }
                 const { data: created, error: insErr } = await supabase
