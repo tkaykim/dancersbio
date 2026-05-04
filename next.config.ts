@@ -6,6 +6,7 @@ const nextConfig: NextConfig = {
     root: process.cwd(),
   },
   images: {
+    unoptimized: true,
     remotePatterns: [
       { protocol: 'https', hostname: '**', pathname: '/**' },
       { protocol: 'http', hostname: '**', pathname: '/**' },
