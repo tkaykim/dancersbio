@@ -178,6 +178,7 @@ export default function DrawerAddSubProject({
             onSuccess()
             onClose()
         } catch (err: any) {
+            console.error('[subproject save]', err)
             setError(err.message ?? '서브 프로젝트 생성에 실패했습니다.')
         } finally {
             setSaving(false)

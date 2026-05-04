@@ -215,6 +215,7 @@ export function useProjectForm({ projectId, onSuccess }: UseProjectFormOpts) {
                 onSuccess(resultProjectId)
             }
         } catch (err: unknown) {
+            console.error('[project save]', err)
             setError(err instanceof Error ? err.message : '저장 실패')
         } finally {
             setLoading(false)
