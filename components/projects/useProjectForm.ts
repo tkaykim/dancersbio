@@ -186,7 +186,9 @@ export function useProjectForm({ projectId, onSuccess }: UseProjectFormOpts) {
                 if (updErr) throw updErr
             } else {
                 let { data: { session } } = await supabase.auth.getSession()
-                if (!session?.user?.id) {
+                const now = Math.floor(Date.now() / 1000)
+                const expired = session?.expires_at != null && session.expires_at < now + 60
+                if (!session?.user?.id || expired) {
                     const { data: refreshed } = await supabase.auth.refreshSession()
                     session = refreshed.session
                 }
