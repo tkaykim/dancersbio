@@ -114,6 +114,14 @@ export const RECRUIT_GENDER_LABELS: Record<RecruitGender, string> = {
 
 export type ProposalAppliesAs = 'individual' | 'team'
 
+export type RecruitUnit = 'individual' | 'team' | 'both'
+
+export const RECRUIT_UNIT_LABELS: Record<RecruitUnit, string> = {
+    individual: '개인만',
+    team: '팀만',
+    both: '개인 / 팀 모두',
+}
+
 export type ModerationStatus = 'draft' | 'pending' | 'approved' | 'rejected'
 
 export const MODERATION_STATUS_LABELS: Record<ModerationStatus, string> = {
@@ -128,7 +136,7 @@ export interface Project {
     owner_id: string
     parent_project_id: string | null
     client_profile_id: string | null
-    pm_dancer_id: string | null
+    lead_dancer_id: string | null
     contract_amount: number | null
     title: string
     description: string | null
@@ -178,10 +186,14 @@ export interface Project {
     owner?: {
         name: string | null
     }
-    pm_dancer?: {
+    lead_dancer?: {
         id: string
         stage_name: string
     } | null
+    /** 모집 단위: individual(개인만) | team(팀만) | both(둘다) */
+    recruit_unit?: RecruitUnit
+    /** 정산 지급 예정일 */
+    payment_due_date?: string | null
     proposals?: ProjectProposal[]
     event_dates?: ProjectEventDate[]
 }

@@ -17,11 +17,11 @@ export interface ProjectForCareer {
 }
 
 /**
- * 제안 수락 시 PM이 된 댄서에게 경력 1건을 생성한다.
+ * 제안 수락 시 lead가 된 댄서에게 경력 1건을 생성한다.
  * details.project_id가 있으므로 공개 프로필에서는 엠바고 해제/공개 시점에만 노출된다.
  * 이미 해당 프로젝트로 경력이 있으면 건너뛴다.
  */
-export async function ensurePmCareer(
+export async function ensureLeadCareer(
     supabase: SupabaseClient,
     project: ProjectForCareer,
     dancerId: string
@@ -40,7 +40,7 @@ export async function ensurePmCareer(
     const year = careerDate.substring(0, 4)
     const month = careerDate.substring(5, 7) || ''
     const careerType = project.category || 'other'
-    const pmRoleLabel = CATEGORY_ROLE_MAP[project.category || ''] || 'PM'
+    const leadRoleLabel = CATEGORY_ROLE_MAP[project.category || ''] || '리드'
 
     await supabase.from('careers').insert({
         dancer_id: dancerId,
@@ -50,10 +50,13 @@ export async function ensurePmCareer(
         details: {
             year,
             month,
-            role: `${pmRoleLabel} (PM)`,
+            role: `${leadRoleLabel} (리드)`,
             description: project.description || '',
             project_id: project.id,
         },
         is_public: false,
     })
 }
+
+/** @deprecated ensureLeadCareer로 대체됨. import 호환을 위해 alias만 유지. */
+export const ensurePmCareer = ensureLeadCareer

@@ -63,7 +63,7 @@ export default function ProjectDetailPage() {
     const [showFinance, setShowFinance] = useState(false)
     const [showEmbargoSettings, setShowEmbargoSettings] = useState(false)
     const [editingBasicInfo, setEditingBasicInfo] = useState(false)
-    const [basicInfo, setBasicInfo] = useState({ description: '', due_date: '' })
+    const [basicInfo, setBasicInfo] = useState({ description: '', due_date: '', payment_due_date: '' })
 
     const fetchProject = useCallback(async () => {
         if (!id) return
@@ -75,7 +75,7 @@ export default function ProjectDetailPage() {
                     *,
                     clients (company_name, contact_person),
                     owner:users!owner_id (name),
-                    pm_dancer:dancers!pm_dancer_id (id, stage_name),
+                    lead_dancer:dancers!lead_dancer_id (id, stage_name),
                     proposals (id, dancer_id, sender_id, fee, status, role, details, scheduled_date, created_at, dancers (id, stage_name, profile_img, genres, slug))
                 `)
                 .eq('id', id)
@@ -95,7 +95,11 @@ export default function ProjectDetailPage() {
             if (eventDates?.length) projectData.event_dates = eventDates
             setProject(projectData)
             setNotes(data.notes || '')
-            setBasicInfo({ description: data.description || '', due_date: data.due_date || '' })
+            setBasicInfo({
+                description: data.description || '',
+                due_date: data.due_date || '',
+                payment_due_date: (data as any).payment_due_date || '',
+            })
 
             // 현재 사용자의 멤버 역할
             if (user) {
@@ -168,14 +172,14 @@ export default function ProjectDetailPage() {
         const CATEGORY_ROLE_MAP: Record<string, string> = {
             choreo: '안무가', broadcast: '출연', performance: '공연', workshop: '워크샵 강사', judge: '심사위원',
         }
-        const pmRoleLabel = CATEGORY_ROLE_MAP[proj.category || ''] || 'PM'
+        const leadRoleLabel = CATEGORY_ROLE_MAP[proj.category || ''] || '리드'
 
         const entries = accepted
             .filter(p => !existingDancerIds.has(p.dancer_id))
             .map(p => {
-                const isPm = proj.pm_dancer_id === p.dancer_id
+                const isLead = proj.lead_dancer_id === p.dancer_id
                 const baseRole = p.role || '참여'
-                const role = isPm ? `${pmRoleLabel} (PM) · ${baseRole}` : baseRole
+                const role = isLead ? `${leadRoleLabel} (리드) · ${baseRole}` : baseRole
                 return {
                     dancer_id: p.dancer_id, type: careerType, title: proj.title, date: careerDate,
                     details: { year, month, role, description: proj.description || '', project_id: proj.id },
@@ -183,11 +187,11 @@ export default function ProjectDetailPage() {
                 }
             })
 
-        // PM이 참여자 목록에 없는 경우 (별도 엔트리)
-        if (proj.pm_dancer_id && !existingDancerIds.has(proj.pm_dancer_id) && !entries.some(e => e.dancer_id === proj.pm_dancer_id)) {
+        // 리드가 참여자 목록에 없는 경우 (별도 엔트리)
+        if (proj.lead_dancer_id && !existingDancerIds.has(proj.lead_dancer_id) && !entries.some(e => e.dancer_id === proj.lead_dancer_id)) {
             entries.push({
-                dancer_id: proj.pm_dancer_id, type: careerType, title: proj.title, date: careerDate,
-                details: { year, month, role: `${pmRoleLabel} (PM)`, description: proj.description || '', project_id: proj.id },
+                dancer_id: proj.lead_dancer_id, type: careerType, title: proj.title, date: careerDate,
+                details: { year, month, role: `${leadRoleLabel} (리드)`, description: proj.description || '', project_id: proj.id },
                 is_public: false,
             })
         }
@@ -214,9 +218,15 @@ export default function ProjectDetailPage() {
         const { error } = await supabase.from('projects').update({
             description: basicInfo.description || null,
             due_date: basicInfo.due_date || null,
+            payment_due_date: basicInfo.payment_due_date || null,
         }).eq('id', project.id)
         if (!error) {
-            setProject({ ...project, description: basicInfo.description || null, due_date: basicInfo.due_date || null })
+            setProject({
+                ...project,
+                description: basicInfo.description || null,
+                due_date: basicInfo.due_date || null,
+                payment_due_date: basicInfo.payment_due_date || null,
+            })
             setEditingBasicInfo(false)
         }
         setSavingNotes(false)
@@ -234,14 +244,72 @@ export default function ProjectDetailPage() {
         }
     }
 
-    const setProjectPm = async (dancerId: string) => {
+    /** owner/manager가 지원자 proposal을 승인/거절/대기로 변경 */
+    const setProposalStatus = async (
+        proposalId: string,
+        next: 'accepted' | 'declined' | 'pending',
+        proposalDancerId?: string,
+    ) => {
+        const labels = { accepted: '수락', declined: '거절', pending: '대기로 되돌리기' }
+        if (!confirm(`이 지원을 ${labels[next]}하시겠습니까?`)) return
+        const { error } = await supabase.from('proposals').update({ status: next }).eq('id', proposalId)
+        if (error) {
+            alert('권한이 없거나 오류가 발생했습니다.')
+            return
+        }
+
+        // 수락 처리: 리드 자동 지정 + lead user를 manager로 등록 + 프로젝트 상태 전환 + 경력 자동 생성
+        if (next === 'accepted' && project && proposalDancerId) {
+            const updates: Record<string, any> = {}
+            if (!project.lead_dancer_id) updates.lead_dancer_id = proposalDancerId
+            if (project.confirmation_status === 'negotiating') {
+                updates.confirmation_status = 'confirmed'
+                updates.progress_status = 'recruiting'
+            }
+            if (Object.keys(updates).length > 0) {
+                await supabase.from('projects').update(updates).eq('id', project.id)
+            }
+            if (updates.lead_dancer_id) {
+                try {
+                    await ensurePmCareer(
+                        supabase,
+                        { id: project.id, title: project.title, category: project.category, start_date: project.start_date, description: project.description },
+                        proposalDancerId,
+                    )
+                    const { data: dRow } = await supabase
+                        .from('dancers')
+                        .select('owner_id')
+                        .eq('id', proposalDancerId)
+                        .maybeSingle()
+                    const leadUserId = dRow?.owner_id
+                    if (leadUserId) {
+                        await supabase
+                            .from('project_members')
+                            .upsert(
+                                { project_id: project.id, user_id: leadUserId, role: 'manager' },
+                                { onConflict: 'project_id,user_id', ignoreDuplicates: true }
+                            )
+                    }
+                } catch { /* 경력·멤버 자동 등록 실패는 수락에 영향 없음 */ }
+            }
+        }
+
+        if (next === 'declined' && project?.id) {
+            await syncProjectStatusIfNoActiveProposals(supabase, project.id, 'declined')
+        }
+
+        fetchProject()
+        await triggerPushEvent('proposal_status_changed', { proposal_id: proposalId, status: next })
+    }
+
+    const setProjectLead = async (dancerId: string) => {
         if (!project) return
-        const { error } = await supabase.from('projects').update({ pm_dancer_id: dancerId }).eq('id', project.id)
+        const { error } = await supabase.from('projects').update({ lead_dancer_id: dancerId }).eq('id', project.id)
         if (!error) {
-            setProject({ ...project, pm_dancer_id: dancerId })
+            setProject({ ...project, lead_dancer_id: dancerId })
             fetchProject()
         } else {
-            alert('PM 지정에 실패했습니다.')
+            alert('리드 댄서 지정에 실패했습니다.')
         }
     }
 
@@ -318,8 +386,9 @@ export default function ProjectDetailPage() {
     if (!project || !user) return null
 
     const isOwner = project.owner_id === user.id
-    const isPm = project.pm_dancer_id != null && myDancerIds.includes(project.pm_dancer_id)
-    const canManageProject = isOwner || isPm
+    const isLead = project.lead_dancer_id != null && myDancerIds.includes(project.lead_dancer_id)
+    // 운영 권한은 owner/manager(project_members) + lead 댄서. lead는 수락 시 자동 manager로 등록되지만 안전상 명시.
+    const canManageProject = isOwner || isLead || myRole === 'owner' || myRole === 'manager'
     const { confirmation, progress } = getProjectStatuses(project)
     const confirmInfo = CONFIRMATION_OPTIONS.find(o => o.value === confirmation) || CONFIRMATION_OPTIONS[0]
     const progressInfo = PROGRESS_OPTIONS.find(o => o.value === progress) || PROGRESS_OPTIONS[0]
@@ -343,9 +412,9 @@ export default function ProjectDetailPage() {
     const effectivelyPublic = isProjectPublic(project.visibility, project.embargo_date)
 
     const allActiveProposals = deduplicatedProposals.filter(p => p.status === 'accepted' || p.status === 'pending' || p.status === 'negotiating')
-    const pmRevenue = allActiveProposals.filter((p: any) => p.dancer_id === project.pm_dancer_id).reduce((a: number, p: any) => a + (p.fee || 0), 0)
-    const totalExpense = allActiveProposals.filter((p: any) => p.dancer_id !== project.pm_dancer_id).reduce((a: number, p: any) => a + (p.fee || 0), 0)
-    const netProfit = pmRevenue - totalExpense
+    const leadRevenue = allActiveProposals.filter((p: any) => p.dancer_id === project.lead_dancer_id).reduce((a: number, p: any) => a + (p.fee || 0), 0)
+    const totalExpense = allActiveProposals.filter((p: any) => p.dancer_id !== project.lead_dancer_id).reduce((a: number, p: any) => a + (p.fee || 0), 0)
+    const netProfit = leadRevenue - totalExpense
 
     return (
         <div className="min-h-screen bg-background pb-20">
@@ -417,6 +486,15 @@ export default function ProjectDetailPage() {
                                     className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-sm text-white focus:outline-none focus:border-primary"
                                 />
                             </div>
+                            <div>
+                                <label className="text-[11px] text-white/40 mb-1 block">지급 예정일</label>
+                                <input
+                                    type="date"
+                                    value={basicInfo.payment_due_date}
+                                    onChange={(e) => setBasicInfo({ ...basicInfo, payment_due_date: e.target.value })}
+                                    className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-sm text-white focus:outline-none focus:border-primary"
+                                />
+                            </div>
                         </div>
                     ) : (
                         <div className="space-y-2">
@@ -441,20 +519,23 @@ export default function ProjectDetailPage() {
                                 {project.due_date && (
                                     <span className="flex items-center gap-1 text-red-400/50"><Target className="w-3 h-3" />마감 {project.due_date}</span>
                                 )}
+                                {project.payment_due_date && (
+                                    <span className="flex items-center gap-1 text-emerald-400/60"><Calendar className="w-3 h-3" />지급 예정 {project.payment_due_date}</span>
+                                )}
                                 <span className="flex items-center gap-1"><Users className="w-3 h-3" />확정 {acceptedProposals.length}명</span>
-                                {pendingProposals.length > 0 && !(isOwner && !isPm) && <span className="text-yellow-400/50">대기 {pendingProposals.length}</span>}
+                                {pendingProposals.length > 0 && !(isOwner && !isLead) && <span className="text-yellow-400/50">대기 {pendingProposals.length}</span>}
                             </div>
                         </div>
                     )}
-                    {isOwner && !isPm && (project.contract_amount != null || acceptedProposals.some((p: any) => p.dancer_id === project.pm_dancer_id)) && (
+                    {isOwner && !isLead && (project.contract_amount != null || acceptedProposals.some((p: any) => p.dancer_id === project.lead_dancer_id)) && (
                         <div className="mt-2 pt-2 border-t border-neutral-800/50">
-                            <p className="text-[11px] text-white/40">PM에게 할당한 예산</p>
+                            <p className="text-[11px] text-white/40">리드에게 할당한 예산</p>
                             <p className="text-sm font-semibold text-primary/80">
                                 {project.contract_amount != null
                                     ? `${project.contract_amount.toLocaleString()}원`
                                     : (() => {
-                                        const pmProp = acceptedProposals.find((p: any) => p.dancer_id === project.pm_dancer_id)
-                                        return pmProp?.fee != null ? `${(pmProp.fee as number).toLocaleString()}원` : '미정'
+                                        const leadProp = acceptedProposals.find((p: any) => p.dancer_id === project.lead_dancer_id)
+                                        return leadProp?.fee != null ? `${(leadProp.fee as number).toLocaleString()}원` : '미정'
                                     })()}
                             </p>
                         </div>
@@ -506,17 +587,17 @@ export default function ProjectDetailPage() {
                     </div>
                 )}
 
-                {/* ── 오너 전용: PM 미지정 시 참여 확정 댄서 중 PM 지정 (파생/단일 프로젝트만) ── */}
-                {isOwner && project.parent_project_id != null && !project.pm_dancer_id && acceptedProposals.length > 0 && (
+                {/* ── 오너 전용: 리드 미지정 시 참여 확정 댄서 중 리드 지정 (파생/단일 프로젝트만) ── */}
+                {isOwner && project.parent_project_id != null && !project.lead_dancer_id && acceptedProposals.length > 0 && (
                     <div className="bg-amber-500/5 border border-amber-500/20 rounded-xl p-3">
-                        <p className="text-xs font-medium text-amber-200/90 mb-2">프로젝트 PM 지정</p>
-                        <p className="text-[11px] text-white/50 mb-2">댄서 초대·할일 관리는 PM에게도 열립니다. 참여 확정 댄서 중 한 명을 PM으로 지정하세요.</p>
+                        <p className="text-xs font-medium text-amber-200/90 mb-2">프로젝트 리드 댄서 지정</p>
+                        <p className="text-[11px] text-white/50 mb-2">참여 확정 댄서 중 한 명을 리드 댄서로 지정하세요. 리드는 정산 매출 수령 주체입니다.</p>
                         <select
                             defaultValue=""
-                            onChange={(e) => { const v = e.target.value; if (v) setProjectPm(v) }}
+                            onChange={(e) => { const v = e.target.value; if (v) setProjectLead(v) }}
                             className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-sm text-white focus:outline-none focus:border-primary"
                         >
-                            <option value="">PM 선택...</option>
+                            <option value="">리드 선택...</option>
                             {acceptedProposals.map((p: any) => (
                                 <option key={p.id} value={p.dancer_id}>
                                     {p.dancers?.stage_name ?? '댄서'} (참여 확정)
@@ -526,8 +607,8 @@ export default function ProjectDetailPage() {
                     </div>
                 )}
 
-                {/* ── 댄서 초대: 브리프는 오너(클라이언트)만, 파생/단일은 PM만(클라이언트는 섭외 내역 비공개) ── */}
-                {((canRecruit && isPm) || (isOwner && project.parent_project_id == null)) && (
+                {/* ── 댄서 초대: 브리프는 오너(클라이언트)만, 파생/단일은 리드만(클라이언트는 섭외 내역 비공개) ── */}
+                {((canRecruit && isLead) || (isOwner && project.parent_project_id == null)) && (
                     <Link href={`/my/projects/${project.id}/invite`}
                         className="flex items-center justify-center gap-2 w-full py-3 bg-primary text-black font-bold rounded-xl hover:bg-primary/90 transition">
                         <Plus className="w-5 h-5" />
@@ -559,7 +640,7 @@ export default function ProjectDetailPage() {
                     />
                 )}
 
-                {/* ── 할일 관리 (오너 또는 PM) ── */}
+                {/* ── 할일 관리 (오너 또는 리드) ── */}
                 <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-3">
                     <TaskManager projectId={project.id} isOwner={canManageProject} myDancerIds={myDancerIds} />
                 </div>
@@ -587,10 +668,10 @@ export default function ProjectDetailPage() {
                     </div>
                 )}
 
-                {/* ── 참여 댄서 목록: 클라이언트(오너·비PM)는 인원 수만 표시, PM/참여자는 목록·금액 표시 ── */}
-                {isOwner && !isPm ? (
+                {/* ── 참여 댄서 목록: 클라이언트(오너·비리드)는 인원 수만 표시, 리드/참여자는 목록·금액 표시 ── */}
+                {isOwner && !isLead ? (
                     <section className="bg-neutral-900/50 border border-neutral-800/50 rounded-xl p-3">
-                        <p className="text-xs text-white/40">PM이 섭외한 인원만 집계됩니다. 세부 인원·금액은 PM만 확인할 수 있습니다.</p>
+                        <p className="text-xs text-white/40">리드 댄서가 섭외한 인원만 집계됩니다. 세부 인원·금액은 리드/매니저만 확인할 수 있습니다.</p>
                         <div className="flex flex-wrap gap-3 mt-2 text-[11px] text-white/50">
                             <span className="flex items-center gap-1"><CheckCircle className="w-3 h-3 text-green-500/60" /> 참여 확정 {acceptedProposals.length}명</span>
                             {pendingProposals.length > 0 && <span className="flex items-center gap-1"><Clock className="w-3 h-3 text-yellow-400/60" /> 응답 대기 {pendingProposals.length}명</span>}
@@ -608,7 +689,15 @@ export default function ProjectDetailPage() {
                                 <p className="text-xs text-white/20 py-3 text-center">아직 참여 확정된 댄서가 없습니다</p>
                             ) : (
                                 <div className="space-y-1.5">
-                                    {acceptedProposals.map(p => <DancerRow key={p.id} proposal={p} showFee={isPm} />)}
+                                    {acceptedProposals.map(p => (
+                                        <DancerRow
+                                            key={p.id}
+                                            proposal={p}
+                                            showFee={isLead}
+                                            onDecline={canManageProject ? () => setProposalStatus(p.id, 'declined', p.dancer_id) : undefined}
+                                            onResetPending={canManageProject ? () => setProposalStatus(p.id, 'pending', p.dancer_id) : undefined}
+                                        />
+                                    ))}
                                 </div>
                             )}
                         </section>
@@ -621,7 +710,17 @@ export default function ProjectDetailPage() {
                                     응답 대기 ({pendingProposals.length})
                                 </h2>
                                 <div className="space-y-1.5">
-                                    {pendingProposals.map(p => <DancerRow key={p.id} proposal={p} showFee={isPm} showCancelButton={true} onCancel={() => cancelProposal(p.id)} />)}
+                                    {pendingProposals.map(p => (
+                                        <DancerRow
+                                            key={p.id}
+                                            proposal={p}
+                                            showFee={isLead}
+                                            showCancelButton={true}
+                                            onCancel={() => cancelProposal(p.id)}
+                                            onApprove={canManageProject ? () => setProposalStatus(p.id, 'accepted', p.dancer_id) : undefined}
+                                            onDecline={canManageProject ? () => setProposalStatus(p.id, 'declined', p.dancer_id) : undefined}
+                                        />
+                                    ))}
                                 </div>
                             </section>
                         )}
@@ -633,7 +732,15 @@ export default function ProjectDetailPage() {
                                     <XCircle className="w-3.5 h-3.5 text-red-400" /> 거절 ({declinedProposals.length})
                                 </h2>
                                 <div className="space-y-1.5">
-                                    {declinedProposals.map(p => <DancerRow key={p.id} proposal={p} showFee={isPm} />)}
+                                    {declinedProposals.map(p => (
+                                        <DancerRow
+                                            key={p.id}
+                                            proposal={p}
+                                            showFee={isLead}
+                                            onApprove={canManageProject ? () => setProposalStatus(p.id, 'accepted', p.dancer_id) : undefined}
+                                            onResetPending={canManageProject ? () => setProposalStatus(p.id, 'pending', p.dancer_id) : undefined}
+                                        />
+                                    ))}
                                 </div>
                             </section>
                         )}
@@ -650,7 +757,7 @@ export default function ProjectDetailPage() {
                     </div>
                 )}
 
-                {/* ── 오너/PM: 상태 관리 ── */}
+                {/* ── 오너/리드: 상태 관리 ── */}
                 {canManageProject && (
                     <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-3 space-y-3">
                         <div>
@@ -686,7 +793,7 @@ export default function ProjectDetailPage() {
                     </div>
                 )}
 
-                {/* ── 오너/PM: 메모 ── */}
+                {/* ── 오너/리드: 메모 ── */}
                 {canManageProject && (
                     <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-3">
                         <div className="flex items-center justify-between mb-2">
@@ -712,21 +819,21 @@ export default function ProjectDetailPage() {
                     </div>
                 )}
 
-                {/* ── PM만: 전체 매출/지출 재무 요약 (접힘식) ── */}
-                {isPm && (
+                {/* ── 리드만: 전체 매출/지출 재무 요약 (접힘식) ── */}
+                {isLead && (
                     <div className="bg-neutral-900/70 border border-neutral-800/50 rounded-xl overflow-hidden">
                         <button onClick={() => setShowFinance(!showFinance)}
                             className="w-full px-3 py-2.5 flex items-center justify-between text-xs hover:bg-neutral-800/30 transition">
                             <span className="text-white/40 font-medium">재무</span>
                             <div className="flex items-center gap-3">
-                                {pmRevenue > 0 && <span className="text-blue-400/70">매출 {pmRevenue.toLocaleString()}</span>}
+                                {leadRevenue > 0 && <span className="text-blue-400/70">매출 {leadRevenue.toLocaleString()}</span>}
                                 {totalExpense > 0 && <span className="text-red-400/60">지출 {totalExpense.toLocaleString()}</span>}
-                                {(pmRevenue > 0 || totalExpense > 0) && (
+                                {(leadRevenue > 0 || totalExpense > 0) && (
                                     <span className={`font-semibold ${netProfit >= 0 ? 'text-green-500/70' : 'text-red-400/70'}`}>
                                         순익 {netProfit.toLocaleString()}
                                     </span>
                                 )}
-                                {pmRevenue === 0 && totalExpense === 0 && <span className="text-white/30">내역 없음</span>}
+                                {leadRevenue === 0 && totalExpense === 0 && <span className="text-white/30">내역 없음</span>}
                                 {showFinance ? <ChevronUp className="w-3.5 h-3.5 text-white/20" /> : <ChevronDown className="w-3.5 h-3.5 text-white/20" />}
                             </div>
                         </button>
@@ -735,7 +842,7 @@ export default function ProjectDetailPage() {
                                 contractAmount={project.contract_amount}
                                 acceptedProposals={acceptedProposals}
                                 pendingProposals={pendingProposals}
-                                projectPmDancerId={project.pm_dancer_id}
+                                projectLeadDancerId={project.lead_dancer_id}
                             />
                         )}
                     </div>
@@ -803,23 +910,23 @@ export default function ProjectDetailPage() {
     )
 }
 
-/* ─── 재무 상세 (PM 전용, 접힘 패널) ─── */
+/* ─── 재무 상세 (리드 전용, 접힘 패널) ─── */
 function FinanceDetails({
     contractAmount,
     acceptedProposals,
     pendingProposals,
-    projectPmDancerId,
+    projectLeadDancerId,
 }: {
     contractAmount: number | null
     acceptedProposals: any[]
     pendingProposals: any[]
-    projectPmDancerId: string | null
+    projectLeadDancerId: string | null
 }) {
-    const pmIncomeConfirmed = acceptedProposals.filter((p: any) => p.dancer_id === projectPmDancerId).reduce((a: number, p: any) => a + (p.fee || 0), 0)
-    const pmIncomePending = pendingProposals.filter((p: any) => p.dancer_id === projectPmDancerId).reduce((a: number, p: any) => a + (p.fee || 0), 0)
-    const expenseConfirmed = acceptedProposals.filter((p: any) => p.dancer_id !== projectPmDancerId).reduce((a: number, p: any) => a + (p.fee || 0), 0)
-    const expensePending = pendingProposals.filter((p: any) => p.dancer_id !== projectPmDancerId).reduce((a: number, p: any) => a + (p.fee || 0), 0)
-    const totalIncome = pmIncomeConfirmed + pmIncomePending
+    const leadIncomeConfirmed = acceptedProposals.filter((p: any) => p.dancer_id === projectLeadDancerId).reduce((a: number, p: any) => a + (p.fee || 0), 0)
+    const leadIncomePending = pendingProposals.filter((p: any) => p.dancer_id === projectLeadDancerId).reduce((a: number, p: any) => a + (p.fee || 0), 0)
+    const expenseConfirmed = acceptedProposals.filter((p: any) => p.dancer_id !== projectLeadDancerId).reduce((a: number, p: any) => a + (p.fee || 0), 0)
+    const expensePending = pendingProposals.filter((p: any) => p.dancer_id !== projectLeadDancerId).reduce((a: number, p: any) => a + (p.fee || 0), 0)
+    const totalIncome = leadIncomeConfirmed + leadIncomePending
     const totalExpense = expenseConfirmed + expensePending
     const undecided = [...acceptedProposals, ...pendingProposals].filter((p: any) => !p.fee).length
 
@@ -832,13 +939,13 @@ function FinanceDetails({
                 </div>
             )}
             <div className="flex justify-between pt-2">
-                <span className="text-white/30">PM 매출 (확정)</span>
-                <span className="text-blue-400/80">{pmIncomeConfirmed > 0 ? `+${pmIncomeConfirmed.toLocaleString()}원` : '-'}</span>
+                <span className="text-white/30">리드 매출 (확정)</span>
+                <span className="text-blue-400/80">{leadIncomeConfirmed > 0 ? `+${leadIncomeConfirmed.toLocaleString()}원` : '-'}</span>
             </div>
-            {pmIncomePending > 0 && (
+            {leadIncomePending > 0 && (
                 <div className="flex justify-between">
-                    <span className="text-white/30">PM 매출 (대기)</span>
-                    <span className="text-yellow-400/60">+{pmIncomePending.toLocaleString()}원</span>
+                    <span className="text-white/30">리드 매출 (대기)</span>
+                    <span className="text-yellow-400/60">+{leadIncomePending.toLocaleString()}원</span>
                 </div>
             )}
             <div className="flex justify-between">
@@ -967,22 +1074,29 @@ function EmbargoPanel({ project, onUpdate }: { project: Project; onUpdate: () =>
 }
 
 /* ─── 댄서 행 ─── */
-function DancerRow({ 
-    proposal, 
-    showFee, 
+function DancerRow({
+    proposal,
+    showFee,
     showCancelButton = false,
-    onCancel 
-}: { 
+    onCancel,
+    onApprove,
+    onDecline,
+    onResetPending,
+}: {
     proposal: any
     showFee: boolean
     showCancelButton?: boolean
     onCancel?: () => void
+    onApprove?: () => void
+    onDecline?: () => void
+    onResetPending?: () => void
 }) {
     const dancer = proposal.dancers
     const statusInfo = PROPOSAL_STATUS_ICON[proposal.status] || PROPOSAL_STATUS_ICON.pending
     const StatusIcon = statusInfo.icon
 
     const [cancelling, setCancelling] = useState(false)
+    const [acting, setActing] = useState(false)
 
     const handleCancel = async (e: React.MouseEvent) => {
         e.preventDefault()
@@ -991,6 +1105,15 @@ function DancerRow({
         setCancelling(true)
         await onCancel()
         setCancelling(false)
+    }
+
+    const wrap = (fn?: () => void) => async (e: React.MouseEvent) => {
+        e.preventDefault()
+        e.stopPropagation()
+        if (acting || !fn) return
+        setActing(true)
+        await fn()
+        setActing(false)
     }
 
     return (
@@ -1019,18 +1142,50 @@ function DancerRow({
                     <StatusIcon className={`w-3.5 h-3.5 shrink-0 ${statusInfo.color}`} />
                 </div>
             </Link>
-            {showCancelButton && onCancel && (
-                <div className="border-t border-neutral-800/40 px-3 py-1.5">
-                    <button
-                        onClick={handleCancel}
-                        disabled={cancelling}
-                        className="w-full py-1.5 text-xs text-red-400/60 hover:text-red-400 hover:bg-red-400/5 rounded transition flex items-center justify-center gap-1.5 disabled:opacity-50"
-                    >
-                        {cancelling ? <Loader2 className="w-3 h-3 animate-spin" /> : <Ban className="w-3 h-3" />}
-                        제안 취소
-                    </button>
+            {(showCancelButton && onCancel) || onApprove || onDecline || onResetPending ? (
+                <div className="border-t border-neutral-800/40 px-3 py-1.5 flex gap-1.5 flex-wrap">
+                    {onApprove && (
+                        <button
+                            onClick={wrap(onApprove)}
+                            disabled={acting}
+                            className="flex-1 min-w-[80px] py-1.5 text-xs font-bold text-black bg-primary hover:bg-primary/90 rounded transition flex items-center justify-center gap-1 disabled:opacity-50"
+                        >
+                            {acting ? <Loader2 className="w-3 h-3 animate-spin" /> : <CheckCircle className="w-3 h-3" />}
+                            수락
+                        </button>
+                    )}
+                    {onDecline && (
+                        <button
+                            onClick={wrap(onDecline)}
+                            disabled={acting}
+                            className="flex-1 min-w-[80px] py-1.5 text-xs font-semibold text-red-400 bg-red-500/10 hover:bg-red-500/20 rounded transition flex items-center justify-center gap-1 disabled:opacity-50"
+                        >
+                            <XCircle className="w-3 h-3" />
+                            거절
+                        </button>
+                    )}
+                    {onResetPending && (
+                        <button
+                            onClick={wrap(onResetPending)}
+                            disabled={acting}
+                            className="flex-1 min-w-[100px] py-1.5 text-xs text-yellow-400/80 bg-yellow-500/10 hover:bg-yellow-500/20 rounded transition flex items-center justify-center gap-1 disabled:opacity-50"
+                        >
+                            <Clock className="w-3 h-3" />
+                            대기로 되돌리기
+                        </button>
+                    )}
+                    {showCancelButton && onCancel && (
+                        <button
+                            onClick={handleCancel}
+                            disabled={cancelling}
+                            className="flex-1 min-w-[80px] py-1.5 text-xs text-red-400/60 hover:text-red-400 hover:bg-red-400/5 rounded transition flex items-center justify-center gap-1.5 disabled:opacity-50"
+                        >
+                            {cancelling ? <Loader2 className="w-3 h-3 animate-spin" /> : <Ban className="w-3 h-3" />}
+                            제안 취소
+                        </button>
+                    )}
                 </div>
-            )}
+            ) : null}
         </div>
     )
 }
@@ -1050,12 +1205,12 @@ function ParticipantActions({ proposalId, projectId, dancerId, onUpdate }: { pro
                 await syncProjectStatusIfNoActiveProposals(supabase, projectId, 'declined')
             }
 
-            // 수락 시 자동 PM 지정 + 프로젝트 상태 전환 + PM 경력 자동 생성
+            // 수락 시: 리드 자동 지정 + 프로젝트 상태 전환 + 경력 자동 생성 + lead user를 manager로 자동 등록
             if (action === 'accepted') {
-                const { data: proj } = await supabase.from('projects').select('id, title, category, start_date, description, pm_dancer_id, confirmation_status').eq('id', projectId).single()
+                const { data: proj } = await supabase.from('projects').select('id, title, category, start_date, description, lead_dancer_id, confirmation_status').eq('id', projectId).single()
                 if (proj) {
                     const updates: Record<string, any> = {}
-                    if (!proj.pm_dancer_id) updates.pm_dancer_id = dancerId
+                    if (!proj.lead_dancer_id) updates.lead_dancer_id = dancerId
                     if (proj.confirmation_status === 'negotiating') {
                         updates.confirmation_status = 'confirmed'
                         updates.progress_status = 'recruiting'
@@ -1063,8 +1218,25 @@ function ParticipantActions({ proposalId, projectId, dancerId, onUpdate }: { pro
                     if (Object.keys(updates).length > 0) {
                         await supabase.from('projects').update(updates).eq('id', projectId)
                     }
-                    if (updates.pm_dancer_id) {
+                    if (updates.lead_dancer_id) {
                         await ensurePmCareer(supabase, proj, dancerId)
+                        // lead 댄서 본인 user_id를 project_members.manager로 등록 (운영 권한 부여)
+                        try {
+                            const { data: dRow } = await supabase
+                                .from('dancers')
+                                .select('owner_id')
+                                .eq('id', dancerId)
+                                .maybeSingle()
+                            const leadUserId = dRow?.owner_id
+                            if (leadUserId) {
+                                await supabase
+                                    .from('project_members')
+                                    .upsert(
+                                        { project_id: projectId, user_id: leadUserId, role: 'manager' },
+                                        { onConflict: 'project_id,user_id', ignoreDuplicates: true }
+                                    )
+                            }
+                        } catch { /* 멤버 자동 등록 실패는 수락에 영향 없음 */ }
                     }
                 }
             }

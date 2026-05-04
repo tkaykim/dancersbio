@@ -182,7 +182,7 @@ function ProjectCard({ project, userId, myDancerIds, isArchived }: { project: Pr
     const confirmLabel = CONFIRMATION_LABELS[confirmation] || CONFIRMATION_LABELS.negotiating
     const progressLabel = PROGRESS_LABELS[progress] || PROGRESS_LABELS.idle
     const isOwner = project.owner_id === userId
-    const isPm = project.pm_dancer_id != null && myDancerIds.includes(project.pm_dancer_id)
+    const isLead = project.lead_dancer_id != null && myDancerIds.includes(project.lead_dancer_id)
     const proposals = project.proposals || []
     const activeStatuses = ['accepted', 'pending', 'negotiating']
 
@@ -195,11 +195,11 @@ function ProjectCard({ project, userId, myDancerIds, isArchived }: { project: Pr
     }
     const acceptedCount = Array.from(uniqueDancerMap.values()).filter(s => s === 'accepted').length
     const totalCount = uniqueDancerMap.size
-    const isClientOnly = isOwner && !isPm
+    const isClientOnly = isOwner && !isLead
 
     const myProposal = proposals.find((p: any) => myDancerIds.includes(p.dancer_id) && activeStatuses.includes(p.status))
-    const pmRevenue = proposals.filter((p: any) => p.dancer_id === project.pm_dancer_id && activeStatuses.includes(p.status)).reduce((a: number, p: any) => a + (p.fee || 0), 0)
-    const totalExpense = proposals.filter((p: any) => p.dancer_id !== project.pm_dancer_id && activeStatuses.includes(p.status)).reduce((a: number, p: any) => a + (p.fee || 0), 0)
+    const leadRevenue = proposals.filter((p: any) => p.dancer_id === project.lead_dancer_id && activeStatuses.includes(p.status)).reduce((a: number, p: any) => a + (p.fee || 0), 0)
+    const totalExpense = proposals.filter((p: any) => p.dancer_id !== project.lead_dancer_id && activeStatuses.includes(p.status)).reduce((a: number, p: any) => a + (p.fee || 0), 0)
 
     return (
         <Link href={`/my/projects/${project.id}`} className="block">
@@ -229,10 +229,10 @@ function ProjectCard({ project, userId, myDancerIds, isArchived }: { project: Pr
                             {isOwner && project.parent_project_id != null && (
                                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/5 text-white/40 font-medium">파생</span>
                             )}
-                            {isPm && (
-                                <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-400 font-medium">PM</span>
+                            {isLead && (
+                                <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-400 font-medium">리드</span>
                             )}
-                            {!isOwner && !isPm && myProposal && (
+                            {!isOwner && !isLead && myProposal && (
                                 <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${myProposal.status === 'accepted'
                                     ? 'bg-blue-500/10 text-blue-400'
                                     : 'bg-yellow-500/10 text-yellow-400'
@@ -274,17 +274,17 @@ function ProjectCard({ project, userId, myDancerIds, isArchived }: { project: Pr
                     <span className="ml-auto">{getRelativeTime(project.created_at)}</span>
                 </div>
 
-                {/* PM만 전체 매출/지출, 참여자는 본인 제안 단가만 */}
-                {isPm && (pmRevenue > 0 || totalExpense > 0) && (
+                {/* 리드만 전체 매출/지출, 참여자는 본인 제안 단가만 */}
+                {isLead && (leadRevenue > 0 || totalExpense > 0) && (
                     <div className="flex items-center gap-2 text-[10px] text-white/25 pt-1 mt-0.5 border-t border-neutral-800/30">
-                        {pmRevenue > 0 && <span className="text-blue-400/50">매출 {pmRevenue.toLocaleString()}</span>}
+                        {leadRevenue > 0 && <span className="text-blue-400/50">매출 {leadRevenue.toLocaleString()}</span>}
                         {totalExpense > 0 && <><span>·</span><span className="text-red-400/50">지출 {totalExpense.toLocaleString()}</span></>}
-                        <span className={`ml-auto font-medium ${(pmRevenue - totalExpense) >= 0 ? 'text-green-500/50' : 'text-red-400/50'}`}>
-                            순익 {(pmRevenue - totalExpense).toLocaleString()}
+                        <span className={`ml-auto font-medium ${(leadRevenue - totalExpense) >= 0 ? 'text-green-500/50' : 'text-red-400/50'}`}>
+                            순익 {(leadRevenue - totalExpense).toLocaleString()}
                         </span>
                     </div>
                 )}
-                {!isPm && myProposal && (
+                {!isLead && myProposal && (
                     <div className="flex items-center gap-2 text-[10px] text-white/25 pt-1 mt-0.5 border-t border-neutral-800/30">
                         <span className="text-white/40">내 제안 단가</span>
                         <span className={myProposal.fee ? 'text-primary/70 font-medium' : 'text-yellow-400/50'}>

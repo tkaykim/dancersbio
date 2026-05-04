@@ -8,8 +8,8 @@ import { ArrowLeft, Loader2, Plus, Trash2, Globe, Lock, Calendar } from 'lucide-
 import { useBackWithFallback } from '@/lib/useBackWithFallback'
 import { findOrCreateClient } from '@/lib/create-client'
 import { formatEmbargoDate, getKSTDateString } from '@/lib/utils'
-import type { EventType, RecruitGender } from '@/lib/types'
-import { EVENT_TYPE_LABELS, RECRUIT_GENDER_LABELS } from '@/lib/types'
+import type { EventType, RecruitGender, RecruitUnit } from '@/lib/types'
+import { EVENT_TYPE_LABELS, RECRUIT_GENDER_LABELS, RECRUIT_UNIT_LABELS } from '@/lib/types'
 
 const CATEGORY_OPTIONS = [
     { value: 'choreo', label: '안무제작/댄서참여' },
@@ -47,6 +47,8 @@ export default function NewProjectPage() {
     const [budgetPerPerson, setBudgetPerPerson] = useState('')
     const [recruitCount, setRecruitCount] = useState('')
     const [recruitGender, setRecruitGender] = useState<RecruitGender>('any')
+    const [recruitUnit, setRecruitUnit] = useState<RecruitUnit>('individual')
+    const [paymentDueDate, setPaymentDueDate] = useState('')
     const [recruitStart, setRecruitStart] = useState('')
     const [recruitEnd, setRecruitEnd] = useState('')
     const [embargoDate, setEmbargoDate] = useState('')
@@ -117,6 +119,8 @@ export default function NewProjectPage() {
                     : (budgetPerPerson ? parseInt(budgetPerPerson, 10) : null),
                 recruit_count: recruitCount ? parseInt(recruitCount, 10) : null,
                 recruit_gender: recruitGender,
+                recruit_unit: recruitUnit,
+                payment_due_date: paymentDueDate || null,
                 recruit_start_date: recruitStart || null,
                 recruit_end_date: recruitEnd || null,
                 embargo_date: embargoDate || null,
@@ -248,6 +252,17 @@ export default function NewProjectPage() {
                     </div>
                 </div>
 
+                {/* 모집 단위 */}
+                <div>
+                    <label className={labelClass}>모집 단위 *</label>
+                    <p className={hintClass}>지원자가 어떤 형태로 신청할 수 있는지 선택합니다.</p>
+                    <select value={recruitUnit} onChange={(e) => setRecruitUnit(e.target.value as RecruitUnit)} className={inputClass}>
+                        <option value="individual">{RECRUIT_UNIT_LABELS.individual}</option>
+                        <option value="team">{RECRUIT_UNIT_LABELS.team}</option>
+                        <option value="both">{RECRUIT_UNIT_LABELS.both}</option>
+                    </select>
+                </div>
+
                 {/* 섭외 예산 + 인원 */}
                 <div>
                     <label className={labelClass}>섭외 예산 / 인원</label>
@@ -368,6 +383,19 @@ export default function NewProjectPage() {
                             <input type="date" value={recruitEnd} onChange={(e) => setRecruitEnd(e.target.value)} className={inputClass} />
                         </div>
                     </div>
+                </div>
+
+                {/* 지급 예정일 */}
+                <div>
+                    <label className={labelClass}>지급 예정일 *</label>
+                    <p className={hintClass}>참여 확정자에게 정산이 지급될 예정일입니다. 정산 페이지에 표시됩니다.</p>
+                    <input
+                        type="date"
+                        value={paymentDueDate}
+                        onChange={(e) => setPaymentDueDate(e.target.value)}
+                        className={inputClass}
+                        required
+                    />
                 </div>
 
                 {/* 엠바고 */}

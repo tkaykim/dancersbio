@@ -10,6 +10,8 @@ export interface ProjectSettlementData {
     companyName: string | null
     startDate: string | null
     endDate: string | null
+    /** 정산 지급 예정일 — 가까운 순으로 정렬할 때 사용 */
+    paymentDueDate: string | null
     contractAmount: number | null
     incomeItems: SettlementItemDetail[]
     expenseItems: SettlementItemDetail[]
@@ -28,6 +30,9 @@ export interface SettlementItemDetail {
     label: string
     status: 'pending' | 'completed'
     date: string
+    /** proposal_settlements.status — 정산 테이블에 레코드 있을 때만 채움 */
+    settlementStatus?: 'scheduled' | 'in_progress' | 'paid' | 'on_hold' | 'cancelled' | null
+    paidAt?: string | null
 }
 
 interface ProjectSettlementAccordionProps {
@@ -104,6 +109,9 @@ export default function ProjectSettlementAccordion({ data, onViewDetail }: Proje
                         {data.totalIncome > 0 && <span className="text-blue-400/70">매출 {data.totalIncome.toLocaleString()}</span>}
                         {data.totalExpense > 0 && <span className="text-red-400/70">지출 {data.totalExpense.toLocaleString()}</span>}
                     </div>
+                    {data.paymentDueDate && (
+                        <span className="text-[10px] text-emerald-400/70">지급 예정 {data.paymentDueDate}</span>
+                    )}
                 </div>
 
                 <ChevronDown className={`w-5 h-5 text-white/40 transition-transform flex-shrink-0 ${isOpen ? 'rotate-180' : ''}`} />

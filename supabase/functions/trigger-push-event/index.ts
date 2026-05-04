@@ -172,7 +172,7 @@ Deno.serve(async (req: Request) => {
       const { data: project, error: projErr } = await supabase
         .from("projects")
         .select(
-          "id, owner_id, pm_dancer_id, client_profile_id, title, confirmation_status, progress_status, dancers(owner_id), clients(owner_id)"
+          "id, owner_id, lead_dancer_id, client_profile_id, title, confirmation_status, progress_status, dancers(owner_id), clients(owner_id)"
         )
         .eq("id", payload.project_id)
         .single();
@@ -185,7 +185,7 @@ Deno.serve(async (req: Request) => {
       const p = project as any;
       const userIds = new Set<string>();
       if (p.owner_id) userIds.add(p.owner_id);
-      if (p.pm_dancer_id && p.dancers?.owner_id) userIds.add(p.dancers.owner_id);
+      if (p.lead_dancer_id && p.dancers?.owner_id) userIds.add(p.dancers.owner_id);
       if (p.client_profile_id && p.clients?.owner_id) userIds.add(p.clients.owner_id);
 
       const statusLabel =

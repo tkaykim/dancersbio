@@ -61,10 +61,10 @@ export default function InviteDancerPage() {
         setLoading(true)
         setClientCannotInvite(false)
         try {
-            // Fetch project info: parent_project_id, pm_dancer_id로 브리프 여부·초대 권한 판단
+            // Fetch project info: parent_project_id, lead_dancer_id로 브리프 여부·초대 권한 판단 (lead 컬럼 기준)
             const { data: project } = await supabase
                 .from('projects')
-                .select('id, title, parent_project_id, owner_id, pm_dancer_id, client_profile_id, category, visibility, embargo_date, description, due_date, start_date, end_date, confirmation_status, progress_status, proposals (dancer_id)')
+                .select('id, title, parent_project_id, owner_id, lead_dancer_id, client_profile_id, category, visibility, embargo_date, description, due_date, start_date, end_date, confirmation_status, progress_status, proposals (dancer_id)')
                 .eq('id', projectId)
                 .single()
 
@@ -83,11 +83,11 @@ export default function InviteDancerPage() {
                 const brief = project.parent_project_id == null
                 setIsBriefProject(brief)
                 setSourceProject(project as Record<string, unknown>)
-                // 파생 프로젝트이고 PM이 있는 경우: 오너(클라이언트)는 섭외 불가
-                if (!brief && project.pm_dancer_id && project.owner_id === user.id) {
+                // 파생 프로젝트이고 리드가 있는 경우: 오너(클라이언트)는 섭외 불가
+                if (!brief && project.lead_dancer_id && project.owner_id === user.id) {
                     const { data: myDancers } = await supabase.from('dancers').select('id').or(`owner_id.eq.${user.id},manager_id.eq.${user.id}`)
                     const myDancerIds = (myDancers || []).map((d: { id: string }) => d.id)
-                    if (!myDancerIds.includes(project.pm_dancer_id)) setClientCannotInvite(true)
+                    if (!myDancerIds.includes(project.lead_dancer_id)) setClientCannotInvite(true)
                 }
             }
 
@@ -211,7 +211,7 @@ export default function InviteDancerPage() {
                             confirmation_status: 'negotiating',
                             progress_status: 'idle',
                             contract_amount: fee,
-                            pm_dancer_id: dancerId,
+                            lead_dancer_id: dancerId,
                         })
                         .select('id')
                         .single()

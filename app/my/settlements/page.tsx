@@ -11,7 +11,13 @@ import { useMyProfiles } from '@/hooks/useMyProfiles'
 import BalanceSummaryCard from '@/components/settlements/BalanceSummaryCard'
 import ProjectSettlementAccordion, { type ProjectSettlementData, type SettlementItemDetail } from '@/components/settlements/ProjectSettlementAccordion'
 import ProjectSettlementDetailModal from '@/components/settlements/ProjectSettlementDetailModal'
-import { ACTIVE_PROPOSAL_STATUSES, toSettlementItemStatus } from '@/lib/settlement-logic'
+import {
+    ACTIVE_PROPOSAL_STATUSES,
+    toSettlementItemStatus,
+    summarizeSettlementStatus,
+    SETTLEMENT_STATUS_LABELS,
+    type SettlementStatus,
+} from '@/lib/settlement-logic'
 
 interface SettlementItem {
     id: string
@@ -24,11 +30,15 @@ interface SettlementItem {
     type: 'income' | 'expense'
     label: string
     status: 'pending' | 'completed'
+    /** proposal_settlements.status — 정산 테이블에 레코드 있을 때만 채움 */
+    settlementStatus: SettlementStatus | null
+    paidAt: string | null
     date: string
     startDate: string | null
     endDate: string | null
     contractAmount: number | null
     progressStatus: string | null
+    paymentDueDate: string | null
 }
 
 type SettlementFilter = 'all' | 'income' | 'expense'
@@ -78,82 +88,105 @@ export default function SettlementsPage() {
                 .select(`
                     id, fee, status, dancer_id, created_at,
                     projects!inner (
-                        id, title, category, contract_amount, pm_dancer_id,
+                        id, title, category, contract_amount, lead_dancer_id, payment_due_date,
                         start_date, end_date, progress_status,
                         clients (company_name)
                     ),
-                    dancers (id, stage_name)
+                    dancers (id, stage_name),
+                    proposal_settlements (id, amount, status, scheduled_due_date, paid_at, reference_no)
                 `)
                 .eq('dancer_id', selectedProfileId)
                 .in('status', [...ACTIVE_PROPOSAL_STATUSES])
 
             for (const p of incomeProposals || []) {
-                const proj = p.projects as any
-                const dancer = p.dancers as any
-                const isPmIncome = proj.pm_dancer_id === selectedProfileId
+                const pAny = p as any
+                const proj = pAny.projects as any
+                const dancer = pAny.dancers as any
+                const isLeadIncome = proj.lead_dancer_id === selectedProfileId
+                const settlementRow: any = Array.isArray(pAny.proposal_settlements) ? pAny.proposal_settlements[0] : pAny.proposal_settlements
+                const settlementStatus = (settlementRow?.status as SettlementStatus | undefined) || null
+                const itemStatus = settlementStatus
+                    ? summarizeSettlementStatus(settlementStatus)
+                    : toSettlementItemStatus(pAny.status)
+                const labelStatus = settlementStatus
+                    ? SETTLEMENT_STATUS_LABELS[settlementStatus]
+                    : (pAny.status === 'accepted' ? '확정' : '대기')
                 items.push({
-                    id: `income-${p.id}`,
+                    id: `income-${pAny.id}`,
                     projectId: proj.id,
                     projectTitle: proj.title,
                     category: proj.category || '',
                     companyName: proj.clients?.company_name || null,
                     dancerName: dancer?.stage_name || selectedProfile.stage_name,
-                    fee: p.fee,
+                    fee: settlementRow?.amount ?? pAny.fee,
                     type: 'income',
-                    label: isPmIncome
-                        ? `PM 수입 (${p.status === 'accepted' ? '확정' : '대기'})`
-                        : `참여 수입 (${p.status === 'accepted' ? '확정' : '대기'})`,
-                    status: toSettlementItemStatus(p.status),
-                    date: p.created_at,
+                    label: `${isLeadIncome ? '리드 수입' : '참여 수입'} (${labelStatus})`,
+                    status: itemStatus,
+                    settlementStatus,
+                    paidAt: settlementRow?.paid_at ?? null,
+                    date: pAny.created_at,
                     startDate: proj.start_date,
                     endDate: proj.end_date,
                     contractAmount: proj.contract_amount,
                     progressStatus: proj.progress_status,
+                    paymentDueDate: settlementRow?.scheduled_due_date ?? proj.payment_due_date ?? null,
                 })
             }
 
-            // [지출] 선택 프로필이 PM인 프로젝트에서, 다른 프로필에게 보낸 제안
-            const { data: pmProjects } = await supabase
+            // [지출] 선택 프로필이 lead인 프로젝트에서, 다른 프로필에게 보낸 제안
+            const { data: leadProjects } = await supabase
                 .from('projects')
                 .select('id')
-                .eq('pm_dancer_id', selectedProfileId)
+                .eq('lead_dancer_id', selectedProfileId)
 
-            const pmProjectIds = (pmProjects || []).map((p: any) => p.id)
-            if (pmProjectIds.length > 0) {
+            const leadProjectIds = (leadProjects || []).map((p: any) => p.id)
+            if (leadProjectIds.length > 0) {
                 const { data: expenseProposals } = await supabase
                     .from('proposals')
                     .select(`
                         id, fee, status, dancer_id, created_at,
                         projects!inner (
-                            id, title, category, contract_amount, pm_dancer_id,
+                            id, title, category, contract_amount, lead_dancer_id,
                             start_date, end_date, progress_status,
                             clients (company_name)
                         ),
                         dancers (id, stage_name)
                     `)
-                    .in('project_id', pmProjectIds)
+                    .in('project_id', leadProjectIds)
                     .neq('dancer_id', selectedProfileId)
                     .in('status', [...ACTIVE_PROPOSAL_STATUSES])
 
                 for (const p of expenseProposals || []) {
-                    const proj = p.projects as any
-                    const dancer = p.dancers as any
+                    const pAny = p as any
+                    const proj = pAny.projects as any
+                    const dancer = pAny.dancers as any
+                    const settlementRow: any = Array.isArray(pAny.proposal_settlements) ? pAny.proposal_settlements[0] : pAny.proposal_settlements
+                    const settlementStatus = (settlementRow?.status as SettlementStatus | undefined) || null
+                    const itemStatus = settlementStatus
+                        ? summarizeSettlementStatus(settlementStatus)
+                        : toSettlementItemStatus(p.status)
+                    const labelStatus = settlementStatus
+                        ? SETTLEMENT_STATUS_LABELS[settlementStatus]
+                        : (pAny.status === 'accepted' ? '확정' : '대기')
                     items.push({
-                        id: `expense-${p.id}`,
+                        id: `expense-${pAny.id}`,
                         projectId: proj.id,
                         projectTitle: proj.title,
                         category: proj.category || '',
                         companyName: proj.clients?.company_name || null,
                         dancerName: dancer?.stage_name || null,
-                        fee: p.fee,
+                        fee: settlementRow?.amount ?? pAny.fee,
                         type: 'expense',
-                        label: `섭외 지출 (${p.status === 'accepted' ? '확정' : '대기'})`,
-                        status: toSettlementItemStatus(p.status),
-                        date: p.created_at,
+                        label: `섭외 지출 (${labelStatus})`,
+                        status: itemStatus,
+                        settlementStatus,
+                        paidAt: settlementRow?.paid_at ?? null,
+                        date: pAny.created_at,
                         startDate: proj.start_date,
                         endDate: proj.end_date,
                         contractAmount: proj.contract_amount,
                         progressStatus: proj.progress_status,
+                        paymentDueDate: settlementRow?.scheduled_due_date ?? proj.payment_due_date ?? null,
                     })
                 }
             }
@@ -186,16 +219,24 @@ export default function SettlementsPage() {
                         label: item.label,
                         status: item.status,
                         date: item.date,
+                        settlementStatus: item.settlementStatus,
+                        paidAt: item.paidAt,
                     }
+
+                    const isCancelled = item.settlementStatus === 'cancelled'
 
                     if (item.type === 'income') {
                         incomeDetails.push(detail)
-                        if (item.fee) totalIncome += item.fee
-                        else hasUndecided = true
+                        if (!isCancelled) {
+                            if (item.fee) totalIncome += item.fee
+                            else hasUndecided = true
+                        }
                     } else {
                         expenseDetails.push(detail)
-                        if (item.fee) totalExpense += item.fee
-                        else hasUndecided = true
+                        if (!isCancelled) {
+                            if (item.fee) totalExpense += item.fee
+                            else hasUndecided = true
+                        }
                     }
                 }
 
@@ -212,6 +253,7 @@ export default function SettlementsPage() {
                     companyName: firstItem.companyName,
                     startDate: firstItem.startDate,
                     endDate: firstItem.endDate,
+                    paymentDueDate: firstItem.paymentDueDate,
                     contractAmount: firstItem.contractAmount,
                     incomeItems: incomeDetails,
                     expenseItems: expenseDetails,
@@ -224,8 +266,15 @@ export default function SettlementsPage() {
                 })
             }
 
-            // 최신 프로젝트 순으로 정렬
+            // 정렬: 미정산(pending/partial)은 지급예정일 가까운 순, 완료는 뒤로
             projectSettlementList.sort((a, b) => {
+                const completedRank = (s: typeof a.settlementStatus) => s === 'completed' ? 1 : 0
+                const ar = completedRank(a.settlementStatus)
+                const br = completedRank(b.settlementStatus)
+                if (ar !== br) return ar - br
+                const aDue = a.paymentDueDate ? new Date(a.paymentDueDate).getTime() : Infinity
+                const bDue = b.paymentDueDate ? new Date(b.paymentDueDate).getTime() : Infinity
+                if (aDue !== bDue) return aDue - bDue
                 const aDate = a.incomeItems[0]?.date || a.expenseItems[0]?.date || ''
                 const bDate = b.incomeItems[0]?.date || b.expenseItems[0]?.date || ''
                 return new Date(bDate).getTime() - new Date(aDate).getTime()

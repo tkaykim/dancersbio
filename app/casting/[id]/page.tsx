@@ -50,6 +50,7 @@ export default function CastingDetailPage() {
     const [liveItem, setLiveItem] = useState<CastingMock | null>(null)
     const [liveBrief, setLiveBrief] = useState<string | null>(null)
     const [liveOwnerId, setLiveOwnerId] = useState<string | null>(null)
+    const [liveRecruitUnit, setLiveRecruitUnit] = useState<'individual' | 'team' | 'both' | null>(null)
     const [liveLoading, setLiveLoading] = useState<boolean>(isProjectId)
     const [openApply, setOpenApply] = useState(false)
 
@@ -67,7 +68,7 @@ export default function CastingDetailPage() {
                 .select(`
                     id, title, category, visibility, progress_status,
                     embargo_date, budget, start_date, end_date, due_date, created_at,
-                    description, owner_id,
+                    description, owner_id, recruit_unit,
                     clients (company_name),
                     owner:users!owner_id (name),
                     event_dates:project_event_dates (event_date, event_time, label, sort_order)
@@ -93,6 +94,8 @@ export default function CastingDetailPage() {
             setLiveItem(projectToCastingMock(row))
             setLiveBrief(row.description ?? null)
             setLiveOwnerId(row.owner_id ?? null)
+            const ru = (row as unknown as { recruit_unit?: string }).recruit_unit
+            setLiveRecruitUnit(ru === 'team' || ru === 'both' || ru === 'individual' ? ru : null)
             setLiveLoading(false)
         }
         load()
@@ -331,6 +334,7 @@ export default function CastingDetailPage() {
                 casting={item}
                 realProjectId={isLiveProject ? projectUuid : null}
                 realProjectOwnerId={isLiveProject ? liveOwnerId : null}
+                realProjectRecruitUnit={isLiveProject ? liveRecruitUnit : null}
             />
         </MobileContainer>
     )

@@ -16,6 +16,8 @@ interface Props {
     realProjectId?: string | null
     /** 실 프로젝트의 owner_id — 자기 프로젝트엔 지원 못 막기 위해 사용 */
     realProjectOwnerId?: string | null
+    /** 실 프로젝트의 모집 단위. 'individual'이면 팀 신청 차단, 'team'이면 개인 신청 차단 */
+    realProjectRecruitUnit?: 'individual' | 'team' | 'both' | null
 }
 
 export default function ApplyCastingSheet({
@@ -24,6 +26,7 @@ export default function ApplyCastingSheet({
     casting,
     realProjectId = null,
     realProjectOwnerId = null,
+    realProjectRecruitUnit = null,
 }: Props) {
     const { user } = useAuth()
     const { ownedDancers, managedDancers, loading: profilesLoading } = useMyProfiles()
@@ -44,6 +47,17 @@ export default function ApplyCastingSheet({
     const [applyMode, setApplyMode] = useState<'individual' | 'team'>('individual')
     const [myTeams, setMyTeams] = useState<{ id: string; name: string }[]>([])
     const [selectedTeamId, setSelectedTeamId] = useState<string>('')
+
+    // 프로젝트의 모집 단위에 따른 정책
+    const allowIndividual = realProjectRecruitUnit !== 'team'
+    const allowTeam = realProjectRecruitUnit !== 'individual'
+
+    // 모집 단위가 'team'이면 자동으로 team 모드로 시작
+    useEffect(() => {
+        if (!open) return
+        if (realProjectRecruitUnit === 'team') setApplyMode('team')
+        else if (realProjectRecruitUnit === 'individual') setApplyMode('individual')
+    }, [open, realProjectRecruitUnit])
 
     // 사용자가 leader 인 팀 목록
     useEffect(() => {
@@ -148,6 +162,17 @@ export default function ApplyCastingSheet({
 
             if (applyMode === 'team' && !selectedTeamId) {
                 setSubmitError('신청할 팀을 선택해주세요.')
+                setSubmitting(false)
+                return
+            }
+            // 프로젝트의 모집 단위 정책 검증
+            if (applyMode === 'team' && !allowTeam) {
+                setSubmitError('이 공고는 개인 단위로만 모집합니다.')
+                setSubmitting(false)
+                return
+            }
+            if (applyMode === 'individual' && !allowIndividual) {
+                setSubmitError('이 공고는 팀 단위로만 모집합니다.')
                 setSubmitting(false)
                 return
             }
@@ -328,7 +353,7 @@ export default function ApplyCastingSheet({
                                     <button
                                         type="button"
                                         onClick={() => setApplyMode('individual')}
-                                        disabled={profiles.length === 0}
+                                        disabled={profiles.length === 0 || !allowIndividual}
                                         style={{
                                             flex: 1,
                                             padding: '10px 12px',
@@ -338,14 +363,14 @@ export default function ApplyCastingSheet({
                                             background: applyMode === 'individual' ? 'var(--cue-accent)' : 'var(--cue-surface-2)',
                                             color: applyMode === 'individual' ? 'var(--cue-accent-ink)' : 'var(--cue-ink-2)',
                                             border: applyMode === 'individual' ? 'none' : '1px solid var(--cue-hairline)',
-                                            opacity: profiles.length === 0 ? 0.4 : 1,
-                                            cursor: profiles.length === 0 ? 'not-allowed' : 'pointer',
+                                            opacity: (profiles.length === 0 || !allowIndividual) ? 0.4 : 1,
+                                            cursor: (profiles.length === 0 || !allowIndividual) ? 'not-allowed' : 'pointer',
                                         }}
                                     >개인으로 신청</button>
                                     <button
                                         type="button"
                                         onClick={() => setApplyMode('team')}
-                                        disabled={myTeams.length === 0}
+                                        disabled={myTeams.length === 0 || !allowTeam}
                                         style={{
                                             flex: 1,
                                             padding: '10px 12px',
@@ -355,12 +380,22 @@ export default function ApplyCastingSheet({
                                             background: applyMode === 'team' ? 'var(--cue-accent)' : 'var(--cue-surface-2)',
                                             color: applyMode === 'team' ? 'var(--cue-accent-ink)' : 'var(--cue-ink-2)',
                                             border: applyMode === 'team' ? 'none' : '1px solid var(--cue-hairline)',
-                                            opacity: myTeams.length === 0 ? 0.4 : 1,
-                                            cursor: myTeams.length === 0 ? 'not-allowed' : 'pointer',
+                                            opacity: (myTeams.length === 0 || !allowTeam) ? 0.4 : 1,
+                                            cursor: (myTeams.length === 0 || !allowTeam) ? 'not-allowed' : 'pointer',
                                         }}
                                     >팀으로 신청</button>
                                 </div>
-                                {myTeams.length === 0 && (
+                                {!allowIndividual && (
+                                    <div style={{ marginTop: 8, fontSize: 11, color: 'var(--cue-ink-3)' }}>
+                                        이 공고는 팀 단위로만 모집합니다.
+                                    </div>
+                                )}
+                                {!allowTeam && (
+                                    <div style={{ marginTop: 8, fontSize: 11, color: 'var(--cue-ink-3)' }}>
+                                        이 공고는 개인 단위로만 모집합니다.
+                                    </div>
+                                )}
+                                {allowTeam && myTeams.length === 0 && (
                                     <div style={{ marginTop: 8, fontSize: 11, color: 'var(--cue-ink-3)' }}>
                                         팀 신청은 본인이 리더인 팀이 있을 때 가능합니다.
                                     </div>

@@ -17,6 +17,7 @@ import {
     X,
     UserPlus,
     FileText,
+    Wallet,
 } from 'lucide-react'
 import { Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -29,6 +30,7 @@ const NAV_ITEMS = [
     { label: '푸시 관리', href: '/admin/push', icon: Bell },
     { label: '프로젝트', href: '/admin/projects', icon: Briefcase },
     { label: '제안', href: '/admin/proposals', icon: Send },
+    { label: '정산 처리', href: '/admin/settlements', icon: Wallet },
     { label: '프로필 승인', href: '/admin/profiles-pending', icon: UserCheck },
     { label: '권한 요청', href: '/admin/requests', icon: ClipboardList },
     { label: '등록로그', href: '/admin/logs', icon: FileText },

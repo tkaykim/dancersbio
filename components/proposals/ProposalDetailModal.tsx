@@ -121,7 +121,7 @@ export default function ProposalDetailModal({ proposal, activeTab, onClose, onUp
                     .single()
                 if (proj) {
                     const projectUpdates: Record<string, any> = {}
-                    if (!proj.pm_dancer_id) projectUpdates.pm_dancer_id = proposal.dancer_id
+                    if (!proj.lead_dancer_id) projectUpdates.lead_dancer_id = proposal.dancer_id
                     if (proj.confirmation_status === 'negotiating') {
                         projectUpdates.confirmation_status = 'confirmed'
                         projectUpdates.progress_status = 'recruiting'
@@ -140,8 +140,25 @@ export default function ProposalDetailModal({ proposal, activeTab, onClose, onUp
                             await triggerPushEvent('project_status_changed', { project_id: proposal.project_id })
                         }
                     }
-                    if (projectUpdates.pm_dancer_id) {
+                    if (projectUpdates.lead_dancer_id) {
                         await ensurePmCareer(supabase, proj, proposal.dancer_id)
+                        // lead 댄서의 user_id를 project_members.manager로 자동 등록
+                        try {
+                            const { data: dancerRow } = await supabase
+                                .from('dancers')
+                                .select('owner_id')
+                                .eq('id', proposal.dancer_id)
+                                .maybeSingle()
+                            const leadUserId = dancerRow?.owner_id
+                            if (leadUserId) {
+                                await supabase
+                                    .from('project_members')
+                                    .upsert(
+                                        { project_id: proposal.project_id, user_id: leadUserId, role: 'manager' },
+                                        { onConflict: 'project_id,user_id', ignoreDuplicates: true }
+                                    )
+                            }
+                        } catch { /* 멤버 자동 등록 실패는 수락 자체엔 영향 없음 */ }
                     }
                 }
             } catch (err) {
@@ -180,10 +197,11 @@ export default function ProposalDetailModal({ proposal, activeTab, onClose, onUp
                             <button
                                 onClick={handleCancelProposal}
                                 disabled={cancelling}
-                                className="p-2 text-red-400/60 hover:text-red-400 disabled:opacity-50 transition"
-                                title="제안 취소"
+                                className="px-2.5 py-1.5 text-xs font-semibold text-red-400 hover:text-red-300 bg-red-500/10 hover:bg-red-500/20 rounded-lg disabled:opacity-50 transition flex items-center gap-1.5"
+                                title="이 지원/제안을 취소합니다"
                             >
-                                {cancelling ? <Loader2 className="w-5 h-5 animate-spin" /> : <Ban className="w-5 h-5" />}
+                                {cancelling ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Ban className="w-3.5 h-3.5" />}
+                                지원 취소
                             </button>
                         )}
                         <button onClick={onClose} className="p-2 text-white/50 hover:text-white">

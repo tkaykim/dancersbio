@@ -11,6 +11,7 @@ export type PushEventType =
   | 'proposal_created'
   | 'proposal_accepted'
   | 'proposal_declined'
+  | 'proposal_status_changed'
   | 'negotiation_message'
   | 'project_status_changed'
 
@@ -19,6 +20,8 @@ export interface TriggerPushPayload {
   project_id?: string
   /** 협상 메시지일 때 누가 보냈는지 */
   from_side?: 'sender' | 'dancer'
+  /** proposal_status_changed 일 때 새 status */
+  status?: 'pending' | 'accepted' | 'declined' | 'negotiating' | 'cancelled'
 }
 
 /**
